@@ -37,6 +37,7 @@ type DialogHeaderProps = {
   subtitle?: string
   onClose: () => void
   icon?: string
+  iconClassName?: string
 }
 
 export function DialogHeader({
@@ -44,12 +45,18 @@ export function DialogHeader({
   subtitle,
   onClose,
   icon,
+  iconClassName = 'bg-secondary text-on-secondary',
 }: DialogHeaderProps) {
   return (
     <div className="flex items-center justify-between bg-primary px-6 py-4 text-on-primary">
       <div className="flex items-center gap-3">
         {icon ? (
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-on-secondary">
+          <div
+            className={cn(
+              'flex h-9 w-9 items-center justify-center rounded-lg',
+              iconClassName,
+            )}
+          >
             <span className="material-symbols-outlined text-[20px]">
               {icon}
             </span>

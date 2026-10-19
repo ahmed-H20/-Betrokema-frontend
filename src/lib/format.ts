@@ -26,10 +26,27 @@ export function arabicPlural(count: number, forms: ArabicPluralForms): string {
   return forms.many
 }
 
-// "12.4 مليون ج.م" once a value reaches a million, the plain grouped number
-// otherwise — see context/build-plan.md Chunk 2 data-honesty rule (team
-// sales formatting).
-export function formatMillionsOrPlain(value: number): string {
-  if (Math.abs(value) < 1_000_000) return formatNumber(value)
-  return `${(value / 1_000_000).toFixed(1)} مليون`
+// Full counted-noun phrase: the 1/2 forms already encode the count
+// ("يوم واحد", "يومان") so no digit is shown for those; 3+ forms (plural,
+// then accusative-singular for 11+) don't by themselves say which number in
+// that range, so the digit is shown alongside the noun. Reuses `arabicPlural`
+// for the noun-form selection — don't duplicate that branching here.
+export function arabicCountPhrase(count: number, forms: ArabicPluralForms): string {
+  const n = Math.abs(count)
+  if (n === 1) return forms.one
+  if (n === 2) return forms.two
+  return `${formatNumber(count)} ${arabicPlural(count, forms)}`
+}
+
+// "12.4" + unit "مليون ج.م" once a value reaches a million, the plain
+// grouped number + unit "ج.م" otherwise — see context/build-plan.md Chunk 2
+// data-honesty rule (team sales formatting) and the real Stitch export,
+// which renders the number and the "مليون ج.م" unit as two separate spans.
+export function formatMillionsOrPlain(
+  value: number,
+): { value: string; unit: string } {
+  if (Math.abs(value) < 1_000_000) {
+    return { value: formatNumber(value), unit: 'ج.م' }
+  }
+  return { value: (value / 1_000_000).toFixed(1), unit: 'مليون ج.م' }
 }

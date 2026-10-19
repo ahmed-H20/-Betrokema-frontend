@@ -1,12 +1,11 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { useEffect, useMemo, useState } from 'react'
 import type { SellerStatus } from '@/api/sellers.schema'
+import type { EnrichedSeller } from '@/api/sellers.schema'
 import { StateMessage } from '@/components/ui/StateMessage'
 import {
   REPS_EMPTY,
   REPS_ERROR,
   REPS_FILTER_BUTTON,
-  REPS_GOVERNORATE_ALL,
   REPS_LIST_TITLE,
   REPS_LOADING,
   REPS_SEARCH_PLACEHOLDER,
@@ -17,8 +16,7 @@ import {
   SELLER_STATUS_LABELS,
 } from '@/constants/strings'
 import { cn } from '@/lib/cn'
-import { useDebouncedValue } from '@/lib/useDebouncedValue'
-import { useSellers } from '@/features/sellers/hooks'
+import { formatNumber } from '@/lib/format'
 import { RepCard } from '@/features/sellers/components/RepCard'
 
 const SORT_OPTIONS = [
@@ -34,60 +32,30 @@ const STATUS_FILTER_OPTIONS: { value: SellerStatus | undefined; label: string }[
 ]
 
 export function RepsDirectory({
+  sellers,
+  isLoading,
+  isError,
+  search,
+  onSearchChange,
+  sort,
+  onSortChange,
+  statusFilter,
+  onStatusFilterChange,
   selectedSellerId,
   onSelectSeller,
 }: {
+  sellers: EnrichedSeller[]
+  isLoading: boolean
+  isError: boolean
+  search: string
+  onSearchChange: (value: string) => void
+  sort: 'performance' | 'sales'
+  onSortChange: (sort: 'performance' | 'sales') => void
+  statusFilter: SellerStatus | undefined
+  onStatusFilterChange: (status: SellerStatus | undefined) => void
   selectedSellerId: string | undefined
   onSelectSeller: (id: string | undefined) => void
 }) {
-  const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<'performance' | 'sales'>('performance')
-  const [statusFilter, setStatusFilter] = useState<SellerStatus | undefined>(
-    undefined,
-  )
-  const [governorateFilter, setGovernorateFilter] = useState<string | undefined>(
-    undefined,
-  )
-  const debouncedSearch = useDebouncedValue(search, 400)
-
-  const sellersQuery = useSellers({
-    search: debouncedSearch || undefined,
-    status: statusFilter,
-    sort,
-  })
-
-  const sellers = useMemo(() => sellersQuery.data ?? [], [sellersQuery.data])
-
-  // Options reflect the current status/search-filtered result, before the
-  // governorate filter itself is applied — see src/api/sellers.ts.
-  const governorateOptions = useMemo(
-    () =>
-      Array.from(new Set(sellers.map((seller) => seller.governorate))).sort(
-        (a, b) => a.localeCompare(b, 'ar'),
-      ),
-    [sellers],
-  )
-
-  const filteredSellers = useMemo(
-    () =>
-      governorateFilter
-        ? sellers.filter((seller) => seller.governorate === governorateFilter)
-        : sellers,
-    [sellers, governorateFilter],
-  )
-
-  useEffect(() => {
-    if (filteredSellers.length === 0) {
-      if (selectedSellerId !== undefined) onSelectSeller(undefined)
-      return
-    }
-    const stillPresent = filteredSellers.some(
-      (seller) => seller._id === selectedSellerId,
-    )
-    if (!stillPresent) onSelectSeller(filteredSellers[0]._id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredSellers, selectedSellerId])
-
   const sortLabel =
     SORT_OPTIONS.find((option) => option.value === sort)?.label ??
     REPS_SORT_OPTION_PERFORMANCE
@@ -96,35 +64,29 @@ export function RepsDirectory({
       ?.label ?? REPS_STATUS_ALL
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl bg-surface-container-lowest p-4 shadow-sm">
-      <div className="flex items-center justify-between">
-        <h2 className="font-headline-sm text-headline-sm text-primary">
-          {REPS_LIST_TITLE}
-        </h2>
-      </div>
-
-      <div className="relative">
-        <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[20px] text-outline">
-          search
-        </span>
-        <input
-          className="font-body-sm h-11 w-full rounded-lg bg-surface-container-low pl-4 pr-10 text-body-sm text-on-surface placeholder-outline transition-all focus:bg-surface-container-highest focus:outline-none"
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder={REPS_SEARCH_PLACEHOLDER}
-          type="text"
-          value={search}
-        />
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+      <div className="flex items-center justify-between pb-space-sm">
+        <div className="flex items-center gap-space-xs">
+          <span className="material-symbols-outlined text-[20px] text-primary">
+            groups
+          </span>
+          <span className="font-headline-sm text-headline-sm text-primary">
+            {REPS_LIST_TITLE}
+          </span>
+          <span className="font-label-sm rounded-full bg-surface-container-high px-2 py-0.5 text-label-sm font-semibold text-on-surface">
+            {formatNumber(sellers.length)}
+          </span>
+        </div>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button
-              className="font-label-md flex h-9 items-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-label-md text-on-surface transition-colors hover:bg-surface-container-highest"
+              className="font-label-sm flex items-center gap-1 text-label-sm text-on-surface-variant"
               type="button"
             >
-              <span className="material-symbols-outlined text-[18px]">sort</span>
               {REPS_SORT_LABEL(sortLabel)}
+              <span className="material-symbols-outlined text-[16px]">
+                swap_vert
+              </span>
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
@@ -140,7 +102,7 @@ export function RepsDirectory({
                     option.value === sort && 'text-primary font-semibold',
                   )}
                   key={option.value}
-                  onSelect={() => setSort(option.value)}
+                  onSelect={() => onSortChange(option.value)}
                 >
                   {option.label}
                 </DropdownMenu.Item>
@@ -148,15 +110,29 @@ export function RepsDirectory({
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
+      </div>
 
+      <div className="my-space-xs flex items-center gap-space-xs">
+        <div className="relative flex-1">
+          <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-outline">
+            search
+          </span>
+          <input
+            className="font-body-sm h-9 w-full rounded-lg bg-surface-container-low pl-3 pr-9 text-body-sm text-on-surface placeholder-outline focus:bg-surface-container-lowest focus:outline-none"
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder={REPS_SEARCH_PLACEHOLDER}
+            type="text"
+            value={search}
+          />
+        </div>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button
-              className="font-label-md flex h-9 items-center gap-1.5 rounded-lg bg-surface-container-high px-3 text-label-md text-on-surface transition-colors hover:bg-surface-container-highest"
+              className="font-label-sm flex h-9 items-center gap-1 rounded-lg bg-surface-container-low px-2.5 text-label-sm text-on-surface hover:bg-surface-container-high"
               type="button"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                filter_list
+              <span className="material-symbols-outlined text-[16px] text-secondary">
+                tune
               </span>
               {REPS_FILTER_BUTTON}
               {statusFilter ? (
@@ -179,7 +155,7 @@ export function RepsDirectory({
                     option.value === statusFilter && 'text-primary font-semibold',
                   )}
                   key={option.label}
-                  onSelect={() => setStatusFilter(option.value)}
+                  onSelect={() => onStatusFilterChange(option.value)}
                 >
                   {option.label}
                 </DropdownMenu.Item>
@@ -187,36 +163,21 @@ export function RepsDirectory({
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
-
-        <select
-          className="font-label-md h-9 rounded-lg bg-surface-container-high px-2.5 text-label-md text-on-surface"
-          onChange={(event) =>
-            setGovernorateFilter(event.target.value || undefined)
-          }
-          value={governorateFilter ?? ''}
-        >
-          <option value="">{REPS_GOVERNORATE_ALL}</option>
-          {governorateOptions.map((governorate) => (
-            <option key={governorate} value={governorate}>
-              {governorate}
-            </option>
-          ))}
-        </select>
       </div>
 
-      <div className="flex flex-col gap-2">
-        {sellersQuery.isLoading ? (
+      <div className="mt-space-sm flex max-h-[720px] flex-col gap-space-xs overflow-y-auto pr-0.5">
+        {isLoading ? (
           <StateMessage minHeightClassName="min-h-[200px]" text={REPS_LOADING} />
-        ) : sellersQuery.isError ? (
+        ) : isError ? (
           <StateMessage
             minHeightClassName="min-h-[200px]"
             text={REPS_ERROR}
             tone="error"
           />
-        ) : filteredSellers.length === 0 ? (
+        ) : sellers.length === 0 ? (
           <StateMessage minHeightClassName="min-h-[200px]" text={REPS_EMPTY} />
         ) : (
-          filteredSellers.map((seller) => (
+          sellers.map((seller) => (
             <RepCard
               key={seller._id}
               onSelect={() => onSelectSeller(seller._id)}

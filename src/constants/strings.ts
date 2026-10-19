@@ -227,6 +227,30 @@ export const CLIENT_PLURAL_FORMS = {
   few: 'عملاء',
   many: 'عميلاً',
 }
+export const DAYS_REMAINING_PLURAL_FORMS = {
+  one: 'يوم واحد',
+  two: 'يومان',
+  few: 'أيام',
+  many: 'يوماً',
+}
+export const REP_CARD_CLIENTS_COUNT_FORMS = {
+  one: 'عميل واحد',
+  two: 'عميلان',
+  few: 'عملاء',
+  many: 'عميلاً',
+}
+export const REP_CARD_CLIENTS_REGISTERED_FORMS = {
+  one: 'عميل واحد مسجل',
+  two: 'عميلان مسجلان',
+  few: 'عملاء مسجلون',
+  many: 'عميلاً مسجلاً',
+}
+export const REP_CARD_INVOICES_QUARTER_FORMS = {
+  one: 'فاتورة واحدة هذا الربع',
+  two: 'فاتورتان هذا الربع',
+  few: 'فواتير هذا الربع',
+  many: 'فاتورة هذا الربع',
+}
 
 export const SELLER_KPI_LOADING = 'جارِ تحميل مؤشرات المناديب...'
 export const SELLER_KPI_ERROR = 'تعذر تحميل مؤشرات المناديب'
@@ -235,7 +259,11 @@ export const KPI_CERTIFIED_SELLERS_UNIT = (word: string) => `${word} ميدان�
 export const KPI_TEAM_SALES_LABEL = 'إجمالي مبيعات الفريق (الشهر)'
 export const KPI_TEAM_SALES_TARGET = (target: string) => `المستهدف: ${target} م. ج.م`
 export const KPI_TARGET_ACHIEVEMENT_LABEL = 'نسبة تحقيق المستهدف'
-export const KPI_TARGET_DAYS_REMAINING = (days: number) => `باقي ${days} أيام للإغلاق`
+export const KPI_TARGET_DAYS_REMAINING = (daysPhrase: string) => `باقي ${daysPhrase} للإغلاق`
+export const KPI_REPS_STATUS_ACTIVE = 'نشط'
+export const KPI_REPS_STATUS_SUSPENDED = 'قيد التعليق'
+export const KPI_REPS_STATUS_VACATION = 'إجازة'
+export const KPI_TEAM_SALES_GROWTH_SUFFIX = 'مقارنة بالماضي'
 export const KPI_ACTIVE_CLIENTS_LABEL = 'العملاء الميدانيون النشطون'
 export const KPI_ACTIVE_CLIENTS_UNIT = (word: string) => `${word} ومعرض طلاء`
 export const KPI_ACTIVE_CLIENTS_NEW = (count: number) =>
@@ -250,7 +278,7 @@ export const REPS_SEARCH_PLACEHOLDER = 'بحث باسم المندوب، الك�
 export const REPS_STATUS_ALL = 'كل الحالات'
 export const REPS_GOVERNORATE_ALL = 'كل المحافظات'
 export const REP_CARD_SALES_PREFIX = 'المبيعات:'
-export const REP_CARD_CLIENTS_COUNT = (count: string) => `${count} عميلاً`
+export const REP_CERTIFIED_SINCE = (year: number) => `معتمد منذ ${year}`
 export const REPS_EMPTY = 'لا يوجد مناديب مطابقون لبحثك'
 export const REPS_ERROR = 'تعذر تحميل بيانات المناديب'
 export const REPS_LOADING = 'جارِ تحميل المناديب...'

@@ -106,7 +106,8 @@ export function RepFormDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open} widthClassName="max-w-2xl">
       <DialogHeader
-        icon="badge"
+        icon="person_add"
+        iconClassName="bg-primary-fixed text-on-primary-fixed"
         onClose={() => onOpenChange(false)}
         subtitle={REP_MODAL_SUBTITLE}
         title={isEdit ? REP_MODAL_TITLE_EDIT : REP_MODAL_TITLE_CREATE}
@@ -129,15 +130,19 @@ export function RepFormDialog({
               <label className={labelClassName}>
                 {REP_PHONE_LABEL} <span className="text-error">*</span>
               </label>
-              <div className="flex items-center gap-2">
-                <span className="font-label-md flex h-11 items-center rounded-lg bg-surface-container-high px-3 text-label-md text-on-surface-variant">
-                  +20
-                </span>
+              <div className="flex h-11 items-center overflow-hidden rounded-lg bg-surface-container-low">
                 <input
-                  className={inputClassName}
+                  className="h-full flex-1 bg-transparent px-3 font-body-sm text-body-sm text-on-surface focus:outline-none"
                   type="text"
                   {...register('phone')}
                 />
+                <span
+                  className="font-label-md flex h-full items-center gap-1 bg-surface-container-high px-3 text-label-md font-semibold text-on-surface-variant"
+                  dir="ltr"
+                >
+                  +20
+                  <span className="material-symbols-outlined text-[16px]">flag</span>
+                </span>
               </div>
               {errors.phone ? (
                 <span className="font-label-sm mt-1 block text-label-sm text-error">

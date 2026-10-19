@@ -54,34 +54,39 @@ export function RepDetailPanel({
         seller={seller}
       />
 
-      <Tabs.Root defaultValue="clients">
-        <Tabs.List className="flex items-center gap-1 rounded-xl bg-surface-container-lowest p-1.5 shadow-sm">
-          {[
-            { value: 'clients', label: TAB_CLIENTS(metrics.clientsCount) },
-            { value: 'invoices', label: TAB_INVOICES(metrics.totalInvoicesCount) },
-            { value: 'performance', label: TAB_PERFORMANCE },
-          ].map((tab) => (
-            <Tabs.Trigger
-              className={cn(
-                'font-label-md flex-1 rounded-lg px-4 py-2.5 text-label-md transition-colors data-[state=active]:bg-primary data-[state=active]:text-on-primary data-[state=inactive]:text-on-surface-variant data-[state=inactive]:hover:bg-surface-container-low',
-              )}
-              key={tab.value}
-              value={tab.value}
-            >
-              {tab.label}
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
-        <Tabs.Content className="mt-4" value="clients">
-          <ClientsTab sellerId={seller._id} sellerName={seller.name} />
-        </Tabs.Content>
-        <Tabs.Content className="mt-4" value="invoices">
-          <InvoicesTab sellerId={seller._id} />
-        </Tabs.Content>
-        <Tabs.Content className="mt-4" value="performance">
-          <ProfileTab metrics={metrics} seller={seller} />
-        </Tabs.Content>
-      </Tabs.Root>
+      <div className="rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+        <Tabs.Root defaultValue="clients">
+          <Tabs.List className="mb-space-md flex items-center gap-space-md rounded-lg bg-surface-container-low p-1.5">
+            {[
+              { value: 'clients', icon: 'storefront', label: TAB_CLIENTS(metrics.clientsCount) },
+              { value: 'invoices', icon: 'receipt_long', label: TAB_INVOICES(metrics.totalInvoicesCount) },
+              { value: 'performance', icon: 'badge', label: TAB_PERFORMANCE },
+            ].map((tab) => (
+              <Tabs.Trigger
+                className={cn(
+                  'font-label-md flex flex-1 items-center justify-center gap-space-xs rounded-md px-space-md py-2 text-label-md transition-all data-[state=active]:bg-primary-container data-[state=active]:font-bold data-[state=active]:text-on-primary data-[state=active]:shadow-xs data-[state=inactive]:font-medium data-[state=inactive]:text-on-surface-variant data-[state=inactive]:hover:text-on-surface',
+                )}
+                key={tab.value}
+                value={tab.value}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {tab.icon}
+                </span>
+                {tab.label}
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
+          <Tabs.Content value="clients">
+            <ClientsTab sellerId={seller._id} sellerName={seller.name} />
+          </Tabs.Content>
+          <Tabs.Content value="invoices">
+            <InvoicesTab sellerId={seller._id} />
+          </Tabs.Content>
+          <Tabs.Content value="performance">
+            <ProfileTab metrics={metrics} seller={seller} />
+          </Tabs.Content>
+        </Tabs.Root>
+      </div>
 
       <RepFormDialog onOpenChange={setEditOpen} open={editOpen} seller={seller} />
       <DeleteRepDialog

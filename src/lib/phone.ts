@@ -11,3 +11,11 @@ export function formatEgyptianPhoneDisplay(phone: string): string {
   const local = phone.slice(1) // drop leading 0 -> 10 digits
   return `+20 ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`
 }
+
+// Display-only transform for the local (non-"+20") form used on the rep
+// list cards, per the real export: "01012345678" -> "0101 234 5678". The
+// stored value is untouched — only this rendered string is grouped.
+export function formatEgyptianPhoneLocal(phone: string): string {
+  if (!EGYPT_MOBILE_REGEX.test(phone)) return phone
+  return `${phone.slice(0, 4)} ${phone.slice(4, 7)} ${phone.slice(7)}`
+}

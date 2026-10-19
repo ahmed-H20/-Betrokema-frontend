@@ -29,6 +29,7 @@ function formatInvoiceDate(iso: string): string {
   return new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
     day: 'numeric',
     month: 'long',
+    year: 'numeric',
   }).format(new Date(iso))
 }
 
@@ -41,24 +42,31 @@ function clientLabel(client: Invoice['client']): string {
 function KpiPill({
   label,
   value,
+  icon,
   tone,
 }: {
   label: string
   value: number
+  icon: string
   tone: 'success' | 'warning' | 'error'
 }) {
-  const toneClasses = {
-    success: 'bg-emerald-50 text-emerald-700',
-    warning: 'bg-amber-50 text-amber-700',
-    error: 'bg-error-container text-on-error-container',
+  const valueClass = {
+    success: 'text-secondary',
+    warning: 'text-on-surface',
+    error: 'text-error',
   }[tone]
 
   return (
-    <div className={cn('flex flex-1 flex-col gap-1 rounded-lg p-3', toneClasses)}>
-      <span className="font-label-sm text-label-sm">{label}</span>
-      <span className="font-headline-sm text-headline-sm">
-        {formatNumber(value)} ج.م
-      </span>
+    <div className="flex flex-1 items-center justify-between rounded-lg bg-surface-container-low p-space-sm">
+      <div>
+        <span className="font-label-sm block text-label-sm text-on-surface-variant">
+          {label}
+        </span>
+        <span className={cn('font-headline-sm font-mono text-headline-sm', valueClass)}>
+          {formatNumber(value)} ج.م
+        </span>
+      </div>
+      <span className={cn('material-symbols-outlined text-[24px]', valueClass)}>{icon}</span>
     </div>
   )
 }
@@ -69,21 +77,34 @@ const columnHelper = createColumnHelper<typeof features, Invoice>()
 const columns = columnHelper.columns([
   columnHelper.accessor('invoiceCode', {
     header: INVOICES_COL_CODE,
-    cell: (info) => <bdi dir="ltr">{info.getValue()}</bdi>,
+    cell: (info) => (
+      <span className="font-mono font-bold text-primary" dir="ltr">
+        {info.getValue()}
+      </span>
+    ),
   }),
   columnHelper.display({
     id: 'client',
     header: INVOICES_COL_CLIENT,
-    cell: (info) => clientLabel(info.row.original.client),
+    cell: (info) => (
+      <span className="font-medium text-on-surface">{clientLabel(info.row.original.client)}</span>
+    ),
   }),
   columnHelper.accessor('createdAt', {
     header: INVOICES_COL_DATE,
-    cell: (info) => formatInvoiceDate(info.getValue()),
+    cell: (info) => (
+      <span className="text-on-surface-variant">{formatInvoiceDate(info.getValue())}</span>
+    ),
   }),
   columnHelper.accessor('totalPrice', {
     header: INVOICES_COL_AMOUNT,
     cell: (info) => (
-      <span className={cn(isOverdue(info.row.original) && 'text-error')}>
+      <span
+        className={cn(
+          'font-mono font-bold',
+          isOverdue(info.row.original) ? 'text-error' : 'text-on-surface',
+        )}
+      >
         {formatNumber(info.getValue())} ج.م
       </span>
     ),
@@ -107,15 +128,26 @@ export function InvoicesTab({ sellerId }: { sellerId: string }) {
   const table = useTable({ features, columns, data })
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <KpiPill label={INVOICES_TAB_PILL_COLLECTED} tone="success" value={kpis.collected} />
+    <div className="flex flex-col gap-space-md">
+      <div className="grid grid-cols-1 gap-space-sm sm:grid-cols-3">
         <KpiPill
+          icon="verified"
+          label={INVOICES_TAB_PILL_COLLECTED}
+          tone="success"
+          value={kpis.collected}
+        />
+        <KpiPill
+          icon="pending_actions"
           label={INVOICES_TAB_PILL_IN_COLLECTION}
           tone="warning"
           value={kpis.inCollection}
         />
-        <KpiPill label={INVOICES_TAB_PILL_OVERDUE} tone="error" value={kpis.overdueTotal} />
+        <KpiPill
+          icon="warning"
+          label={INVOICES_TAB_PILL_OVERDUE}
+          tone="error"
+          value={kpis.overdueTotal}
+        />
       </div>
 
       {invoicesQuery.isLoading ? (
@@ -125,14 +157,18 @@ export function InvoicesTab({ sellerId }: { sellerId: string }) {
       ) : data.length === 0 ? (
         <StateMessage minHeightClassName="min-h-[160px]" text={INVOICES_EMPTY} />
       ) : (
-        <div className="max-h-[420px] overflow-auto rounded-xl bg-surface-container-lowest shadow-sm">
-          <table className="w-full">
-            <thead className="sticky top-0 bg-surface-container-lowest">
+        <div className="max-h-[420px] overflow-auto rounded-lg">
+          <table className="w-full border-collapse text-right">
+            <thead className="sticky top-0">
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr className="border-b border-surface-container" key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
+                <tr className="bg-surface-container-low" key={headerGroup.id}>
+                  {headerGroup.headers.map((header, index) => (
                     <th
-                      className="font-label-sm px-4 py-3 text-right text-label-sm text-on-surface-variant"
+                      className={cn(
+                        'font-label-md px-space-md py-space-sm text-label-md text-on-surface-variant',
+                        index === 0 && 'rounded-r-lg',
+                        index === headerGroup.headers.length - 1 && 'rounded-l-lg',
+                      )}
                       key={header.id}
                     >
                       {header.isPlaceholder ? null : <FlexRender header={header} />}
@@ -141,11 +177,17 @@ export function InvoicesTab({ sellerId }: { sellerId: string }) {
                 </tr>
               ))}
             </thead>
-            <tbody>
+            <tbody className="font-body-sm text-body-sm">
               {table.getRowModel().rows.map((row) => (
-                <tr className="border-b border-surface-container last:border-0" key={row.id}>
+                <tr
+                  className={cn(
+                    'transition-colors hover:bg-surface-container-low',
+                    row.index % 2 === 1 && 'bg-surface-container-low/30',
+                  )}
+                  key={row.id}
+                >
                   {row.getAllCells().map((cell) => (
-                    <td className="px-4 py-3" key={cell.id}>
+                    <td className="px-space-md py-space-sm" key={cell.id}>
                       <FlexRender cell={cell} />
                     </td>
                   ))}
