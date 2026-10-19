@@ -1,0 +1,67 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import * as productsApi from '@/api/products'
+import type {
+  CreateProductInput,
+  ProductListFilters,
+  UpdateStockAndPriceInput,
+} from '@/api/products.schema'
+
+export function useProductStats() {
+  return useQuery({
+    queryKey: ['products', 'stats'],
+    queryFn: productsApi.getStats,
+  })
+}
+
+export function useFeaturedProduct() {
+  return useQuery({
+    queryKey: ['products', 'featured'],
+    queryFn: productsApi.getFeatured,
+  })
+}
+
+export function useProducts(filters: ProductListFilters) {
+  return useQuery({
+    queryKey: ['products', 'list', filters],
+    queryFn: () => productsApi.getAll(filters),
+  })
+}
+
+function invalidateProductQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  void queryClient.invalidateQueries({ queryKey: ['products', 'list'] })
+  void queryClient.invalidateQueries({ queryKey: ['products', 'stats'] })
+  void queryClient.invalidateQueries({ queryKey: ['products', 'featured'] })
+  void queryClient.invalidateQueries({ queryKey: ['categories'] })
+}
+
+export function useCreateProduct() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateProductInput) => productsApi.create(input),
+    onSuccess: () => invalidateProductQueries(queryClient),
+  })
+}
+
+export function useUpdateProductStockAndPrice() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      input,
+    }: {
+      id: string
+      input: UpdateStockAndPriceInput
+    }) => productsApi.updateStockAndPrice(id, input),
+    onSuccess: () => invalidateProductQueries(queryClient),
+  })
+}
+
+export function useDeleteProduct() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => productsApi.remove(id),
+    onSuccess: () => invalidateProductQueries(queryClient),
+  })
+}
