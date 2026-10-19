@@ -25,7 +25,24 @@ function App() {
             <Route element={<NotFoundPage />} path="*" />
           </Route>
         </Routes>
-        <Toaster richColors position="top-center" />
+        <Toaster
+          icons={{
+            success: (
+              <span className="material-symbols-outlined text-[24px] text-secondary-fixed">
+                task_alt
+              </span>
+            ),
+          }}
+          position="bottom-left"
+          toastOptions={{
+            unstyled: true,
+            classNames: {
+              toast:
+                'flex items-center gap-space-sm rounded-xl bg-primary-container px-space-lg py-space-md text-on-primary shadow-2xl',
+              title: 'font-body-md text-body-md font-medium',
+            },
+          }}
+        />
       </BrowserRouter>
     </QueryClientProvider>
   )

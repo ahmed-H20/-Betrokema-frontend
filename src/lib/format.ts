@@ -25,3 +25,11 @@ export function arabicPlural(count: number, forms: ArabicPluralForms): string {
   if (mod100 >= 3 && mod100 <= 10) return forms.few
   return forms.many
 }
+
+// "12.4 مليون ج.م" once a value reaches a million, the plain grouped number
+// otherwise — see context/build-plan.md Chunk 2 data-honesty rule (team
+// sales formatting).
+export function formatMillionsOrPlain(value: number): string {
+  if (Math.abs(value) < 1_000_000) return formatNumber(value)
+  return `${(value / 1_000_000).toFixed(1)} مليون`
+}

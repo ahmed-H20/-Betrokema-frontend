@@ -209,6 +209,197 @@ export const TOAST_CATEGORY_CREATED = 'تم حفظ وتثبيت التصنيف �
 export const TOAST_CATEGORY_DELETED = 'تم حذف التصنيف بنجاح'
 export const GENERIC_ERROR = 'حدث خطأ غير متوقع'
 
+// Sellers & Clients (Chunk 2)
+export const SELLERS_PAGE_TITLE = 'مناديب المبيعات والعملاء الميدانيين'
+export const SELLERS_PAGE_SUBTITLE =
+  'متابعة الأداء الإقليمي، حصص المبيعات الميدانية، تحصيلات الفواتير، ومحفظة العملاء لكل مندوب'
+export const SELLERS_ADD_BUTTON = '+ تسجيل مندوب جديد'
+
+export const SELLER_PLURAL_FORMS = {
+  one: 'مندوب',
+  two: 'مندوبان',
+  few: 'مناديب',
+  many: 'مندوباً',
+}
+export const CLIENT_PLURAL_FORMS = {
+  one: 'عميل',
+  two: 'عميلان',
+  few: 'عملاء',
+  many: 'عميلاً',
+}
+
+export const SELLER_KPI_LOADING = 'جارِ تحميل مؤشرات المناديب...'
+export const SELLER_KPI_ERROR = 'تعذر تحميل مؤشرات المناديب'
+export const KPI_CERTIFIED_SELLERS_LABEL = 'المناديب المعتمدون'
+export const KPI_CERTIFIED_SELLERS_UNIT = (word: string) => `${word} ميدانياً`
+export const KPI_TEAM_SALES_LABEL = 'إجمالي مبيعات الفريق (الشهر)'
+export const KPI_TEAM_SALES_TARGET = (target: string) => `المستهدف: ${target} م. ج.م`
+export const KPI_TARGET_ACHIEVEMENT_LABEL = 'نسبة تحقيق المستهدف'
+export const KPI_TARGET_DAYS_REMAINING = (days: number) => `باقي ${days} أيام للإغلاق`
+export const KPI_ACTIVE_CLIENTS_LABEL = 'العملاء الميدانيون النشطون'
+export const KPI_ACTIVE_CLIENTS_UNIT = (word: string) => `${word} ومعرض طلاء`
+export const KPI_ACTIVE_CLIENTS_NEW = (count: number) =>
+  `+${count} عميلاً جديداً هذا الأسبوع`
+
+export const REPS_LIST_TITLE = 'قائمة المناديب الميدانيين'
+export const REPS_SORT_OPTION_PERFORMANCE = 'الأداء'
+export const REPS_SORT_OPTION_SALES = 'المبيعات'
+export const REPS_SORT_LABEL = (option: string) => `ترتيب حسب: ${option}`
+export const REPS_FILTER_BUTTON = 'تصفية'
+export const REPS_SEARCH_PLACEHOLDER = 'بحث باسم المندوب، الكود أو رقم الهاتف...'
+export const REPS_STATUS_ALL = 'كل الحالات'
+export const REPS_GOVERNORATE_ALL = 'كل المحافظات'
+export const REP_CARD_SALES_PREFIX = 'المبيعات:'
+export const REP_CARD_CLIENTS_COUNT = (count: string) => `${count} عميلاً`
+export const REPS_EMPTY = 'لا يوجد مناديب مطابقون لبحثك'
+export const REPS_ERROR = 'تعذر تحميل بيانات المناديب'
+export const REPS_LOADING = 'جارِ تحميل المناديب...'
+
+// Seller.status — VACATION has no label in the Stitch export (ui-strings.md
+// flags this gap); "في إجازة" coined here to match the other two labels'
+// register, logged in context/ui-tokens.md.
+export const SELLER_STATUS_LABELS = {
+  ACTIVE: 'نشط ميدانياً',
+  SUSPENDED: 'معلق',
+  VACATION: 'في إجازة',
+} as const
+
+export const REP_EDIT_BUTTON = 'تعديل البيانات'
+export const REP_MORE_ACTIONS_LABEL = 'خيارات إضافية'
+export const REP_METRIC_CURRENT_SALES = 'مبيعات الشهر الحالي'
+export const REP_METRIC_ACHIEVEMENT = 'نسبة الإنجاز'
+export const REP_METRIC_COMMISSION = 'العمولات المستحقة'
+export const REP_METRIC_COLLECTION = 'معدل التحصيل المالي'
+export const REP_COLLECTION_RATE_UNKNOWN = '—'
+export const REP_DETAIL_EMPTY = 'اختر مندوباً من القائمة لعرض بياناته'
+
+export const TAB_CLIENTS = (count: number) => `العملاء المسجلون (${count} عميل)`
+export const TAB_INVOICES = (count: number) => `فواتير المندوب والتحصيل (${count})`
+export const TAB_PERFORMANCE = 'الملف الوظيفي والأداء'
+
+export const CLIENTS_TAB_TITLE = 'محفظة عملاء المندوب'
+export const CLIENTS_TAB_SUBTITLE = 'معارض الدهانات، مقاولو التشطيبات، والشركات'
+export const CLIENTS_ADD_BUTTON = '+ إضافة عميل للمندوب'
+export const CLIENTS_COL_NAME = 'اسم العميل / المنشأة'
+export const CLIENTS_COL_CONTACT = 'المسؤول والهاتف'
+export const CLIENTS_COL_CREDIT = 'حد الائتمان'
+export const CLIENTS_COL_DEBT = 'المديونية الحالية'
+export const CLIENTS_COL_STATUS = 'حالة الدفع'
+export const CLIENT_STATUS_LABELS = {
+  regular: 'منتظم بالسداد',
+  over_credit: 'تجاوز الائتمان',
+  excellent: 'رصيد ممتاز',
+  settled: 'خالص تماماً',
+} as const
+export const CLIENT_STATUS_UNKNOWN = 'غير محدد'
+export const CLIENTS_EMPTY = 'لا يوجد عملاء مسجلون لهذا المندوب'
+export const CLIENTS_ERROR = 'تعذر تحميل بيانات العملاء'
+export const CLIENTS_LOADING = 'جارِ تحميل العملاء...'
+
+export const ADD_CLIENT_TITLE = 'تسجيل عميل جديد للمندوب'
+export const ADD_CLIENT_SUBTITLE = (repName: string) =>
+  `سيتم ربط العميل بمحفظة ${repName}`
+export const CLIENT_NAME_LABEL = 'اسم العميل'
+export const CLIENT_ORGANIZE_LABEL = 'اسم المنشأة أو الشركة'
+export const CLIENT_CONTACT_LABEL = 'المسؤول (اختياري)'
+export const CLIENT_PHONE_LABEL = 'رقم الهاتف'
+export const CLIENT_GOVERNORATE_LABEL = 'المحافظة'
+export const CLIENT_CITY_LABEL = 'المدينة'
+export const CLIENT_ADDRESS_LABEL = 'العنوان (اختياري)'
+export const CLIENT_CREDIT_LIMIT_LABEL = 'حد الائتمان الممنوح'
+export const CLIENT_COMMERCIAL_TYPE_LABEL = 'النشاط التجاري (اختياري)'
+export const CLIENT_NOTES_LABEL = 'ملاحظات (اختياري)'
+export const ADD_CLIENT_SUBMIT = 'حفظ وربط العميل'
+export const TOAST_CLIENT_CREATED = 'تم إضافة العميل بنجاح'
+
+export const INVOICES_TAB_PILL_COLLECTED = 'فواتير محصلة'
+export const INVOICES_TAB_PILL_IN_COLLECTION = 'قيد التحصيل (شيكات/آجل)'
+export const INVOICES_TAB_PILL_OVERDUE = 'متأخرات مستحقة'
+export const INVOICES_COL_CODE = 'رقم الفاتورة'
+export const INVOICES_COL_CLIENT = 'العميل المستلم'
+export const INVOICES_COL_DATE = 'تاريخ الإصدار'
+export const INVOICES_COL_AMOUNT = 'قيمة الفاتورة'
+export const INVOICES_COL_STATUS = 'حالة التحصيل'
+export const INVOICE_BADGE_PAID = 'تم السداد كلياً'
+export const INVOICE_BADGE_PARTIAL = 'سداد جزئي'
+export const INVOICE_BADGE_OVERDUE = 'متأخر عن السداد'
+export const INVOICE_BADGE_UNPAID = 'غير مسدد'
+export const INVOICE_BADGE_DUE = (date: string) => `مستحق في ${date}`
+export const INVOICES_EMPTY = 'لا توجد فواتير مسجلة لهذا المندوب'
+export const INVOICES_ERROR = 'تعذر تحميل الفواتير'
+export const INVOICES_LOADING = 'جارِ تحميل الفواتير...'
+
+export const PROFILE_COVERAGE_TITLE = 'نطاق التغطية'
+export const PROFILE_COVERAGE_REGION_LABEL = 'المنطقة:'
+export const PROFILE_COVERAGE_CITY_LABEL = 'المدينة:'
+export const PROFILE_COVERAGE_ADDRESS_LABEL = 'العنوان:'
+export const PROFILE_COVERAGE_EMPTY = 'لا تتوفر بيانات نطاق تغطية مسجلة'
+export const PROFILE_COMMISSION_TITLE = 'العمولة'
+export const PROFILE_COMMISSION_RATE_LABEL = 'نسبة العمولة'
+export const PROFILE_COMMISSION_AMOUNT_LABEL = 'العمولة المستحقة'
+export const PROFILE_COMMISSION_BASIS_NOTE =
+  'العمولة محسوبة على إجمالي مبيعات الشهر الحالي، وليس على المبلغ المحصل فعلياً'
+export const PROFILE_SUSPEND_BUTTON = 'تعليق الحساب مؤقتاً'
+export const PROFILE_REACTIVATE_BUTTON = 'إعادة التفعيل'
+
+export const SUSPEND_DIALOG_TITLE = 'تعليق حساب المندوب'
+export const SUSPEND_DIALOG_DESCRIPTION =
+  'سيتم تعليق حساب المندوب مؤقتاً ولن يظهر كمندوب نشط. يمكنك إعادة تفعيله في أي وقت.'
+export const SUSPEND_REASON_LABEL = 'سبب التعليق (اختياري)'
+export const SUSPEND_CONFIRM_BUTTON = 'تعليق الحساب'
+export const REACTIVATE_DIALOG_TITLE = 'إعادة تفعيل حساب المندوب'
+export const REACTIVATE_DIALOG_DESCRIPTION = 'سيعود المندوب للعمل كمندوب نشط فوراً.'
+export const REACTIVATE_CONFIRM_BUTTON = 'إعادة التفعيل'
+export const TOAST_SELLER_STATUS_UPDATED = 'تم تحديث حالة المندوب بنجاح'
+
+export const REP_MODAL_TITLE_CREATE = 'تسجيل مندوب مبيعات جديد'
+export const REP_MODAL_TITLE_EDIT = 'تعديل بيانات المندوب'
+export const REP_MODAL_SUBTITLE = 'إدخال بيانات المندوب الرسمية وتحديد النطاق الجغرافي'
+export const REP_NAME_LABEL = 'الاسم بالكامل (ثلاثي أو رباعي)'
+export const REP_PHOTO_URL_LABEL = 'رابط صورة المندوب (اختياري)'
+export const REP_PHOTO_URL_PLACEHOLDER = 'https://example.com/photo.jpg'
+export const REP_PHONE_LABEL = 'رقم الهاتف (الواتساب والمكالمات)'
+export const REP_GOVERNORATE_LABEL = 'المحافظة'
+export const REP_GOVERNORATE_PLACEHOLDER = 'اختر المحافظة'
+export const REP_REGION_LABEL = 'المنطقة الميدانية (اختياري)'
+export const REP_PERFORMANCE_SECTION = 'بيانات الأداء (اختياري)'
+export const REP_TITLE_LABEL = 'المسمى الوظيفي'
+export const REP_SECTOR_LABEL = 'القطاع'
+export const REP_MONTHLY_TARGET_LABEL = 'المستهدف الشهري (ج.م)'
+export const REP_COMMISSION_RATE_LABEL = 'نسبة العمولة (%)'
+export const REP_MODAL_SUBMIT = 'حفظ بيانات المندوب'
+export const TOAST_SELLER_SAVED = 'تم حفظ بيانات المندوب'
+
+export const REP_GOVERNORATE_OPTIONS = [
+  'القاهرة',
+  'الجيزة',
+  'الإسكندرية',
+  'الشرقية',
+  'الدقهلية',
+  'القليوبية',
+] as const
+
+export const DELETE_SELLER_BUTTON = 'حذف المندوب'
+export const DELETE_SELLER_BLOCKED_TITLE = 'لا يمكن حذف هذا المندوب'
+export const DELETE_SELLER_BLOCKED_MESSAGE =
+  'لا يمكن حذف مندوب لديه عملاء أو فواتير، يمكنك تعليق الحساب بدلاً من ذلك'
+export const DELETE_SELLER_BLOCKED_SUSPEND_BUTTON = 'تعليق الحساب بدلاً من ذلك'
+export const DELETE_SELLER_CONFIRM_TITLE = 'تأكيد حذف المندوب'
+export const DELETE_SELLER_CONFIRM_DESCRIPTION =
+  'سيتم حذف هذا المندوب نهائياً ولا يمكن التراجع عن هذا الإجراء.'
+export const DELETE_SELLER_CONFIRM_BUTTON = 'حذف نهائي'
+export const TOAST_SELLER_DELETED = 'تم حذف المندوب بنجاح'
+
+export const VALIDATION_SELLER_NAME_REQUIRED = 'الاسم الكامل مطلوب'
+export const VALIDATION_SELLER_PHONE_INVALID =
+  'رقم هاتف مصري غير صالح (مثال: 01012345678)'
+export const SELLER_PHOTO_URL_ERROR =
+  'يجب إدخال رابط صالح يبدأ بـ http:// أو https://'
+export const VALIDATION_CLIENT_NAME_REQUIRED = 'اسم العميل مطلوب'
+export const VALIDATION_CLIENT_ORGANIZE_REQUIRED = 'اسم المنشأة أو الشركة مطلوب'
+export const VALIDATION_CLIENT_PHONE_INVALID =
+  'رقم هاتف مصري غير صالح (مثال: 01012345678)'
+
 // Validation messages
 export const VALIDATION_PRODUCT_NAME_REQUIRED = 'اسم المنتج التجاري مطلوب'
 export const VALIDATION_PRODUCT_CATEGORY_REQUIRED = 'التصنيف الرئيسي مطلوب'

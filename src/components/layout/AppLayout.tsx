@@ -12,6 +12,7 @@ import {
   USER_ROLE_LABEL,
 } from '@/constants/strings'
 import { useProductStats } from '@/features/products/hooks'
+import { useSellerStats } from '@/features/sellers/hooks'
 
 function formatToday() {
   return new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
@@ -31,9 +32,20 @@ function useProductsNavBadge() {
   return data?.totalProducts.count
 }
 
+// Reuses the same ['sellers','stats'] query the Sellers page's KPI row
+// already fires — no extra request while on /sellers, only a background one
+// elsewhere. Per context/.bridge-plan.md GLOBAL rule, styled as a
+// secondary-fixed pill rather than the Products badge's neutral gray — a
+// deliberate color deviation logged in context/ui-tokens.md.
+function useSellersNavBadge() {
+  const { data } = useSellerStats()
+  return data?.certifiedSellers.total
+}
+
 export function AppLayout() {
   const today = formatToday()
   const productsBadge = useProductsNavBadge()
+  const sellersBadge = useSellersNavBadge()
 
   return (
     <div className="min-h-screen bg-surface">
@@ -86,6 +98,11 @@ export function AppLayout() {
                   {item.path === '/products' && productsBadge !== undefined ? (
                     <span className="font-label-sm rounded-full bg-surface-container-highest px-1.5 py-0.5 text-label-sm text-on-surface-variant">
                       {formatNumber(productsBadge)}
+                    </span>
+                  ) : null}
+                  {item.path === '/sellers' && sellersBadge !== undefined ? (
+                    <span className="font-label-sm rounded-full bg-secondary-fixed px-1.5 py-0.5 text-label-sm text-on-secondary-fixed-variant">
+                      {formatNumber(sellersBadge)}
                     </span>
                   ) : null}
                 </NavLink>
