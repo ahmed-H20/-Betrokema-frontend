@@ -13,6 +13,7 @@ import {
 } from '@/constants/strings'
 import { useProductStats } from '@/features/products/hooks'
 import { useSellerStats } from '@/features/sellers/hooks'
+import { useWarehouseStats } from '@/features/warehouses/hooks'
 
 function formatToday() {
   return new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
@@ -42,10 +43,20 @@ function useSellersNavBadge() {
   return data?.certifiedSellers.total
 }
 
+// Reuses the same ['warehouses','stats'] query the Warehouses page's KPI row
+// already fires — no extra request while on /warehouses. Styled as a
+// secondary-fixed pill per context/.bridge-plan.md's GLOBAL rule (same
+// convention as the Sellers badge, not the Products badge's neutral gray).
+function useWarehousesNavBadge() {
+  const { data } = useWarehouseStats()
+  return data?.warehouses.total
+}
+
 export function AppLayout() {
   const today = formatToday()
   const productsBadge = useProductsNavBadge()
   const sellersBadge = useSellersNavBadge()
+  const warehousesBadge = useWarehousesNavBadge()
 
   return (
     <div className="min-h-screen bg-surface">
@@ -103,6 +114,11 @@ export function AppLayout() {
                   {item.path === '/sellers' && sellersBadge !== undefined ? (
                     <span className="font-label-sm rounded-full bg-secondary-fixed px-1.5 py-0.5 text-label-sm text-on-secondary-fixed-variant">
                       {formatNumber(sellersBadge)}
+                    </span>
+                  ) : null}
+                  {item.path === '/warehouses' && warehousesBadge !== undefined ? (
+                    <span className="font-label-sm rounded-full bg-secondary-fixed px-1.5 py-0.5 text-label-sm text-on-secondary-fixed-variant">
+                      {formatNumber(warehousesBadge)}
                     </span>
                   ) : null}
                 </NavLink>

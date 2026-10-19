@@ -428,7 +428,215 @@ export const VALIDATION_CLIENT_ORGANIZE_REQUIRED = 'اسم المنشأة أو �
 export const VALIDATION_CLIENT_PHONE_INVALID =
   'رقم هاتف مصري غير صالح (مثال: 01012345678)'
 
+// Warehouses (Chunk 3)
+export const WAREHOUSES_PAGE_TITLE = 'إدارة وإعداد المخازن والمستودعات'
+export const WAREHOUSES_EXPORT_BUTTON = 'تصدير تقرير المخزون (CSV)'
+export const WAREHOUSES_ADD_BUTTON = '+ إضافة مخزن جديد'
+
+export const KPI_WAREHOUSES_LABEL = 'المخازن'
+export const KPI_WAREHOUSES_CENTERS = (count: number) => `${count} مراكز`
+export const KPI_STOCK_BALANCE_LABEL = 'رصيد المنتجات والكيماويات'
+export const KPI_STOCK_BALANCE_SUBTITLE = (codePhrase: string) =>
+  `موزعة عبر ${codePhrase} منتج نشط`
+export const PRODUCT_CODE_PLURAL_FORMS = {
+  one: 'كود واحد',
+  two: 'كودان',
+  few: 'أكواد',
+  many: 'كود',
+}
+export const KPI_TRANSFERS_CRITICAL_LABEL = 'مناقلات وأرصدة حرجة'
+export const KPI_TRANSFERS_PENDING_UNIT = 'طلبات مناقلة معلقة'
+export const TRANSFER_PENDING_PLURAL_FORMS = {
+  one: 'طلب مناقلة معلق',
+  two: 'طلبان معلقان',
+  few: 'طلبات مناقلة معلقة',
+  many: 'طلباً معلقاً',
+}
+export const TRANSFERS_PENDING_NONE = 'لا توجد طلبات معلقة'
+export const WAREHOUSE_CENTER_PLURAL_FORMS = {
+  one: 'مركز واحد',
+  two: 'مركزان',
+  few: 'مراكز',
+  many: 'مركزاً',
+}
+export const KPI_TRANSFERS_ACTION_REQUIRED = 'يتطلب اعتماد مسؤول الإمداد اللوجستي'
+export const WAREHOUSES_KPI_LOADING = 'جارِ تحميل مؤشرات المخازن...'
+export const WAREHOUSES_KPI_ERROR = 'تعذر تحميل مؤشرات المخازن'
+
+export const WAREHOUSES_SECTION_TITLE = 'المستودعات الإقليمية المعتمدة'
+export const WAREHOUSES_FILTER_ALL = (count: number) => `الكل (${count})`
+export const WAREHOUSES_FILTER_ACTIVE = (count: number) => `نشط (${count})`
+export const WAREHOUSES_EMPTY = 'لا توجد مستودعات مطابقة'
+export const WAREHOUSES_ERROR = 'تعذر تحميل المستودعات'
+export const WAREHOUSES_LOADING = 'جارِ تحميل المستودعات...'
+
+export const WAREHOUSE_CODE_LABEL = 'رمز المحطة:'
+export const WAREHOUSE_CAPACITY_UNIT = 'بالتة'
+export const WAREHOUSE_ADDRESS_LABEL = 'العنوان'
+export const WAREHOUSE_SUPERVISOR_LABEL = 'أمين العهدة'
+export const WAREHOUSE_CAPACITY_USED_LABEL = 'الطاقة المستغلة'
+export const WAREHOUSE_LINKED_PRODUCTS_LABEL = 'المنتجات المربوطة'
+export const WAREHOUSE_TOTAL_STOCK_LABEL = 'الرصيد الفعلي الإجمالي'
+export const WAREHOUSE_STOCK_UNIT = 'وحدة'
+export const WAREHOUSE_DISTRIBUTE_BUTTON = 'توزيع المنتجات'
+export const WAREHOUSE_EDIT_TOOLTIP = 'تعديل بيانات المستودع'
+export const WAREHOUSE_DELETE_TOOLTIP = 'حذف المستودع'
+
+export const WAREHOUSE_STATUS_LABELS = {
+  نشط: 'نشط',
+  'جرد دوري': 'جرد دوري',
+  معلق: 'معلق',
+  صيانة: 'صيانة',
+} as const
+
+export const WAREHOUSE_FORM_TITLE_CREATE = 'إضافة مخزن جديد'
+export const WAREHOUSE_FORM_TITLE_EDIT = (name: string) => `تعديل بيانات: ${name}`
+export const WAREHOUSE_FORM_BADGE_CREATE = 'سجل جديد'
+export const WAREHOUSE_FORM_BADGE_EDIT = 'تحديث مستودع قائم'
+export const WAREHOUSE_FORM_SUBTITLE =
+  'قم بتهيئة السجلات الجغرافية، تعيين أمين المستودع، وتحديد السقف الأعلى لاستيعاب المنصات لتجنب التكدس.'
+export const WAREHOUSE_NAME_LABEL = 'اسم المستودع / الفرع'
+export const WAREHOUSE_NAME_PLACEHOLDER = 'مثال: مستودع السويس اللوجستي'
+export const WAREHOUSE_GOVERNORATE_LABEL = 'المحافظة الإقليمية'
+export const WAREHOUSE_GOVERNORATE_PLACEHOLDER = 'اختر المحافظة من القائمة...'
+export const WAREHOUSE_GOVERNORATE_OPTIONS = [
+  { value: 'الشرقية', label: 'الشرقية (العاشر من رمضان / بلبيس)' },
+  { value: 'المنوفية', label: 'المنوفية (مدينة السادات)' },
+  { value: 'الإسكندرية', label: 'الإسكندرية (برج العرب / العامرية)' },
+  { value: 'أسيوط', label: 'أسيوط (الصعيد والوجه القبلي)' },
+  { value: 'القاهرة', label: 'القاهرة (حلوان / المرج / التجمع)' },
+  { value: 'الجيزة', label: 'الجيزة (السادس من أكتوبر)' },
+  { value: 'السويس', label: 'السويس (منطقة القناة)' },
+] as const
+export const WAREHOUSE_ADDRESS_FORM_LABEL = 'العنوان التفصيلي ومجمع المخازن'
+export const WAREHOUSE_ADDRESS_PLACEHOLDER = 'رقم القطعة، المجمع الصناعي، علامة مميزة...'
+export const WAREHOUSE_SUPERVISOR_NAME_LABEL = 'أمين العهدة المسؤول'
+export const WAREHOUSE_SUPERVISOR_NAME_PLACEHOLDER = 'الاسم ثلاثي'
+export const WAREHOUSE_EMERGENCY_PHONE_LABEL = 'هاتف الطوارئ'
+export const WAREHOUSE_EMERGENCY_PHONE_PLACEHOLDER = '01000000000'
+export const WAREHOUSE_CAPACITY_LABEL = 'السعة الاستيعابية'
+export const WAREHOUSE_OCCUPIED_PALLETS_LABEL = 'المنصات المشغولة حالياً'
+export const WAREHOUSE_CLASSIFICATION_LABEL = 'تصنيف التشغيل'
+export const WAREHOUSE_CLASSIFICATION_OPTIONS = [
+  'مستودع رئيسي',
+  'توزيع محلي سريع',
+  'كيماويات ومواد خام',
+] as const
+export const WAREHOUSE_ACTIVE_CHECKBOX_LABEL =
+  'تنشيط المستودع فوراً وبدء استقبال الحركات المخزنية'
+export const WAREHOUSE_FORM_SUBMIT_CREATE = 'حفظ وتثبيت المخزن'
+export const WAREHOUSE_FORM_SUBMIT_EDIT = 'حفظ التعديلات الميدانية'
+export const WAREHOUSE_FORM_RESET = 'تفريغ الحقول'
+export const TOAST_WAREHOUSE_SAVED = 'تم حفظ بيانات المستودع بنجاح'
+
+export const DELETE_WAREHOUSE_CONFIRM_TITLE = 'تأكيد حذف المستودع'
+export const DELETE_WAREHOUSE_CONFIRM_DESCRIPTION =
+  'سيتم حذف هذا المستودع نهائياً ولا يمكن التراجع عن هذا الإجراء.'
+export const DELETE_WAREHOUSE_CONFIRM_BUTTON = 'حذف نهائي'
+export const DELETE_WAREHOUSE_BLOCKED_TITLE = 'لا يمكن حذف هذا المستودع'
+export const DELETE_WAREHOUSE_BLOCKED_MESSAGE =
+  'قم بنقل الأرصدة أو تصفيتها أولاً'
+export const TOAST_WAREHOUSE_DELETED = 'تم حذف المستودع بنجاح'
+
+export const INVENTORY_SECTION_TITLE = 'توزيع المنتجات والكميات المخزنية'
+export const INVENTORY_SECTION_SUBTITLE =
+  'مراقبة الأرصدة المتوفرة، تعديل حد الطلب، وإسناد مواقع التخزين الداخلية (الممر والبالتة)'
+export const INVENTORY_SEARCH_PLACEHOLDER = 'بحث باسم المنتج أو الكود...'
+export const INVENTORY_ASSIGN_BUTTON = '+ تخصيص منتج للمخزن'
+export const INVENTORY_COL_PRODUCT = 'المنتج والتوصيف الفني'
+export const INVENTORY_COL_SKU = 'كود الصنف (SKU)'
+export const INVENTORY_COL_PACKAGING = 'وحدة التعبئة'
+export const INVENTORY_COL_BIN = 'موقع الرف والتخزين'
+export const INVENTORY_COL_STOCK = 'الرصيد الفعلي الحالي'
+export const INVENTORY_COL_REORDER = 'حد إعادة الطلب'
+export const INVENTORY_COL_STATUS = 'حالة التوفر'
+export const INVENTORY_COL_ACTIONS = 'إجراءات'
+export const INVENTORY_REORDER_UNIT_SUFFIX = (unitWord: string) => `${unitWord}`
+export const INVENTORY_CRITICAL_SUFFIX = 'فقط!'
+export const INVENTORY_EMPTY = 'لا توجد أصناف مخزنة في هذا المستودع'
+export const INVENTORY_ERROR = 'تعذر تحميل بيانات المخزون'
+export const INVENTORY_LOADING = 'جارِ تحميل المخزون...'
+export const INVENTORY_FOOTER = (
+  shown: number,
+  total: number,
+  productWord: string,
+) => `عرض ${shown} أصناف من أصل ${total} ${productWord} مخزناً داخل المستودع المحدد`
+export const INVENTORY_UPDATE_TOOLTIP = 'تحديث الرصيد الفوري'
+export const INVENTORY_TRANSFER_TOOLTIP = 'نقل إلى مخزن آخر'
+export const INVENTORY_URGENT_TRANSFER_TOOLTIP = 'طلب توريد عاجل من مستودع آخر'
+
+export const ASSIGN_PRODUCT_TITLE = (warehouseName: string) =>
+  `إسناد منتج أو خامة لمستودع ${warehouseName}`
+export const ASSIGN_PRODUCT_SELECT_LABEL = 'اختر صنف الدهان / الكيماويات'
+export const ASSIGN_PRODUCT_STOCK_LABEL = 'الرصيد المبدئي (وحدات)'
+export const ASSIGN_PRODUCT_REORDER_LABEL = 'حد تنبيه إعادة الطلب'
+export const ASSIGN_PRODUCT_BIN_LABEL = 'الموقع الداخلي (الرف/الممر)'
+export const ASSIGN_PRODUCT_SKU_LABEL = 'كود الصنف (SKU) (اختياري)'
+export const ASSIGN_PRODUCT_PACKAGING_LABEL = 'وحدة التعبئة (اختياري)'
+export const ASSIGN_PRODUCT_SUBMIT = 'تأكيد التخصيص للمستودع'
+export const ASSIGN_PRODUCT_SUBMIT_UPDATE = 'تحديث التخصيص'
+export const ASSIGN_PRODUCT_OVERWRITE_TITLE = 'تأكيد استبدال الرصيد'
+export const ASSIGN_PRODUCT_OVERWRITE_MESSAGE = (current: number, next: number) =>
+  `سيتم استبدال الرصيد الحالي (${current}) بـ ${next}`
+export const ASSIGN_PRODUCT_TRUNCATED_NOTE =
+  'تم عرض أول 500 منتج فقط — استخدم البحث لتضييق النتائج'
+export const TOAST_PRODUCT_ASSIGNED = 'تم تخصيص المنتج داخل المستودع بنجاح'
+
+export const EDIT_INVENTORY_ITEM_TITLE = 'تحديث بيانات الصنف المخزني'
+export const EDIT_INVENTORY_ITEM_SUBMIT = 'حفظ التحديث'
+export const TOAST_INVENTORY_ITEM_UPDATED = 'تم تحديث بيانات الصنف المخزني بنجاح'
+
+export const TRANSFER_MODAL_TITLE = 'إنشاء إذن مناقلة بين المستودعات'
+export const TRANSFER_FROM_LABEL = 'من مستودع (المصدر):'
+export const TRANSFER_TO_LABEL = 'إلى مستودع (الوجهة):'
+export const TRANSFER_PRODUCT_LABEL = 'المنتج المراد نقله:'
+export const TRANSFER_QUANTITY_LABEL = 'الكمية المنقولة:'
+export const TRANSFER_DRIVER_LABEL = 'رقم سيارة النقل / السائق:'
+export const TRANSFER_SUBMIT = 'إنشاء إذن المناقلة'
+export const TOAST_TRANSFER_CREATED = (code: string) =>
+  `تم إنشاء إذن المناقلة رقم ${code} بنجاح`
+export const VALIDATION_TRANSFER_SAME_WAREHOUSE = 'يجب اختيار مستودعين مختلفين'
+export const VALIDATION_TRANSFER_PRODUCT_REQUIRED = 'يجب اختيار منتج للنقل'
+export const VALIDATION_TRANSFER_QUANTITY_INVALID = 'الكمية يجب أن تكون عدداً صحيحاً أكبر من صفر'
+export const VALIDATION_TRANSFER_QUANTITY_EXCEEDS = (available: number) =>
+  `الكمية المتاحة في المستودع المصدر: ${available} فقط`
+
+export const TRANSFERS_DIALOG_TITLE = 'طلبات المناقلة بين المستودعات'
+export const TRANSFERS_DIALOG_CLOSE = 'إغلاق'
+export const TRANSFERS_COL_CODE = 'رقم الإذن'
+export const TRANSFERS_COL_ROUTE = 'من / إلى'
+export const TRANSFERS_COL_ITEMS = 'الأصناف'
+export const TRANSFERS_COL_DATE = 'التاريخ'
+export const TRANSFERS_COL_STATUS = 'الحالة'
+export const TRANSFERS_COL_ACTIONS = 'إجراءات'
+export const TRANSFER_STATUS_LABELS = {
+  pending: 'بانتظار الاعتماد',
+  approved: 'معتمدة',
+  completed: 'مكتملة',
+  cancelled: 'ملغاة',
+  rejected: 'مرفوضة',
+} as const
+export const TRANSFER_COMPLETE_ACTION = 'اعتماد وتنفيذ المناقلة'
+export const TRANSFER_REJECT_ACTION = 'رفض الطلب'
+export const TRANSFER_STOCK_MOVED_NOTE = 'تم تنفيذ حركة المخزون'
+export const TRANSFERS_EMPTY = 'لا توجد طلبات مناقلة'
+export const TRANSFERS_ERROR = 'تعذر تحميل طلبات المناقلة'
+export const TRANSFERS_LOADING = 'جارِ تحميل طلبات المناقلة...'
+export const TOAST_TRANSFER_UPDATED = 'تم تحديث حالة المناقلة بنجاح'
+export const TRANSFER_STALE_ERROR =
+  'تم تحديث حالة هذا الطلب من جهة أخرى، يرجى إعادة الفتح والمحاولة مجدداً'
+
+export const CSV_REPORT_FILENAME_PREFIX = 'warehouse-inventory-report'
+
 // Validation messages
+export const VALIDATION_WAREHOUSE_NAME_REQUIRED = 'اسم المستودع / الفرع مطلوب'
+export const VALIDATION_WAREHOUSE_GOVERNORATE_REQUIRED = 'المحافظة الإقليمية مطلوبة'
+export const VALIDATION_WAREHOUSE_ADDRESS_REQUIRED = 'العنوان التفصيلي مطلوب'
+export const VALIDATION_WAREHOUSE_CAPACITY_MIN = 'السعة يجب أن تكون على الأقل 1 بالتة'
+export const VALIDATION_ASSIGN_PRODUCT_REQUIRED = 'يجب اختيار منتج'
+export const VALIDATION_ASSIGN_STOCK_NEGATIVE = 'الرصيد لا يمكن أن يكون سالباً'
+export const VALIDATION_ASSIGN_REORDER_NEGATIVE = 'حد إعادة الطلب لا يمكن أن يكون سالباً'
+
 export const VALIDATION_PRODUCT_NAME_REQUIRED = 'اسم المنتج التجاري مطلوب'
 export const VALIDATION_PRODUCT_CATEGORY_REQUIRED = 'التصنيف الرئيسي مطلوب'
 export const VALIDATION_QUANTITY_NEGATIVE = 'الكمية لا يمكن أن تكون سالبة'

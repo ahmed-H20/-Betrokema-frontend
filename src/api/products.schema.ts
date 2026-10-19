@@ -110,6 +110,23 @@ export const productStatsResponseSchema = z.object({
 })
 export type ProductStats = z.infer<typeof productStatsResponseSchema>['data']
 
+// Lean shape for GET /products?limit=500&field=name,code — the warehouse
+// transfer/assign-product pickers only ever need id/name/code, and the full
+// productSchema above requires fields (e.g. quantity) the server's `field`
+// projection omits.
+export const productPickerItemSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  code: z.string().optional().default(''),
+})
+export type ProductPickerItem = z.infer<typeof productPickerItemSchema>
+
+export const productPickerResponseSchema = z.object({
+  status: z.literal('success'),
+  totalCount: z.number().optional(),
+  data: z.array(productPickerItemSchema),
+})
+
 export type ProductListFilters = {
   category?: string
   search?: string

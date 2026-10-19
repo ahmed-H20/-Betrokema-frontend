@@ -4,12 +4,14 @@ import {
   featuredProductResponseSchema,
   productEnvelopeSchema,
   productListResponseSchema,
+  productPickerResponseSchema,
   productStatsResponseSchema,
   updateStockAndPriceInputSchema,
   type CreateProductInput,
   type Product,
   type ProductListFilters,
   type ProductListResponse,
+  type ProductPickerItem,
   type ProductStats,
   type UpdateStockAndPriceInput,
 } from '@/api/products.schema'
@@ -67,4 +69,18 @@ export async function updateStockAndPrice(
 
 export async function remove(id: string): Promise<void> {
   await request<unknown>(`/products/${id}`, { method: 'DELETE' })
+}
+
+// Warehouse transfer/assign-product pickers — see context/.bridge-plan.md
+// Chunk 3 build order step 1.
+export async function getForPicker(): Promise<{
+  products: ProductPickerItem[]
+  totalCount: number
+}> {
+  const raw = await request<unknown>('/products?limit=500&field=name,code')
+  const parsed = productPickerResponseSchema.parse(raw)
+  return {
+    products: parsed.data,
+    totalCount: parsed.totalCount ?? parsed.data.length,
+  }
 }

@@ -153,6 +153,11 @@ export function RepCard({
             </span>
           </div>
         </div>
+        {seller.statusNote ? (
+          <div className="font-label-sm mt-space-xs text-label-sm text-on-surface-variant">
+            {seller.statusNote}
+          </div>
+        ) : null}
       </button>
     )
   }
