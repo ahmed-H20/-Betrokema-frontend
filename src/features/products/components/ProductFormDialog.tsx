@@ -1,9 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import * as warehousesApi from '@/api/warehouses'
 import { Dialog, DialogHeader } from '@/components/ui/Dialog'
 import {
   GENERIC_ERROR,
@@ -34,7 +32,7 @@ import {
   TOAST_PRODUCT_CREATED,
 } from '@/constants/strings'
 import { useCategories } from '@/features/categories/hooks'
-import { useCreateProduct } from '@/features/products/hooks'
+import { useCreateProduct, useWarehouseNames } from '@/features/products/hooks'
 import { buildCreateProductPayload } from '@/features/products/productForm'
 import {
   productFormDefaults,
@@ -62,10 +60,7 @@ export function ProductFormDialog({
   onOpenChange,
 }: ProductFormDialogProps) {
   const categoriesQuery = useCategories()
-  const warehousesQuery = useQuery({
-    queryKey: ['warehouses', 'names'],
-    queryFn: warehousesApi.getAllNames,
-  })
+  const warehousesQuery = useWarehouseNames()
   const createProduct = useCreateProduct()
 
   const {

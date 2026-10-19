@@ -62,7 +62,7 @@ function KpiCard({
           >
             {label}
           </span>
-          <div className="flex items-baseline gap-2" dir="ltr">
+          <div className="flex items-baseline gap-2">
             <span
               className={`font-headline-xl text-headline-xl text-primary ${valueClassName ?? ''}`}
             >

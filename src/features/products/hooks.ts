@@ -1,10 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as productsApi from '@/api/products'
+import * as warehousesApi from '@/api/warehouses'
 import type {
   CreateProductInput,
   ProductListFilters,
   UpdateStockAndPriceInput,
 } from '@/api/products.schema'
+
+// Minimal seam for the product form's warehouse <select> — see
+// src/api/warehouses.ts. Lives here rather than in its own feature's
+// hooks.ts since the full Warehouse resource isn't built until Chunk 3.
+export function useWarehouseNames() {
+  return useQuery({
+    queryKey: ['warehouses', 'names'],
+    queryFn: warehousesApi.getAllNames,
+  })
+}
 
 export function useProductStats() {
   return useQuery({
