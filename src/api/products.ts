@@ -22,6 +22,7 @@ function buildQuery(filters: ProductListFilters): string {
   if (filters.search) params.set('search', filters.search)
   if (filters.page) params.set('page', String(filters.page))
   if (filters.limit) params.set('limit', String(filters.limit))
+  if (filters.sort) params.set('sort', filters.sort)
   const query = params.toString()
   return query ? `?${query}` : ''
 }

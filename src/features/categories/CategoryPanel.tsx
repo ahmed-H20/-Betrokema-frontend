@@ -11,6 +11,7 @@ import {
   CATEGORIES_ERROR,
   CATEGORIES_LOADING,
   CATEGORY_DELETE_BLOCKED,
+  CATEGORY_DELETE_BLOCKED_TOOLTIP,
   CATEGORY_DELETE_CONFIRM_BUTTON,
   CATEGORY_DELETE_CONFIRM_DESCRIPTION,
   CATEGORY_DELETE_CONFIRM_TITLE,
@@ -23,9 +24,11 @@ import {
   CATEGORY_FORM_TITLE,
   CATEGORY_LIST_TITLE,
   GENERIC_ERROR,
+  PRODUCT_PLURAL_FORMS,
   TOAST_CATEGORY_CREATED,
   TOAST_CATEGORY_DELETED,
 } from '@/constants/strings'
+import { arabicPlural } from '@/lib/format'
 import {
   useCategories,
   useCreateCategory,
@@ -52,7 +55,12 @@ function CategoryDeleteAction({ category }: { category: Category }) {
 
   function handleOpen() {
     if (blocked) {
-      toast.error(CATEGORY_DELETE_BLOCKED(category.productsCount))
+      toast.error(
+        CATEGORY_DELETE_BLOCKED(
+          category.productsCount,
+          arabicPlural(category.productsCount, PRODUCT_PLURAL_FORMS),
+        ),
+      )
       return
     }
     setOpen(true)
@@ -64,7 +72,7 @@ function CategoryDeleteAction({ category }: { category: Category }) {
         className="flex h-8 w-8 items-center justify-center rounded-lg text-error transition-colors hover:bg-error-container disabled:cursor-not-allowed disabled:opacity-40"
         disabled={blocked}
         onClick={handleOpen}
-        title={CATEGORY_DELETE_TITLE}
+        title={blocked ? CATEGORY_DELETE_BLOCKED_TOOLTIP : CATEGORY_DELETE_TITLE}
         type="button"
       >
         <span className="material-symbols-outlined text-[18px]">delete</span>

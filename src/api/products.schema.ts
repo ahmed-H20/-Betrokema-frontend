@@ -115,6 +115,7 @@ export type ProductListFilters = {
   search?: string
   page?: number
   limit?: number
+  sort?: string
 }
 
 export const createProductInputSchema = z.object({

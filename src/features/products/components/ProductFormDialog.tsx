@@ -83,6 +83,7 @@ export function ProductFormDialog({
 
   const imagesField = useFieldArray({ control, name: 'images' })
   const features = watch('features')
+  const quantity = watch('quantity')
 
   useEffect(() => {
     if (open) reset(productFormDefaults)
@@ -101,6 +102,7 @@ export function ProductFormDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open} widthClassName="max-w-4xl">
       <DialogHeader
+        icon="add_box"
         onClose={() => onOpenChange(false)}
         subtitle={PRODUCT_MODAL_SUBTITLE}
         title={PRODUCT_MODAL_TITLE}
@@ -117,7 +119,9 @@ export function ProductFormDialog({
             </h4>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className={labelClassName}>{PRODUCT_NAME_LABEL}</label>
+                <label className={labelClassName}>
+                  {PRODUCT_NAME_LABEL} <span className="text-error">*</span>
+                </label>
                 <input
                   className={inputClassName}
                   placeholder={PRODUCT_NAME_PLACEHOLDER}
@@ -132,7 +136,7 @@ export function ProductFormDialog({
               </div>
               <div>
                 <label className={labelClassName}>
-                  {PRODUCT_CATEGORY_LABEL}
+                  {PRODUCT_CATEGORY_LABEL} <span className="text-error">*</span>
                 </label>
                 <select className={inputClassName} {...register('category')}>
                   <option value="">{PRODUCT_CATEGORY_PLACEHOLDER}</option>
@@ -196,11 +200,29 @@ export function ProductFormDialog({
                 <label className={labelClassName}>
                   {PRODUCT_INITIAL_QUANTITY_LABEL}
                 </label>
-                <input
-                  className={compactInputClassName}
-                  type="number"
-                  {...register('quantity', { valueAsNumber: true })}
-                />
+                <div className="flex items-center">
+                  <button
+                    className="flex h-10 w-10 items-center justify-center rounded-r-lg bg-surface-container-highest text-lg font-bold text-on-surface transition-colors hover:bg-surface-container"
+                    onClick={() =>
+                      setValue('quantity', Math.max(0, (quantity || 0) - 5))
+                    }
+                    type="button"
+                  >
+                    -
+                  </button>
+                  <input
+                    className="font-headline-sm h-10 w-full bg-surface-container-lowest text-center text-headline-sm text-primary focus:outline-none"
+                    type="number"
+                    {...register('quantity', { valueAsNumber: true })}
+                  />
+                  <button
+                    className="flex h-10 w-10 items-center justify-center rounded-l-lg bg-surface-container-highest text-lg font-bold text-on-surface transition-colors hover:bg-surface-container"
+                    onClick={() => setValue('quantity', (quantity || 0) + 5)}
+                    type="button"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
               <div>
                 <label className={labelClassName}>

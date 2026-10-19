@@ -1,3 +1,4 @@
+import type { DefaultValues } from 'react-hook-form'
 import { z } from 'zod'
 import { isHttpUrl } from '@/lib/url'
 import {
@@ -20,13 +21,17 @@ const urlFieldSchema = z
   })
 
 export const pricingFieldsSchema = z.object({
-  galonPrice: z.number().min(0.01, VALIDATION_GALON_PRICE_REQUIRED),
+  galonPrice: z
+    .number({ error: VALIDATION_GALON_PRICE_REQUIRED })
+    .min(0.01, VALIDATION_GALON_PRICE_REQUIRED),
   galonDiscount: z
     .number()
     .min(0, VALIDATION_DISCOUNT_NEGATIVE)
     .max(100, VALIDATION_DISCOUNT_MAX),
   galonWeight: z.string().trim(),
-  bestelaPrice: z.number().min(0.01, VALIDATION_BESTELA_PRICE_REQUIRED),
+  bestelaPrice: z
+    .number({ error: VALIDATION_BESTELA_PRICE_REQUIRED })
+    .min(0.01, VALIDATION_BESTELA_PRICE_REQUIRED),
   bestelaDiscount: z
     .number()
     .min(0, VALIDATION_DISCOUNT_NEGATIVE)
@@ -48,7 +53,10 @@ export const productFormSchema = pricingFieldsSchema.extend({
 })
 export type ProductFormValues = z.infer<typeof productFormSchema>
 
-export const productFormDefaults: ProductFormValues = {
+// galon/bestelaPrice and discount are deliberately left undefined (not 0) so
+// the Stitch placeholders ("350.00"/"1250.00", "5"/"8") show instead of a
+// prefilled 0 — see context/ui-tokens.md deviations log.
+export const productFormDefaults: DefaultValues<ProductFormValues> = {
   name: '',
   category: '',
   description: '',
@@ -58,11 +66,11 @@ export const productFormDefaults: ProductFormValues = {
   image: '',
   images: [],
   features: [],
-  galonPrice: 0,
-  galonDiscount: 0,
+  galonPrice: undefined,
+  galonDiscount: undefined,
   galonWeight: '',
-  bestelaPrice: 0,
-  bestelaDiscount: 0,
+  bestelaPrice: undefined,
+  bestelaDiscount: undefined,
   bestelaWeight: '',
 }
 

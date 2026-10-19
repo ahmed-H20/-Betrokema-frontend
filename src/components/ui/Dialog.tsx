@@ -36,20 +36,35 @@ type DialogHeaderProps = {
   title: string
   subtitle?: string
   onClose: () => void
+  icon?: string
 }
 
-export function DialogHeader({ title, subtitle, onClose }: DialogHeaderProps) {
+export function DialogHeader({
+  title,
+  subtitle,
+  onClose,
+  icon,
+}: DialogHeaderProps) {
   return (
     <div className="flex items-center justify-between bg-primary px-6 py-4 text-on-primary">
-      <div>
-        <DialogPrimitive.Title className="font-headline-sm text-headline-sm">
-          {title}
-        </DialogPrimitive.Title>
-        {subtitle ? (
-          <span className="font-label-sm block text-label-sm text-on-primary-container">
-            {subtitle}
-          </span>
+      <div className="flex items-center gap-3">
+        {icon ? (
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-on-secondary">
+            <span className="material-symbols-outlined text-[20px]">
+              {icon}
+            </span>
+          </div>
         ) : null}
+        <div>
+          <DialogPrimitive.Title className="font-headline-sm text-headline-sm">
+            {title}
+          </DialogPrimitive.Title>
+          {subtitle ? (
+            <span className="font-label-sm block text-label-sm text-on-primary-container">
+              {subtitle}
+            </span>
+          ) : null}
+        </div>
       </div>
       <button
         aria-label="إغلاق"

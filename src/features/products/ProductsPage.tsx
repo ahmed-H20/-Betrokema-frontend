@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { StateMessage } from '@/components/ui/StateMessage'
-import { PRODUCTS_ADD_BUTTON, PRODUCTS_ERROR, PRODUCTS_LOADING, PRODUCTS_PAGE_TITLE } from '@/constants/strings'
+import {
+  PRODUCTS_ADD_BUTTON,
+  PRODUCTS_ERROR,
+  PRODUCTS_LOADING,
+  PRODUCTS_PAGE_EYEBROW,
+  PRODUCTS_PAGE_TITLE,
+} from '@/constants/strings'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { CategoryPanel } from '@/features/categories/CategoryPanel'
 import { useCategories } from '@/features/categories/hooks'
@@ -18,6 +24,7 @@ export function ProductsPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [search, setSearch] = useState('')
+  const [sort, setSort] = useState('-createdAt')
   const [page, setPage] = useState(1)
 
   const debouncedSearch = useDebouncedValue(search, 400)
@@ -26,9 +33,15 @@ export function ProductsPage() {
   const productsQuery = useProducts({
     category: selectedCategory,
     search: debouncedSearch || undefined,
+    sort,
     page,
     limit: PAGE_SIZE,
   })
+
+  function handleSortChange(value: string) {
+    setSort(value)
+    setPage(1)
+  }
 
   // Reset to page 1 the moment the user changes a filter (not tied to the
   // debounce) — simpler and compiler-safe vs. deriving it from the debounced
@@ -46,9 +59,16 @@ export function ProductsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
-        <h1 className="font-headline-xl text-headline-xl tracking-tight text-primary">
-          {PRODUCTS_PAGE_TITLE}
-        </h1>
+        <div>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="font-label-sm text-label-sm uppercase tracking-widest text-secondary">
+              {PRODUCTS_PAGE_EYEBROW}
+            </span>
+          </div>
+          <h1 className="font-headline-xl text-headline-xl tracking-tight text-primary">
+            {PRODUCTS_PAGE_TITLE}
+          </h1>
+        </div>
         <button
           className="font-label-lg flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-label-lg text-on-primary shadow-md transition-all hover:bg-primary-container hover:shadow-lg"
           onClick={() => setCreateOpen(true)}
@@ -73,8 +93,10 @@ export function ProductsPage() {
             categories={categoriesQuery.data?.data ?? []}
             onSearchChange={handleSearchChange}
             onSelectCategory={handleSelectCategory}
+            onSortChange={handleSortChange}
             search={search}
             selectedCategory={selectedCategory}
+            sort={sort}
             totalProducts={categoriesQuery.data?.totalProducts ?? 0}
           />
 

@@ -5,7 +5,8 @@ import type { Product } from '@/api/products.schema'
 import {
   CURRENCY_SUFFIX,
   GENERIC_ERROR,
-  PRODUCT_AVAILABLE_QUANTITY,
+  PACKAGE_DISCOUNT_LABEL,
+  PACKAGE_PRICE_LABEL,
   PRODUCT_DELETE_BUTTON,
   PRODUCT_DELETE_CONFIRM_BUTTON,
   PRODUCT_DELETE_CONFIRM_DESCRIPTION,
@@ -13,8 +14,11 @@ import {
   PRODUCT_EDIT_STOCK_PRICE,
   PRODUCT_LOW_STOCK_BADGE,
   PRODUCT_NO_CATEGORY,
+  PRODUCT_STOCK_PREFIX,
+  STOCK_UNIT_SUFFIX,
   TOAST_PRODUCT_DELETED,
 } from '@/constants/strings'
+import { cn } from '@/lib/cn'
 import { formatNumber } from '@/lib/format'
 import { useDeleteProduct } from '@/features/products/hooks'
 import { QuickEditStockDialog } from '@/features/products/components/QuickEditStockDialog'
@@ -90,7 +94,14 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
               </h3>
             </div>
           </div>
-          {product.statusBadge ? (
+          {product.isLowStock ? (
+            <span className="font-label-sm flex items-center gap-1 rounded-md bg-error-container px-2 py-1 text-label-sm font-bold text-on-error-container">
+              <span className="material-symbols-outlined text-[14px]">
+                warning
+              </span>
+              {PRODUCT_LOW_STOCK_BADGE}
+            </span>
+          ) : product.statusBadge ? (
             <span className="font-label-sm rounded-md bg-surface-container-high px-2 py-1 text-label-sm font-semibold text-on-surface-variant">
               {product.statusBadge}
             </span>
@@ -118,10 +129,9 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
                 key={pkg.unitName}
               >
                 <span className="font-label-sm mb-0.5 text-label-sm text-on-surface-variant">
-                  {pkg.unitName}
-                  {pkg.weight ? ` (${pkg.weight})` : ''}
+                  {PACKAGE_PRICE_LABEL(pkg.unitName, pkg.weight)}
                 </span>
-                <div className="flex items-baseline gap-1" dir="ltr">
+                <div className="flex items-baseline gap-1">
                   <span className="font-label-lg text-label-lg text-primary">
                     {formatNumber(pkg.price)} {CURRENCY_SUFFIX}
                   </span>
@@ -131,23 +141,33 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
                     </span>
                   ) : null}
                 </div>
+                {pkg.discountPercent > 0 ? (
+                  <span className="font-label-sm mt-0.5 text-label-sm font-medium text-secondary">
+                    {PACKAGE_DISCOUNT_LABEL(pkg.discountPercent)}
+                  </span>
+                ) : pkg.note ? (
+                  <span className="font-label-sm mt-0.5 text-label-sm text-on-surface-variant">
+                    {pkg.note}
+                  </span>
+                ) : null}
               </div>
             ))}
           </div>
         ) : null}
 
-        <div className="mb-4 flex items-center justify-between">
-          <span className="font-label-sm text-label-sm text-on-surface" dir="ltr">
-            {PRODUCT_AVAILABLE_QUANTITY(product.quantity)}
+        <div className="mb-4">
+          <span
+            className={cn(
+              'font-label-sm text-label-sm',
+              product.isLowStock
+                ? 'font-semibold text-error'
+                : 'text-on-surface',
+            )}
+          >
+            {PRODUCT_STOCK_PREFIX} <bdi dir="ltr">{formatNumber(product.quantity)}</bdi>{' '}
+            {STOCK_UNIT_SUFFIX}
+            {product.warehouse ? ` (${product.warehouse})` : ''}
           </span>
-          {product.isLowStock ? (
-            <span className="font-label-sm flex items-center gap-1 rounded-md bg-error-container px-2 py-1 text-label-sm font-bold text-on-error-container">
-              <span className="material-symbols-outlined text-[14px]">
-                warning
-              </span>
-              {PRODUCT_LOW_STOCK_BADGE}
-            </span>
-          ) : null}
         </div>
       </div>
 

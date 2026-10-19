@@ -10,9 +10,10 @@ import {
   FEATURED_HIGH_STOCK_BADGE,
   FEATURED_QUICK_EDIT,
   FEATURED_STOCK_AVAILABLE,
-  PRODUCT_AVAILABLE_QUANTITY,
   PRODUCTS_ERROR,
+  STOCK_UNIT_SUFFIX,
 } from '@/constants/strings'
+import { formatNumber } from '@/lib/format'
 import { useFeaturedProduct } from '@/features/products/hooks'
 import { QuickEditStockDialog } from '@/features/products/components/QuickEditStockDialog'
 
@@ -83,8 +84,9 @@ export function FeaturedBanner() {
           <span className="font-label-sm block text-label-sm text-on-primary-container">
             {FEATURED_STOCK_AVAILABLE}
           </span>
-          <span className="font-headline-md text-headline-md text-secondary-fixed" dir="ltr">
-            {PRODUCT_AVAILABLE_QUANTITY(product.quantity)}
+          <span className="font-headline-md text-headline-md text-secondary-fixed">
+            <bdi dir="ltr">{formatNumber(product.quantity)}</bdi>{' '}
+            {STOCK_UNIT_SUFFIX}
           </span>
         </div>
         <button

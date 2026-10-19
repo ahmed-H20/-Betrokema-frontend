@@ -38,9 +38,12 @@ export function PricingFields<T extends PricingFieldValues>({
           </span>
         </div>
         <div>
-          <label className={fieldLabelClassName}>{UNIT_BASE_PRICE_LABEL}</label>
+          <label className={fieldLabelClassName}>
+            {UNIT_BASE_PRICE_LABEL} <span className="text-error">*</span>
+          </label>
           <input
             className={inputClassName}
+            placeholder="350.00"
             step="0.01"
             type="number"
             {...register('galonPrice' as Path<T>, { valueAsNumber: true })}
@@ -56,15 +59,19 @@ export function PricingFields<T extends PricingFieldValues>({
             <label className={fieldLabelClassName}>{UNIT_DISCOUNT_LABEL}</label>
             <input
               className={inputClassName}
+              placeholder="5"
               step="0.1"
               type="number"
-              {...register('galonDiscount' as Path<T>, { valueAsNumber: true })}
+              {...register('galonDiscount' as Path<T>, {
+                setValueAs: (value) => (value === '' ? 0 : Number(value)),
+              })}
             />
           </div>
           <div>
             <label className={fieldLabelClassName}>{UNIT_WEIGHT_LABEL}</label>
             <input
               className={inputClassName}
+              placeholder="3.75 لتر"
               type="text"
               {...register('galonWeight' as Path<T>)}
             />
@@ -84,9 +91,12 @@ export function PricingFields<T extends PricingFieldValues>({
           </span>
         </div>
         <div>
-          <label className={fieldLabelClassName}>{UNIT_BASE_PRICE_LABEL}</label>
+          <label className={fieldLabelClassName}>
+            {UNIT_BASE_PRICE_LABEL} <span className="text-error">*</span>
+          </label>
           <input
             className={inputClassName}
+            placeholder="1250.00"
             step="0.01"
             type="number"
             {...register('bestelaPrice' as Path<T>, { valueAsNumber: true })}
@@ -102,15 +112,19 @@ export function PricingFields<T extends PricingFieldValues>({
             <label className={fieldLabelClassName}>{UNIT_DISCOUNT_LABEL}</label>
             <input
               className={inputClassName}
+              placeholder="8"
               step="0.1"
               type="number"
-              {...register('bestelaDiscount' as Path<T>, { valueAsNumber: true })}
+              {...register('bestelaDiscount' as Path<T>, {
+                setValueAs: (value) => (value === '' ? 0 : Number(value)),
+              })}
             />
           </div>
           <div>
             <label className={fieldLabelClassName}>{UNIT_WEIGHT_LABEL}</label>
             <input
               className={inputClassName}
+              placeholder="14 لتر"
               type="text"
               {...register('bestelaWeight' as Path<T>)}
             />
