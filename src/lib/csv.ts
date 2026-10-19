@@ -11,7 +11,7 @@ function neutralizeCell(value: string): string {
 
 function escapeCell(value: unknown): string {
   const text = neutralizeCell(String(value ?? ''))
-  if (/[",\n]/.test(text)) {
+  if (/[",\r\n]/.test(text)) {
     return `"${text.replace(/"/g, '""')}"`
   }
   return text

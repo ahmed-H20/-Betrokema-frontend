@@ -625,14 +625,30 @@ export const TRANSFERS_LOADING = 'جارِ تحميل طلبات المناقل�
 export const TOAST_TRANSFER_UPDATED = 'تم تحديث حالة المناقلة بنجاح'
 export const TRANSFER_STALE_ERROR =
   'تم تحديث حالة هذا الطلب من جهة أخرى، يرجى إعادة الفتح والمحاولة مجدداً'
+export const TRANSFER_NOT_FOUND_ERROR = 'طلب المناقلة لم يعد موجوداً'
 
 export const CSV_REPORT_FILENAME_PREFIX = 'warehouse-inventory-report'
+export const CSV_REPORT_HEADERS = [
+  'اسم المستودع',
+  'كود المستودع',
+  'المحافظة',
+  'أمين العهدة',
+  'اسم المنتج',
+  'كود الصنف',
+  'التصنيف',
+  'موقع التخزين',
+  'وحدة التعبئة',
+  'الرصيد الحالي',
+  'حد إعادة الطلب',
+  'حالة التوفر',
+] as const
 
 // Validation messages
 export const VALIDATION_WAREHOUSE_NAME_REQUIRED = 'اسم المستودع / الفرع مطلوب'
 export const VALIDATION_WAREHOUSE_GOVERNORATE_REQUIRED = 'المحافظة الإقليمية مطلوبة'
 export const VALIDATION_WAREHOUSE_ADDRESS_REQUIRED = 'العنوان التفصيلي مطلوب'
 export const VALIDATION_WAREHOUSE_CAPACITY_MIN = 'السعة يجب أن تكون على الأقل 1 بالتة'
+export const VALIDATION_MUST_BE_WHOLE_NUMBER = 'يجب أن يكون الرقم صحيحاً (بدون كسور)'
 export const VALIDATION_ASSIGN_PRODUCT_REQUIRED = 'يجب اختيار منتج'
 export const VALIDATION_ASSIGN_STOCK_NEGATIVE = 'الرصيد لا يمكن أن يكون سالباً'
 export const VALIDATION_ASSIGN_REORDER_NEGATIVE = 'حد إعادة الطلب لا يمكن أن يكون سالباً'

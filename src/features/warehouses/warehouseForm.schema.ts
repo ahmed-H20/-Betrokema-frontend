@@ -1,6 +1,7 @@
 import type { DefaultValues } from 'react-hook-form'
 import { z } from 'zod'
 import {
+  VALIDATION_MUST_BE_WHOLE_NUMBER,
   VALIDATION_WAREHOUSE_ADDRESS_REQUIRED,
   VALIDATION_WAREHOUSE_CAPACITY_MIN,
   VALIDATION_WAREHOUSE_GOVERNORATE_REQUIRED,
@@ -13,8 +14,11 @@ export const warehouseFormSchema = z.object({
   address: z.string().trim().min(1, VALIDATION_WAREHOUSE_ADDRESS_REQUIRED),
   supervisorName: z.string().trim(),
   emergencyPhone: z.string().trim(),
-  capacityPallets: z.number().min(1, VALIDATION_WAREHOUSE_CAPACITY_MIN),
-  occupiedPallets: z.number().min(0),
+  capacityPallets: z
+    .number()
+    .int(VALIDATION_MUST_BE_WHOLE_NUMBER)
+    .min(1, VALIDATION_WAREHOUSE_CAPACITY_MIN),
+  occupiedPallets: z.number().int(VALIDATION_MUST_BE_WHOLE_NUMBER).min(0),
   operatingClassification: z.string().trim(),
   isActive: z.boolean(),
 })

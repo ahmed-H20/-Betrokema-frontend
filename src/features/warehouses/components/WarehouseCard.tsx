@@ -52,6 +52,14 @@ export function WarehouseCard({
   onEdit: () => void
   onDeleteRequest: () => void
 }) {
+  function onDistribute() {
+    onSelect()
+    // Matches the export's own selectWarehouse() behavior (scroll to the
+    // inventory table) — see .bridge-plan.md Chunk 3 build order step 5.
+    document
+      .getElementById('warehouse-inventory-section')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
   const pill = governoratePill(warehouse)
   const dotClassName = warehouse.status === 'نشط' ? 'bg-secondary' : 'bg-on-tertiary-container'
   const occupancyRate = warehouse.occupancyRate
@@ -165,7 +173,7 @@ export function WarehouseCard({
               ? 'bg-primary-container text-on-primary hover:bg-primary'
               : 'bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary',
           )}
-          onClick={onSelect}
+          onClick={onDistribute}
           type="button"
         >
           <span className="material-symbols-outlined text-[18px]">inventory</span>

@@ -230,7 +230,10 @@ export function InventorySection({
   const table = useTable({ features, columns, data })
 
   return (
-    <div className="flex flex-col gap-space-lg rounded-xl bg-surface-container-lowest p-space-lg shadow-sm">
+    <div
+      className="flex flex-col gap-space-lg rounded-xl bg-surface-container-lowest p-space-lg shadow-sm"
+      id="warehouse-inventory-section"
+    >
       <div className="flex flex-col gap-space-md pb-space-md md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-space-md">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary-fixed text-on-secondary-fixed-variant shadow-sm">

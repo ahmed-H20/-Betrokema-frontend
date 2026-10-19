@@ -16,12 +16,19 @@ import {
   TOAST_INVENTORY_ITEM_UPDATED,
   VALIDATION_ASSIGN_REORDER_NEGATIVE,
   VALIDATION_ASSIGN_STOCK_NEGATIVE,
+  VALIDATION_MUST_BE_WHOLE_NUMBER,
 } from '@/constants/strings'
 import { useUpdateInventoryItem } from '@/features/warehouses/hooks'
 
 const editItemSchema = z.object({
-  currentStock: z.number().min(0, VALIDATION_ASSIGN_STOCK_NEGATIVE),
-  reorderLevel: z.number().min(0, VALIDATION_ASSIGN_REORDER_NEGATIVE),
+  currentStock: z
+    .number()
+    .int(VALIDATION_MUST_BE_WHOLE_NUMBER)
+    .min(0, VALIDATION_ASSIGN_STOCK_NEGATIVE),
+  reorderLevel: z
+    .number()
+    .int(VALIDATION_MUST_BE_WHOLE_NUMBER)
+    .min(0, VALIDATION_ASSIGN_REORDER_NEGATIVE),
   binLocation: z.string().trim(),
 })
 type EditItemValues = z.infer<typeof editItemSchema>

@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import type { Warehouse } from '@/api/warehouses.schema'
 import {
   CSV_REPORT_FILENAME_PREFIX,
+  CSV_REPORT_HEADERS,
   GENERIC_ERROR,
   WAREHOUSES_ADD_BUTTON,
   WAREHOUSES_EXPORT_BUTTON,
@@ -48,20 +49,7 @@ export function WarehousesPage() {
     try {
       const rows = await exportReport.mutateAsync()
       const csv = buildCsv(
-        [
-          'اسم المستودع',
-          'كود المستودع',
-          'المحافظة',
-          'أمين العهدة',
-          'اسم المنتج',
-          'كود الصنف',
-          'التصنيف',
-          'موقع التخزين',
-          'وحدة التعبئة',
-          'الرصيد الحالي',
-          'حد إعادة الطلب',
-          'حالة التوفر',
-        ],
+        [...CSV_REPORT_HEADERS],
         rows.map((row) => [
           row.warehouseName,
           row.warehouseCode,

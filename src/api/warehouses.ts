@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { request } from '@/api/client'
+import { TRANSFER_NOT_FOUND_ERROR } from '@/constants/strings'
 import {
   assignProductInputSchema,
   createTransferInputSchema,
@@ -167,7 +168,7 @@ export async function getTransferById(transferId: string): Promise<StockTransfer
   // whole list and finds this one by id instead.
   const all = await getTransfers()
   const transfer = all.find((item) => item._id === transferId)
-  if (!transfer) throw new Error('طلب المناقلة لم يعد موجوداً')
+  if (!transfer) throw new Error(TRANSFER_NOT_FOUND_ERROR)
   return transfer
 }
 

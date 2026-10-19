@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import {
@@ -57,7 +57,7 @@ export function AssignProductForm({
     handleSubmit,
     watch,
     reset,
-    formState: { isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm<AssignProductInput>({
     resolver: zodResolver(assignProductInputSchema),
     defaultValues: {
@@ -78,6 +78,25 @@ export function AssignProductForm({
       (item) => inventoryProductId(item.product) === selectedProductId,
     )
   }, [selectedProductId, warehouseQuery.data])
+
+  // Picking an already-assigned product should show its real current values,
+  // not the static create-mode defaults — otherwise a user who only means to
+  // tweak the bin location can silently zero out the real stock (the
+  // overwrite-confirm dialog surfaces the real old value as a last-chance
+  // check, but the field itself should never have been wrong in the first
+  // place). Only fires for an existing assignment; a brand-new/unassigned
+  // product keeps whatever the user already typed.
+  useEffect(() => {
+    if (!existingItem) return
+    reset({
+      productId: selectedProductId,
+      currentStock: existingItem.currentStock,
+      reorderLevel: existingItem.reorderLevel,
+      binLocation: existingItem.binLocation,
+      sku: existingItem.sku,
+      packagingUnit: existingItem.packagingUnit,
+    })
+  }, [existingItem, selectedProductId, reset])
 
   async function submitAssignment(values: AssignProductInput) {
     try {
@@ -143,6 +162,11 @@ export function AssignProductForm({
               type="number"
               {...register('currentStock', { valueAsNumber: true })}
             />
+            {errors.currentStock ? (
+              <span className="font-label-sm text-label-sm text-error">
+                {errors.currentStock.message}
+              </span>
+            ) : null}
           </div>
           <div className="flex flex-col gap-1">
             <label className={labelClassName}>{ASSIGN_PRODUCT_REORDER_LABEL}</label>
@@ -151,6 +175,11 @@ export function AssignProductForm({
               type="number"
               {...register('reorderLevel', { valueAsNumber: true })}
             />
+            {errors.reorderLevel ? (
+              <span className="font-label-sm text-label-sm text-error">
+                {errors.reorderLevel.message}
+              </span>
+            ) : null}
           </div>
           <div className="flex flex-col gap-1">
             <label className={labelClassName}>{ASSIGN_PRODUCT_BIN_LABEL}</label>

@@ -3,6 +3,7 @@ import {
   VALIDATION_ASSIGN_PRODUCT_REQUIRED,
   VALIDATION_ASSIGN_REORDER_NEGATIVE,
   VALIDATION_ASSIGN_STOCK_NEGATIVE,
+  VALIDATION_MUST_BE_WHOLE_NUMBER,
   VALIDATION_WAREHOUSE_ADDRESS_REQUIRED,
   VALIDATION_WAREHOUSE_CAPACITY_MIN,
   VALIDATION_WAREHOUSE_GOVERNORATE_REQUIRED,
@@ -102,8 +103,8 @@ export const createWarehouseInputSchema = z.object({
   address: z.string().trim().min(1, VALIDATION_WAREHOUSE_ADDRESS_REQUIRED),
   supervisorName: z.string().trim().optional(),
   emergencyPhone: z.string().trim().optional(),
-  capacityPallets: z.number().min(1, VALIDATION_WAREHOUSE_CAPACITY_MIN),
-  occupiedPallets: z.number().min(0).optional(),
+  capacityPallets: z.number().int(VALIDATION_MUST_BE_WHOLE_NUMBER).min(1, VALIDATION_WAREHOUSE_CAPACITY_MIN),
+  occupiedPallets: z.number().int(VALIDATION_MUST_BE_WHOLE_NUMBER).min(0).optional(),
   operatingClassification: z.string().trim().optional(),
   isActive: z.boolean().optional(),
 })
@@ -200,16 +201,32 @@ export const assignProductInputSchema = z.object({
   sku: z.string().trim().optional(),
   packagingUnit: z.string().trim().optional(),
   binLocation: z.string().trim().optional(),
-  currentStock: z.number().min(0, VALIDATION_ASSIGN_STOCK_NEGATIVE).optional(),
-  reorderLevel: z.number().min(0, VALIDATION_ASSIGN_REORDER_NEGATIVE).optional(),
+  currentStock: z
+    .number()
+    .int(VALIDATION_MUST_BE_WHOLE_NUMBER)
+    .min(0, VALIDATION_ASSIGN_STOCK_NEGATIVE)
+    .optional(),
+  reorderLevel: z
+    .number()
+    .int(VALIDATION_MUST_BE_WHOLE_NUMBER)
+    .min(0, VALIDATION_ASSIGN_REORDER_NEGATIVE)
+    .optional(),
   notes: z.string().trim().optional(),
 })
 export type AssignProductInput = z.infer<typeof assignProductInputSchema>
 
 export const updateInventoryItemInputSchema = z.object({
   binLocation: z.string().trim().optional(),
-  currentStock: z.number().min(0, VALIDATION_ASSIGN_STOCK_NEGATIVE).optional(),
-  reorderLevel: z.number().min(0, VALIDATION_ASSIGN_REORDER_NEGATIVE).optional(),
+  currentStock: z
+    .number()
+    .int(VALIDATION_MUST_BE_WHOLE_NUMBER)
+    .min(0, VALIDATION_ASSIGN_STOCK_NEGATIVE)
+    .optional(),
+  reorderLevel: z
+    .number()
+    .int(VALIDATION_MUST_BE_WHOLE_NUMBER)
+    .min(0, VALIDATION_ASSIGN_REORDER_NEGATIVE)
+    .optional(),
   packagingUnit: z.string().trim().optional(),
   notes: z.string().trim().optional(),
   sku: z.string().trim().optional(),

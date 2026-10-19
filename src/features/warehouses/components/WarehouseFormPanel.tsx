@@ -82,15 +82,21 @@ export function WarehouseFormPanel({
     defaultValues: warehouseFormDefaults,
   })
 
+  const isFirstRender = useRef(true)
   useEffect(() => {
     reset(
       editingWarehouse
         ? warehouseToFormValues(editingWarehouse)
         : warehouseFormDefaults,
     )
-    if (editingWarehouse) {
-      panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // Skip the scroll on mount — only scroll when `editingWarehouse` changes
+    // after that (edit-button click, or "+ إضافة مخزن جديد" while editing),
+    // otherwise every page load would auto-scroll down to this panel.
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
     }
+    panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [editingWarehouse, reset])
 
   const governorateOptions = useMemo(() => {
