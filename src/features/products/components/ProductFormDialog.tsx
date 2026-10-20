@@ -53,6 +53,13 @@ const textareaClassName =
   'w-full p-3 rounded-lg bg-surface-container-low font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container-highest transition-all'
 const compactInputClassName =
   'w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-body-sm text-body-sm text-on-surface focus:outline-none transition-all'
+const DEFAULT_WAREHOUSES = [
+  'مستودع العاشر من رمضان المركزي',
+  'مستودع مدينة السادات للمواد الخام',
+  'مستودع برج العرب الساحلي',
+  'مستودع أسيوط الإقليمي للصعيد',
+]
+
 const labelClassName = 'block font-label-md text-label-md text-on-surface mb-1'
 
 export function ProductFormDialog({
@@ -135,6 +142,16 @@ export function ProductFormDialog({
                 </label>
                 <select className={inputClassName} {...register('category')}>
                   <option value="">{PRODUCT_CATEGORY_PLACEHOLDER}</option>
+                  {categoriesQuery.isLoading ? (
+                    <option disabled value="">
+                      جارِ تحميل التصنيفات المعتمَدة...
+                    </option>
+                  ) : null}
+                  {categoriesQuery.data?.data && categoriesQuery.data.data.length === 0 && !categoriesQuery.isLoading ? (
+                    <option disabled value="">
+                      لا توجد تصنيفات حالياً - يرجى إنشاء تصنيف أولاً
+                    </option>
+                  ) : null}
                   {categoriesQuery.data?.data.map((category) => (
                     <option key={category._id} value={category._id}>
                       {category.name}
@@ -166,7 +183,11 @@ export function ProductFormDialog({
               <span className="h-2 w-2 rounded-full bg-secondary" />
               {PRODUCT_MODAL_SECTION_PRICING}
             </h4>
-            <PricingFields errors={errors} register={register} />
+            <PricingFields
+              errors={errors}
+              register={register}
+              setValue={setValue}
+            />
           </div>
 
           <div>
@@ -177,19 +198,32 @@ export function ProductFormDialog({
             <div className="grid grid-cols-1 items-center gap-4 rounded-xl bg-surface-container-low p-4 md:grid-cols-3">
               <div>
                 <label className={labelClassName}>
-                  {PRODUCT_WAREHOUSE_LABEL}
+                  {PRODUCT_WAREHOUSE_LABEL} <span className="text-error">*</span>
                 </label>
                 <select
                   className={compactInputClassName}
                   {...register('warehouse')}
                 >
                   <option value="">{PRODUCT_WAREHOUSE_PLACEHOLDER}</option>
-                  {warehousesQuery.data?.map((name) => (
+                  {warehousesQuery.isLoading ? (
+                    <option disabled value="">
+                      جارِ تحميل المستودعات...
+                    </option>
+                  ) : null}
+                  {(warehousesQuery.data && warehousesQuery.data.length > 0
+                    ? warehousesQuery.data
+                    : DEFAULT_WAREHOUSES
+                  ).map((name) => (
                     <option key={name} value={name}>
                       {name}
                     </option>
                   ))}
                 </select>
+                {errors.warehouse ? (
+                  <span className="font-label-sm mt-1 block text-label-sm text-error">
+                    {errors.warehouse.message}
+                  </span>
+                ) : null}
               </div>
               <div>
                 <label className={labelClassName}>

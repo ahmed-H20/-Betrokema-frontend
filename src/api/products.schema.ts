@@ -4,6 +4,7 @@ import {
   VALIDATION_PACKAGES_MIN,
   VALIDATION_PRODUCT_CATEGORY_REQUIRED,
   VALIDATION_PRODUCT_NAME_REQUIRED,
+  VALIDATION_PRODUCT_WAREHOUSE_REQUIRED,
   VALIDATION_QUANTITY_NEGATIVE,
 } from '@/constants/strings'
 
@@ -139,7 +140,7 @@ export const createProductInputSchema = z.object({
   name: z.string().trim().min(1, VALIDATION_PRODUCT_NAME_REQUIRED),
   category: z.string().trim().min(1, VALIDATION_PRODUCT_CATEGORY_REQUIRED),
   description: z.string().trim().optional(),
-  warehouse: z.string().trim().optional(),
+  warehouse: z.string().trim().min(1, VALIDATION_PRODUCT_WAREHOUSE_REQUIRED),
   quantity: z.number().min(0, VALIDATION_QUANTITY_NEGATIVE),
   minStockThreshold: z.number().min(0, VALIDATION_MIN_STOCK_NEGATIVE),
   image: z.string().trim().optional(),

@@ -8,6 +8,11 @@ import {
   type CreateClientInput,
 } from '@/api/clients.schema'
 
+export async function getAllClients(): Promise<Client[]> {
+  const raw = await request<{ status: string; data: Client[] }>('/clients?limit=100')
+  return raw?.data || []
+}
+
 export async function getForSeller(
   sellerId: string,
 ): Promise<ClientsForSellerResponse> {

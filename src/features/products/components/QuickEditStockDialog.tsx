@@ -67,6 +67,7 @@ export function QuickEditStockDialog({
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<StockPriceFormValues>({
     resolver: zodResolver(stockPriceFormSchema),
@@ -120,7 +121,7 @@ export function QuickEditStockDialog({
               </span>
             ) : null}
           </div>
-          <PricingFields errors={errors} register={register} />
+          <PricingFields errors={errors} register={register} setValue={setValue} />
         </div>
         <div className="flex items-center justify-end gap-3 bg-surface-container px-6 py-4">
           <button

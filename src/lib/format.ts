@@ -6,6 +6,10 @@ export function formatNumber(value: number): string {
   return numberFormatter.format(value)
 }
 
+export function formatCurrency(value: number): string {
+  return `${formatNumber(value)} ج.م`
+}
+
 export type ArabicPluralForms = {
   one: string
   two: string

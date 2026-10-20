@@ -26,6 +26,17 @@ export function isBestelaUnit(unitName: string): boolean {
   )
 }
 
+export function formatWeightWithUnit(weight: string): string {
+  const trimmed = (weight || '').trim()
+  if (!trimmed) return ''
+  // If the weight is only numeric, append 'لتر' by default
+  const isOnlyNumeric = /^[\d٠-٩]+([.,][\d٠-٩]+)?$/.test(trimmed)
+  if (isOnlyNumeric) {
+    return `${trimmed} لتر`
+  }
+  return trimmed
+}
+
 function buildPackage(
   unitName: string,
   basePrice: number,
@@ -38,7 +49,7 @@ function buildPackage(
     price,
     ...(discountPercent > 0 ? { oldPrice: roundMoney(basePrice) } : {}),
     discountPercent,
-    weight: weight.trim(),
+    weight: formatWeightWithUnit(weight),
   }
 }
 
@@ -70,7 +81,7 @@ export function buildCreateProductPayload(
     name: form.name,
     category: form.category,
     description: form.description || undefined,
-    warehouse: form.warehouse || undefined,
+    warehouse: form.warehouse.trim(),
     quantity: form.quantity,
     minStockThreshold: form.minStockThreshold,
     image: form.image || undefined,
@@ -81,3 +92,4 @@ export function buildCreateProductPayload(
     packages: buildPackagesFromForm(form),
   }
 }
+

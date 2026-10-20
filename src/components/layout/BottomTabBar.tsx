@@ -23,7 +23,7 @@ const tabItemClassName =
   'flex h-12 min-w-[64px] flex-col items-center justify-center gap-0.5 transition-colors'
 
 type BottomTabBarProps = {
-  onMoreClick: () => void
+  onMoreClick?: () => void
 }
 
 // Phone-only (<md) fixed bottom tab bar — follows petrokema_admin_8's

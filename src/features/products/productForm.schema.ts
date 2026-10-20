@@ -10,6 +10,7 @@ import {
   VALIDATION_MIN_STOCK_NEGATIVE,
   VALIDATION_PRODUCT_CATEGORY_REQUIRED,
   VALIDATION_PRODUCT_NAME_REQUIRED,
+  VALIDATION_PRODUCT_WAREHOUSE_REQUIRED,
   VALIDATION_QUANTITY_NEGATIVE,
 } from '@/constants/strings'
 
@@ -44,7 +45,7 @@ export const productFormSchema = pricingFieldsSchema.extend({
   name: z.string().trim().min(1, VALIDATION_PRODUCT_NAME_REQUIRED),
   category: z.string().trim().min(1, VALIDATION_PRODUCT_CATEGORY_REQUIRED),
   description: z.string().trim(),
-  warehouse: z.string().trim(),
+  warehouse: z.string().trim().min(1, VALIDATION_PRODUCT_WAREHOUSE_REQUIRED),
   quantity: z.number().min(0, VALIDATION_QUANTITY_NEGATIVE),
   minStockThreshold: z.number().min(0, VALIDATION_MIN_STOCK_NEGATIVE),
   image: urlFieldSchema,

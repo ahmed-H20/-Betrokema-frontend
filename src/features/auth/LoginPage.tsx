@@ -156,7 +156,17 @@ export function LoginPage() {
                 required
                 disabled={isSubmitting}
               />
-
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="flex items-center text-on-surface-variant hover:text-on-surface p-1 transition-colors"
+                title={showPassword ? 'إخفاء الرقم السري' : 'إظهار الرقم السري'}
+                tabIndex={-1}
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  {showPassword ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
             </div>
           </div>
 

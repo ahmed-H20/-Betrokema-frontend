@@ -677,6 +677,7 @@ export const VALIDATION_ASSIGN_REORDER_NEGATIVE = 'حد إعادة الطلب ل
 
 export const VALIDATION_PRODUCT_NAME_REQUIRED = 'اسم المنتج التجاري مطلوب'
 export const VALIDATION_PRODUCT_CATEGORY_REQUIRED = 'التصنيف الرئيسي مطلوب'
+export const VALIDATION_PRODUCT_WAREHOUSE_REQUIRED = 'يرجى تحديد المستودع المستهدف'
 export const VALIDATION_QUANTITY_NEGATIVE = 'الكمية لا يمكن أن تكون سالبة'
 export const VALIDATION_MIN_STOCK_NEGATIVE = 'الحد لا يمكن أن يكون سالباً'
 export const VALIDATION_PACKAGES_MIN = 'يجب إدخال سعر وحدة واحدة على الأقل'
@@ -685,3 +686,4 @@ export const VALIDATION_GALON_PRICE_REQUIRED = 'السعر الأساسي للج
 export const VALIDATION_BESTELA_PRICE_REQUIRED = 'السعر الأساسي للبستلة مطلوب'
 export const VALIDATION_DISCOUNT_NEGATIVE = 'الخصم لا يمكن أن يكون سالباً'
 export const VALIDATION_DISCOUNT_MAX = 'الخصم لا يمكن أن يتجاوز 100%'
+

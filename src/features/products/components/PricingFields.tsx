@@ -1,5 +1,6 @@
-import type { FieldErrors, Path, UseFormRegister } from 'react-hook-form'
+import type { FieldErrors, Path, UseFormRegister, UseFormSetValue } from 'react-hook-form'
 import type { PricingFieldValues } from '@/features/products/productForm.schema'
+import { formatWeightWithUnit } from '@/features/products/productForm'
 import {
   UNIT_BASE_PRICE_LABEL,
   UNIT_BESTELA_BADGE,
@@ -13,6 +14,7 @@ import {
 type PricingFieldsProps<T extends PricingFieldValues> = {
   register: UseFormRegister<T>
   errors: FieldErrors<T>
+  setValue?: UseFormSetValue<T>
 }
 
 const inputClassName =
@@ -22,7 +24,31 @@ const fieldLabelClassName = 'font-label-sm block text-label-sm text-on-surface m
 export function PricingFields<T extends PricingFieldValues>({
   register,
   errors,
+  setValue,
 }: PricingFieldsProps<T>) {
+  function handleWeightBlur(
+    fieldName: Path<T>,
+    registerOnBlur?: React.FocusEventHandler<HTMLInputElement>,
+  ) {
+    return (e: React.FocusEvent<HTMLInputElement>) => {
+      const raw = e.target.value
+      const formatted = formatWeightWithUnit(raw)
+      if (formatted !== raw) {
+        e.target.value = formatted
+        if (setValue) {
+          setValue(fieldName, formatted as any, {
+            shouldValidate: true,
+            shouldDirty: true,
+          })
+        }
+      }
+      registerOnBlur?.(e)
+    }
+  }
+
+  const galonWeightRegister = register('galonWeight' as Path<T>)
+  const bestelaWeightRegister = register('bestelaWeight' as Path<T>)
+
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div className="flex flex-col gap-3 rounded-xl bg-surface-container-low p-4">
@@ -73,7 +99,11 @@ export function PricingFields<T extends PricingFieldValues>({
               className={inputClassName}
               placeholder="3.75 لتر"
               type="text"
-              {...register('galonWeight' as Path<T>)}
+              {...galonWeightRegister}
+              onBlur={handleWeightBlur(
+                'galonWeight' as Path<T>,
+                galonWeightRegister.onBlur,
+              )}
             />
           </div>
         </div>
@@ -126,7 +156,11 @@ export function PricingFields<T extends PricingFieldValues>({
               className={inputClassName}
               placeholder="14 لتر"
               type="text"
-              {...register('bestelaWeight' as Path<T>)}
+              {...bestelaWeightRegister}
+              onBlur={handleWeightBlur(
+                'bestelaWeight' as Path<T>,
+                bestelaWeightRegister.onBlur,
+              )}
             />
           </div>
         </div>
