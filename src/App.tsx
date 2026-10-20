@@ -2,6 +2,9 @@ import { DirectionProvider } from '@radix-ui/react-direction'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'sonner'
+import { AuthProvider } from '@/features/auth/AuthContext'
+import { LoginPage } from '@/features/auth/LoginPage'
+import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { AnalyticsPage } from '@/features/analytics/AnalyticsPage'
 import { InvoicesPage } from '@/features/invoices/InvoicesPage'
@@ -21,18 +24,25 @@ function App() {
     // This app is RTL-only (CLAUDE.md), so set it globally, once.
     <DirectionProvider dir="rtl">
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<AppLayout />} path="/">
-              <Route element={<Navigate replace to="/products" />} index />
-              <Route element={<ProductsPage />} path="products" />
-              <Route element={<InvoicesPage />} path="invoices" />
-              <Route element={<SellersPage />} path="sellers" />
-              <Route element={<WarehousesPage />} path="warehouses" />
-              <Route element={<AnalyticsPage />} path="analytics" />
-              <Route element={<NotFoundPage />} path="*" />
-            </Route>
-          </Routes>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public Route */}
+              <Route path="/login" element={<LoginPage />} />
+
+              {/* Protected Application Layout */}
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AppLayout />} path="/">
+                  <Route element={<Navigate replace to="/products" />} index />
+                  <Route element={<ProductsPage />} path="products" />
+                  <Route element={<InvoicesPage />} path="invoices" />
+                  <Route element={<SellersPage />} path="sellers" />
+                  <Route element={<WarehousesPage />} path="warehouses" />
+                  <Route element={<AnalyticsPage />} path="analytics" />
+                  <Route element={<NotFoundPage />} path="*" />
+                </Route>
+              </Route>
+            </Routes>
           <Toaster
             icons={{
               success: (
@@ -52,7 +62,8 @@ function App() {
             }}
           />
         </BrowserRouter>
-      </QueryClientProvider>
+      </AuthProvider>
+    </QueryClientProvider>
     </DirectionProvider>
   )
 }

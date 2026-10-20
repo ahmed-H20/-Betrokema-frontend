@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { useAuth } from '@/features/auth/AuthContext'
 import { cn } from '@/lib/cn'
 import { formatNumber } from '@/lib/format'
 import {
@@ -53,6 +54,7 @@ function useWarehousesNavBadge() {
 }
 
 export function AppLayout() {
+  const { user, logout } = useAuth()
   const today = formatToday()
   const productsBadge = useProductsNavBadge()
   const sellersBadge = useSellersNavBadge()
@@ -161,14 +163,29 @@ export function AppLayout() {
             </button>
             <div className="hidden h-6 w-px bg-outline-variant sm:block" />
             <div className="flex items-center gap-space-md">
-              <span className="font-label-md text-label-md font-semibold text-on-surface">
-                {USER_ROLE_LABEL}
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-                <span className="material-symbols-outlined text-[18px] text-on-primary">
+              <div className="flex flex-col text-left">
+                <span className="font-label-md text-label-md font-semibold text-on-surface">
+                  {user?.name || USER_ROLE_LABEL}
+                </span>
+                <span className="text-[11px] text-on-surface-variant font-mono">
+                  {user?.code || (user?.role === 'seller' ? 'مندوب' : user?.role === 'client' ? 'عميل' : 'مسؤول')}
+                </span>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-on-primary">
+                <span className="material-symbols-outlined text-[18px]">
                   person
                 </span>
               </div>
+              <button
+                type="button"
+                onClick={logout}
+                title="تسجيل الخروج"
+                className="flex items-center justify-center rounded-lg p-1.5 text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  logout
+                </span>
+              </button>
             </div>
           </div>
         </header>

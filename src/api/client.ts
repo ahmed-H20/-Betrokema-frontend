@@ -1,3 +1,5 @@
+import type { AuthUser } from './auth.schema'
+
 const BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 
@@ -11,14 +13,49 @@ export class ApiClientError extends Error {
   }
 }
 
-// No login flow exists yet (see context/architecture.md). This seam stays inert
-// until a real auth flow is wired, so call sites never need to change.
-function getAuthToken(): string | null {
-  return null
+export const AUTH_TOKEN_KEY = 'petrokema_auth_token'
+export const AUTH_USER_KEY = 'petrokema_auth_user'
+
+export function getAuthToken(): string | null {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function setAuthSession(token: string, user: AuthUser): void {
+  try {
+    localStorage.setItem(AUTH_TOKEN_KEY, token)
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user))
+  } catch (e) {
+    console.error('Failed to save auth session', e)
+  }
+}
+
+export function clearAuthSession(): void {
+  try {
+    localStorage.removeItem(AUTH_TOKEN_KEY)
+    localStorage.removeItem(AUTH_USER_KEY)
+  } catch (e) {
+    console.error('Failed to clear auth session', e)
+  }
+}
+
+export function getStoredUser(): AuthUser | null {
+  try {
+    const raw = localStorage.getItem(AUTH_USER_KEY)
+    return raw ? (JSON.parse(raw) as AuthUser) : null
+  } catch {
+    return null
+  }
 }
 
 function onUnauthorized(): void {
-  // no-op until a real auth flow exists
+  clearAuthSession()
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.href = '/login'
+  }
 }
 
 type RequestOptions = Omit<RequestInit, 'body'> & { body?: unknown }
