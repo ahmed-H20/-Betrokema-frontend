@@ -16,7 +16,7 @@ export default defineConfig({
     // so the browser never makes a cross-origin call in dev.
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:8400',
         changeOrigin: true,
       },
     },
