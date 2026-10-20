@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import type { SellerStatus } from '@/api/sellers.schema'
 import {
+  REP_DETAIL_BACK,
   REPS_GOVERNORATE_ALL,
   SELLERS_ADD_BUTTON,
   SELLERS_PAGE_SUBTITLE,
   SELLERS_PAGE_TITLE,
 } from '@/constants/strings'
+import { cn } from '@/lib/cn'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { useSellers } from '@/features/sellers/hooks'
 import { KpiRow } from '@/features/sellers/components/KpiRow'
@@ -22,9 +25,11 @@ export function SellersPage() {
   const [governorateFilter, setGovernorateFilter] = useState<string | undefined>(
     undefined,
   )
-  const [selectedSellerIdRaw, setSelectedSellerId] = useState<
-    string | undefined
-  >(undefined)
+  // Selection lives in the URL (?rep=<id>), not component state, so refresh
+  // and the browser back button both restore it — see context/ui-tokens.md
+  // (R3-sellers-responsive).
+  const [searchParams, setSearchParams] = useSearchParams()
+  const urlSellerId = searchParams.get('rep') ?? undefined
   const [createOpen, setCreateOpen] = useState(false)
 
   const debouncedSearch = useDebouncedValue(search, 400)
@@ -54,14 +59,33 @@ export function SellersPage() {
     [sellers, governorateFilter],
   )
 
-  // Derived during render, not an effect: if the previously-selected seller
-  // fell out of the current filter result, fall back to the first one
-  // (or none) without an extra render pass.
-  const selectedSellerId = filteredSellers.some(
-    (seller) => seller._id === selectedSellerIdRaw,
+  // Derived during render, not an effect: if the URL's rep fell out of the
+  // current filter result, fall back to the first one (or none) without an
+  // extra render pass. `hasExplicitSelection` (URL id still valid) decides
+  // whether the below-xl drill-down view shows the list or the detail —
+  // the xl+ side-by-side view always uses the fallback-inclusive id below.
+  const hasExplicitSelection = filteredSellers.some(
+    (seller) => seller._id === urlSellerId,
   )
-    ? selectedSellerIdRaw
+  const selectedSellerId = hasExplicitSelection
+    ? urlSellerId
     : filteredSellers[0]?._id
+
+  function handleSelectSeller(id: string) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('rep', id)
+      return next
+    })
+  }
+
+  function handleBackToList() {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('rep')
+      return next
+    })
+  }
 
   return (
     <div className="flex flex-col gap-space-lg">
@@ -109,12 +133,21 @@ export function SellersPage() {
 
       <KpiRow />
 
+      {/* Below xl: list-then-detail (one pane at a time, URL-driven) —
+          both panes stay mounted (desktop behavior unchanged, see below),
+          only visibility toggles. At xl+ both always show side by side,
+          exactly as before. */}
       <div className="grid grid-cols-12 items-start gap-space-lg">
-        <div className="col-span-12 xl:col-span-5">
+        <div
+          className={cn(
+            'xl:col-span-5',
+            hasExplicitSelection ? 'hidden xl:block' : 'col-span-12',
+          )}
+        >
           <RepsDirectory
             isError={sellersQuery.isError}
             isLoading={sellersQuery.isLoading}
-            onSelectSeller={setSelectedSellerId}
+            onSelectSeller={handleSelectSeller}
             onSortChange={setSort}
             onStatusFilterChange={setStatusFilter}
             search={search}
@@ -125,11 +158,23 @@ export function SellersPage() {
             statusFilter={statusFilter}
           />
         </div>
-        <div className="col-span-12 xl:col-span-7">
-          <RepDetailPanel
-            onDeleted={() => setSelectedSellerId(undefined)}
-            sellerId={selectedSellerId}
-          />
+        <div
+          className={cn(
+            'flex flex-col gap-space-md xl:col-span-7',
+            hasExplicitSelection ? 'col-span-12' : 'hidden xl:block',
+          )}
+        >
+          <button
+            className="font-label-md flex h-10 w-fit items-center gap-1 rounded-lg bg-surface-container-lowest px-space-md text-label-md text-on-surface shadow-sm transition-colors hover:bg-surface-container-high xl:hidden"
+            onClick={handleBackToList}
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[20px]">
+              chevron_right
+            </span>
+            {REP_DETAIL_BACK}
+          </button>
+          <RepDetailPanel onDeleted={handleBackToList} sellerId={selectedSellerId} />
         </div>
       </div>
 

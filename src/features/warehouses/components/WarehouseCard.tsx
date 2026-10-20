@@ -168,7 +168,7 @@ export function WarehouseCard({
       <div className="mt-space-sm flex items-center justify-between gap-space-sm pt-space-md">
         <button
           className={cn(
-            'flex h-9 flex-1 items-center justify-center gap-1 rounded-lg px-space-md text-label-md font-label-md transition-all',
+            'flex h-10 flex-1 items-center justify-center gap-1 rounded-lg px-space-md text-label-md font-label-md transition-all md:h-9',
             selected
               ? 'bg-primary-container text-on-primary hover:bg-primary'
               : 'bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary',
@@ -180,7 +180,7 @@ export function WarehouseCard({
           {WAREHOUSE_DISTRIBUTE_BUTTON}
         </button>
         <button
-          className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-container text-on-surface transition-colors hover:bg-surface-container-high"
+          className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container text-on-surface transition-colors hover:bg-surface-container-high md:h-9 md:w-9"
           onClick={onEdit}
           title={WAREHOUSE_EDIT_TOOLTIP}
           type="button"
@@ -188,7 +188,7 @@ export function WarehouseCard({
           <span className="material-symbols-outlined text-[18px]">edit</span>
         </button>
         <button
-          className="flex h-9 w-9 items-center justify-center rounded-lg bg-error-container text-on-error-container transition-colors hover:bg-error hover:text-on-error"
+          className="flex h-10 w-10 items-center justify-center rounded-lg bg-error-container text-on-error-container transition-colors hover:bg-error hover:text-on-error md:h-9 md:w-9"
           onClick={onDeleteRequest}
           title={WAREHOUSE_DELETE_TOOLTIP}
           type="button"

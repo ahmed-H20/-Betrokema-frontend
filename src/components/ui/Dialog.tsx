@@ -21,7 +21,12 @@ export function Dialog({
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-primary/60 backdrop-blur-sm" />
         <DialogPrimitive.Content
           className={cn(
-            'fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-full -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl bg-surface-container-lowest shadow-2xl',
+            // R1: below `md`, every dialog is a full-screen sheet (no
+            // rounding, fills the viewport) instead of a centered card —
+            // `md:` and up restores the exact previous centered-dialog
+            // classes untouched.
+            'fixed inset-0 z-50 flex h-dvh w-full flex-col overflow-hidden bg-surface-container-lowest shadow-2xl',
+            'md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[90vh] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl',
             widthClassName,
           )}
         >

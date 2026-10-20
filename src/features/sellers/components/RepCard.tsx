@@ -16,6 +16,18 @@ const STATUS_DOT_CLASSES: Record<EnrichedSeller['status'], string> = {
   VACATION: 'bg-outline',
 }
 
+// Selected-card corner badge, per `petrokema_web_admin_2`: ACTIVE is plain
+// colored text next to the dot (no background), but SUSPENDED is a full
+// pill (bg-error-container/text-on-error-container/rounded/font-mono) — a
+// structural difference per status, not just a color swap. No VACATION
+// sample exists in the export; kept as plain text (same shape as ACTIVE)
+// since a pill treatment was only ever confirmed for SUSPENDED.
+const STATUS_LABEL_CLASSES: Record<EnrichedSeller['status'], string> = {
+  ACTIVE: 'text-on-secondary-fixed-variant',
+  SUSPENDED: 'rounded bg-error-container px-1.5 py-0.5 font-mono text-on-error-container',
+  VACATION: 'text-outline',
+}
+
 // Bolds the digit only when one is actually shown (3+) — for 1/2 the noun
 // form itself already encodes the count ("عميل واحد", "عميلان"), so there's
 // no digit to bold. See src/lib/format.ts's arabicCountPhrase for the rule.
@@ -84,7 +96,12 @@ export function RepCard({
       >
         <div className="absolute left-3 top-3 flex items-center gap-1.5">
           <span className={cn('h-2 w-2 rounded-full', STATUS_DOT_CLASSES[seller.status])} />
-          <span className="font-label-sm text-label-sm font-semibold text-on-secondary-fixed-variant">
+          <span
+            className={cn(
+              'font-label-sm text-label-sm font-semibold',
+              STATUS_LABEL_CLASSES[seller.status],
+            )}
+          >
             {SELLER_STATUS_LABELS[seller.status]}
           </span>
         </div>

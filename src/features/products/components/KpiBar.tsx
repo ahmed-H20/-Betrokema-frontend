@@ -42,6 +42,7 @@ function KpiCard({
   value,
   valueClassName,
   unit,
+  isCurrencyUnit,
   footer,
 }: {
   icon: string
@@ -51,30 +52,46 @@ function KpiCard({
   value: string
   valueClassName?: string
   unit: string
+  isCurrencyUnit?: boolean
   footer: ReactNode
 }) {
+  const valueAndUnit = (
+    <>
+      <span
+        className={`font-headline-xl text-2xl md:text-headline-xl ${valueClassName ?? 'text-primary'}`}
+      >
+        {value}
+      </span>
+      <span className="font-label-sm text-label-sm text-on-surface-variant">
+        {unit}
+      </span>
+    </>
+  )
+
   return (
     <div className="relative flex flex-col justify-between overflow-hidden rounded-xl bg-surface-container-lowest p-5 shadow-sm">
       <div className="flex items-start justify-between">
         <div>
           <span
-            className={`font-label-md mb-1 block text-label-md text-on-surface-variant ${labelClassName ?? ''}`}
+            className={`font-label-md mb-1 block text-label-md ${labelClassName ?? 'text-on-surface-variant'}`}
           >
             {label}
           </span>
-          <div className="flex items-baseline gap-2">
-            <span
-              className={`font-headline-xl text-headline-xl text-primary ${valueClassName ?? ''}`}
-            >
-              {value}
-            </span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant">
-              {unit}
-            </span>
-          </div>
+          {isCurrencyUnit ? (
+            // Detail rule (CLAUDE.md): an amount and its currency live in
+            // one bdi and never wrap apart — unlike the other 3 cards'
+            // plural-phrase units, this one is a real currency amount.
+            <bdi className="flex items-baseline gap-2 whitespace-nowrap" dir="ltr">
+              {valueAndUnit}
+            </bdi>
+          ) : (
+            <div className="flex flex-wrap items-baseline gap-2">
+              {valueAndUnit}
+            </div>
+          )}
         </div>
         <div
-          className={`flex h-11 w-11 items-center justify-center rounded-lg ${iconClassName}`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${iconClassName}`}
         >
           <span className="material-symbols-outlined text-[24px]">
             {icon}
@@ -151,6 +168,7 @@ export function KpiBar() {
         }
         icon="payments"
         iconClassName="bg-secondary-fixed text-on-secondary-fixed-variant"
+        isCurrencyUnit
         label={KPI_STOCK_VALUE_LABEL}
         unit={CURRENCY_SUFFIX}
         value={formatNumber(stats.totalStockValue.value)}

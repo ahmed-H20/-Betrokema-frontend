@@ -56,7 +56,10 @@ export function RepDetailPanel({
 
       <div className="rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
         <Tabs.Root defaultValue="clients">
-          <Tabs.List className="mb-space-md flex items-center gap-space-md rounded-lg bg-surface-container-low p-1.5">
+          {/* Below xl: natural-width tabs scroll horizontally instead of
+              squeezing into equal flex-1 shares — xl: restores the exact
+              original flex-1/overflow-visible/px-2 desktop behavior. */}
+          <Tabs.List className="mb-space-md flex items-center gap-2 overflow-x-auto rounded-lg bg-surface-container-low p-1.5 xl:gap-space-md xl:overflow-visible">
             {[
               { value: 'clients', icon: 'storefront', label: TAB_CLIENTS(metrics.clientsCount) },
               { value: 'invoices', icon: 'receipt_long', label: TAB_INVOICES(metrics.totalInvoicesCount) },
@@ -64,12 +67,12 @@ export function RepDetailPanel({
             ].map((tab) => (
               <Tabs.Trigger
                 className={cn(
-                  'font-label-md flex flex-1 items-center justify-center gap-space-xs rounded-md px-space-md py-2 text-label-md transition-all data-[state=active]:bg-primary-container data-[state=active]:font-bold data-[state=active]:text-on-primary data-[state=active]:shadow-xs data-[state=inactive]:font-medium data-[state=inactive]:text-on-surface-variant data-[state=inactive]:hover:text-on-surface',
+                  'font-label-md flex min-h-10 flex-shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-label-md transition-all data-[state=active]:bg-primary-container data-[state=active]:font-bold data-[state=active]:text-on-primary data-[state=active]:shadow-xs data-[state=inactive]:font-medium data-[state=inactive]:text-on-surface-variant data-[state=inactive]:hover:text-on-surface xl:min-h-0 xl:flex-1 xl:px-2',
                 )}
                 key={tab.value}
                 value={tab.value}
               >
-                <span className="material-symbols-outlined text-[18px]">
+                <span className="material-symbols-outlined shrink-0 text-[16px]">
                   {tab.icon}
                 </span>
                 {tab.label}

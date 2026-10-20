@@ -1,15 +1,20 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import type { Warehouse } from '@/api/warehouses.schema'
+import { Dialog, DialogHeader } from '@/components/ui/Dialog'
 import {
   CSV_REPORT_FILENAME_PREFIX,
   CSV_REPORT_HEADERS,
   GENERIC_ERROR,
+  WAREHOUSE_FORM_SUBTITLE,
+  WAREHOUSE_FORM_TITLE_CREATE,
+  WAREHOUSE_FORM_TITLE_EDIT,
   WAREHOUSES_ADD_BUTTON,
   WAREHOUSES_EXPORT_BUTTON,
   WAREHOUSES_PAGE_TITLE,
 } from '@/constants/strings'
 import { buildCsv, downloadCsv } from '@/lib/csv'
+import { useMediaQuery } from '@/lib/useMediaQuery'
 import { DeleteWarehouseDialog } from '@/features/warehouses/components/DeleteWarehouseDialog'
 import { InventorySection } from '@/features/warehouses/components/InventorySection'
 import { KpiRow } from '@/features/warehouses/components/KpiRow'
@@ -23,6 +28,11 @@ export function WarehousesPage() {
   const [activeOnly, setActiveOnly] = useState(false)
   const [selectedIdRaw, setSelectedId] = useState<string | undefined>(undefined)
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | undefined>(undefined)
+  const [formSheetOpen, setFormSheetOpen] = useState(false)
+  // `lg` (1024px) is also where the grid switches from the sheet to the
+  // always-visible inline panel — matches that breakpoint exactly so the
+  // two never disagree about which one should be in play.
+  const isBelowLg = useMediaQuery('(max-width: 1023px)')
   const [deleteTarget, setDeleteTarget] = useState<Warehouse | undefined>(undefined)
   const [transfersDialogOpen, setTransfersDialogOpen] = useState(false)
   const [transferModalOpen, setTransferModalOpen] = useState(false)
@@ -43,6 +53,24 @@ export function WarehousesPage() {
     if (!selectedId) return
     setTransferPreset({ warehouseId: selectedId, role: opts.mode, productId: opts.productId })
     setTransferModalOpen(true)
+  }
+
+  // Below `lg` the add/edit form opens as a sheet; at `lg`+ it's the
+  // always-visible inline panel, so opening it there is a no-op (the panel
+  // already shows whatever `editingWarehouse` is set to).
+  function handleAddClick() {
+    setEditingWarehouse(undefined)
+    if (isBelowLg) setFormSheetOpen(true)
+  }
+
+  function handleEditRequest(warehouse: Warehouse) {
+    setEditingWarehouse(warehouse)
+    if (isBelowLg) setFormSheetOpen(true)
+  }
+
+  function handleDoneEditing() {
+    setEditingWarehouse(undefined)
+    setFormSheetOpen(false)
   }
 
   async function onExportCsv() {
@@ -96,7 +124,7 @@ export function WarehousesPage() {
           </button>
           <button
             className="flex h-11 items-center gap-space-sm rounded-lg bg-primary-container px-space-lg text-label-lg font-label-lg font-bold text-on-primary shadow-md transition-all hover:bg-primary"
-            onClick={() => setEditingWarehouse(undefined)}
+            onClick={handleAddClick}
             type="button"
           >
             <span className="material-symbols-outlined text-[20px]">add_circle</span>
@@ -116,19 +144,35 @@ export function WarehousesPage() {
             isLoading={warehousesQuery.isLoading}
             onActiveOnlyChange={setActiveOnly}
             onDeleteRequest={setDeleteTarget}
-            onEdit={setEditingWarehouse}
+            onEdit={handleEditRequest}
             onSelect={setSelectedId}
             selectedId={selectedId}
             warehouses={warehouses}
           />
         </div>
-        <div className="lg:col-span-4">
-          <WarehouseFormPanel
-            editingWarehouse={editingWarehouse}
-            onDoneEditing={() => setEditingWarehouse(undefined)}
-          />
+        {/* Below lg this column collapses to nothing — the same form moves
+            into the Dialog sheet below, opened explicitly via the add/edit
+            handlers, instead of always being visible. */}
+        <div className="hidden lg:col-span-4 lg:block">
+          <WarehouseFormPanel editingWarehouse={editingWarehouse} onDoneEditing={handleDoneEditing} />
         </div>
       </div>
+
+      <Dialog onOpenChange={setFormSheetOpen} open={isBelowLg && formSheetOpen} widthClassName="max-w-lg">
+        <DialogHeader
+          icon="domain_add"
+          onClose={() => setFormSheetOpen(false)}
+          subtitle={WAREHOUSE_FORM_SUBTITLE}
+          title={
+            editingWarehouse
+              ? WAREHOUSE_FORM_TITLE_EDIT(editingWarehouse.name)
+              : WAREHOUSE_FORM_TITLE_CREATE
+          }
+        />
+        <div className="flex-1 overflow-y-auto p-6">
+          <WarehouseFormPanel bare editingWarehouse={editingWarehouse} onDoneEditing={handleDoneEditing} />
+        </div>
+      </Dialog>
 
       {selectedWarehouse ? (
         <InventorySection

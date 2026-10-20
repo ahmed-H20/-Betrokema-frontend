@@ -5,3 +5,68 @@
 body {
   font-family: 'IBM Plex Sans Arabic', sans-serif;
 }
+
+/* R1 responsive shell: iOS safe-area insets, copied from the admin phone
+   screens' own embedded styles (petrokema_admin_8 / petrokema_mobile_6) —
+   not a Tailwind core utility, so defined here verbatim. */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* R1: <main>'s bottom padding below md, so content isn't hidden behind the
+   fixed BottomTabBar — bar height (h-16 = 4rem) + the same safe-area inset
+   the bar's own .pb-safe adds to its total rendered height. */
+.pb-tabbar-safe {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* R1 nav drawer (tablet hamburger + phone "المزيد"): real CSS @keyframes,
+   not a transition, so Radix's exit-animation detection waits for them
+   before unmounting. No animation plugin is installed, so these are
+   hand-rolled the same way .pt-safe/.pb-safe are above. */
+@keyframes nav-drawer-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes nav-drawer-slide-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes nav-drawer-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes nav-drawer-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.nav-drawer-panel[data-state='open'] {
+  animation: nav-drawer-slide-in 220ms ease-out;
+}
+.nav-drawer-panel[data-state='closed'] {
+  animation: nav-drawer-slide-out 180ms ease-in;
+}
+.nav-drawer-overlay[data-state='open'] {
+  animation: nav-drawer-overlay-in 220ms ease-out;
+}
+.nav-drawer-overlay[data-state='closed'] {
+  animation: nav-drawer-overlay-out 180ms ease-in;
+}

@@ -23,45 +23,81 @@ import {
 import { arabicCountPhrase, arabicPlural, formatMillionsOrPlain, formatNumber } from '@/lib/format'
 import { useSellerStats } from '@/features/sellers/hooks'
 
+const DEFAULT_UNIT_CLASSNAME = 'font-label-md text-label-md text-on-surface-variant'
+
 function KpiCard({
   icon,
   iconClassName,
   label,
   value,
   unit,
+  unitClassName = DEFAULT_UNIT_CLASSNAME,
+  isCurrencyUnit,
   footer,
+  bodyOverride,
 }: {
   icon: string
   iconClassName: string
   label: string
-  value: ReactNode
+  value?: ReactNode
   unit?: string
-  footer: ReactNode
+  // Per `petrokema_web_admin_2`: every card's unit is small/muted EXCEPT
+  // card 2 (team sales), whose "مليون ج.م" unit is large and primary-colored
+  // — a deliberate per-card difference in the export, not an oversight.
+  unitClassName?: string
+  // Detail rule (CLAUDE.md): an amount and its currency live in one bdi and
+  // never wrap apart. Only card 2 (team sales) is a real currency amount.
+  isCurrencyUnit?: boolean
+  footer?: ReactNode
+  // Card 3 (target achievement) puts its number, status text and
+  // days-remaining on one shared baseline row in the export — a different
+  // shape from the other 3 cards' stacked value-row + footer-row, so it
+  // supplies its own body here instead of value/unit/footer.
+  bodyOverride?: ReactNode
 }) {
+  const valueAndUnit = (
+    <>
+      <span className="font-headline-xl text-2xl text-primary md:text-headline-xl">
+        {value}
+      </span>
+      {unit ? <span className={unitClassName}>{unit}</span> : null}
+    </>
+  )
+
   return (
-    <div className="relative flex flex-col justify-between overflow-hidden rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+    // Deliberate deviation from a plain `justify-between` card shell,
+    // logged in ui-tokens.md: with grid auto-stretch making all 4 cards the
+    // same overall height, `justify-between` pushed the value row down by a
+    // different amount per card (whichever had the shortest footer), so the
+    // big numbers didn't share one y across the row. Fixed by reserving a
+    // fixed-height footer slot below instead, so the header→value gap is
+    // identical on every card regardless of how tall its own footer is.
+    <div className="relative flex flex-col overflow-hidden rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
       <div className="flex items-center justify-between">
         <span className="font-label-md text-label-md font-medium text-on-surface-variant">
           {label}
         </span>
         <div
-          className={`flex h-9 w-9 items-center justify-center rounded-lg ${iconClassName}`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconClassName}`}
         >
           <span className="material-symbols-outlined text-[20px]">{icon}</span>
         </div>
       </div>
       <div className="mt-space-sm">
-        <div className="flex items-baseline gap-space-xs">
-          <span className="font-headline-xl text-headline-xl text-primary">
-            {value}
-          </span>
-          {unit ? (
-            <span className="font-label-md text-label-md text-on-surface-variant">
-              {unit}
-            </span>
-          ) : null}
-        </div>
-        {footer}
+        {bodyOverride ?? (
+          <>
+            {isCurrencyUnit ? (
+              <bdi className="flex items-baseline gap-space-xs whitespace-nowrap" dir="ltr">
+                {valueAndUnit}
+              </bdi>
+            ) : (
+              <div className="flex flex-wrap items-baseline gap-space-xs">
+                {valueAndUnit}
+              </div>
+            )}
+            <div className="min-h-10">{footer}</div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -98,18 +134,18 @@ export function KpiRow() {
     <div className="grid grid-cols-1 gap-space-md sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         footer={
-          <div className="mt-2 flex items-center gap-2 rounded-lg bg-surface-container-low px-2 py-1.5">
-            <span className="font-label-sm flex items-center gap-1 text-label-sm font-semibold text-on-surface">
+          <div className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1 rounded-lg bg-surface-container-low px-1.5 py-1">
+            <span className="font-label-sm flex items-center gap-0.5 whitespace-nowrap text-label-sm font-semibold text-on-surface">
               <StatusDot colorClassName="bg-secondary" />
               {formatNumber(stats.certifiedSellers.active)} {KPI_REPS_STATUS_ACTIVE}
             </span>
             <span className="font-label-sm text-outline">•</span>
-            <span className="font-label-sm flex items-center gap-1 text-label-sm font-semibold text-on-surface">
+            <span className="font-label-sm flex items-center gap-0.5 whitespace-nowrap text-label-sm font-semibold text-on-surface">
               <StatusDot colorClassName="bg-error" />
               {formatNumber(stats.certifiedSellers.suspended)} {KPI_REPS_STATUS_SUSPENDED}
             </span>
             <span className="font-label-sm text-outline">•</span>
-            <span className="font-label-sm flex items-center gap-1 text-label-sm text-on-surface-variant">
+            <span className="font-label-sm flex items-center gap-0.5 whitespace-nowrap text-label-sm text-on-surface-variant">
               <StatusDot colorClassName="bg-outline" />
               {formatNumber(stats.certifiedSellers.vacation)} {KPI_REPS_STATUS_VACATION}
             </span>
@@ -145,18 +181,33 @@ export function KpiRow() {
         }
         icon="payments"
         iconClassName="bg-primary-fixed text-on-primary-fixed"
+        isCurrencyUnit
         label={KPI_TEAM_SALES_LABEL}
         unit={totalSales.unit}
+        unitClassName="font-headline-md text-headline-md text-primary"
         value={totalSales.value}
       />
       <KpiCard
-        footer={
+        bodyOverride={
           <>
-            <div className="flex items-baseline justify-between">
-              <span className="font-label-md text-label-md font-semibold text-secondary">
-                {stats.targetAchievement.statusText}
-              </span>
-              <span className="font-label-sm text-label-sm text-on-surface-variant">
+            {/* Matches petrokema_web_admin_2's own markup exactly: the
+                number, status text and days-remaining share one baseline
+                row — unlike the other 3 cards' stacked value+footer rows. */}
+            <div className="flex items-baseline justify-between gap-space-xs">
+              <div className="flex min-w-0 items-baseline gap-space-xs">
+                <span className="font-headline-xl text-2xl text-primary md:text-headline-xl">
+                  <bdi dir="ltr">
+                    {formatNumber(stats.targetAchievement.percentage)}%
+                  </bdi>
+                </span>
+                <span
+                  className="font-label-md truncate text-label-md font-semibold text-secondary"
+                  title={stats.targetAchievement.statusText}
+                >
+                  {stats.targetAchievement.statusText}
+                </span>
+              </div>
+              <span className="font-label-sm shrink-0 whitespace-nowrap text-label-sm text-on-surface-variant">
                 {KPI_TARGET_DAYS_REMAINING(
                   arabicCountPhrase(
                     stats.targetAchievement.daysRemaining,
@@ -178,9 +229,6 @@ export function KpiRow() {
         icon="track_changes"
         iconClassName="bg-secondary-fixed text-on-secondary-fixed-variant"
         label={KPI_TARGET_ACHIEVEMENT_LABEL}
-        value={
-          <bdi dir="ltr">{formatNumber(stats.targetAchievement.percentage)}%</bdi>
-        }
       />
       <KpiCard
         footer={
