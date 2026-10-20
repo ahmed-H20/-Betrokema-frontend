@@ -85,12 +85,13 @@ export function FeaturedBanner() {
             {FEATURED_STOCK_AVAILABLE}
           </span>
           <span className="font-headline-md text-headline-md text-secondary-fixed">
-            <bdi dir="ltr">{formatNumber(product.quantity)}</bdi>{' '}
-            {STOCK_UNIT_SUFFIX}
+            <bdi className="whitespace-nowrap" dir="ltr">
+              {formatNumber(product.quantity)} {STOCK_UNIT_SUFFIX}
+            </bdi>
           </span>
         </div>
         <button
-          className="font-label-md flex items-center gap-1.5 rounded-lg bg-secondary px-4 py-2 text-label-md text-on-secondary transition-all hover:bg-secondary/90"
+          className="font-label-md flex min-h-10 items-center gap-1.5 rounded-lg bg-secondary px-4 py-2 text-label-md text-on-secondary transition-all hover:bg-secondary/90 lg:min-h-0"
           onClick={() => setQuickEditOpen(true)}
           type="button"
         >

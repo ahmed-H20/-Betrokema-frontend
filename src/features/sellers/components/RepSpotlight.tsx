@@ -119,7 +119,7 @@ export function RepSpotlight({
         </div>
         <div className="flex items-center gap-space-xs self-end sm:self-auto">
           <button
-            className="font-label-sm flex h-9 items-center gap-1 rounded-lg bg-surface-container-high px-space-md text-label-sm text-on-surface transition-colors hover:bg-surface-container-highest"
+            className="font-label-sm flex h-10 items-center gap-1 whitespace-nowrap rounded-lg bg-surface-container-high px-space-md text-label-sm text-on-surface transition-colors hover:bg-surface-container-highest xl:h-9"
             onClick={onEdit}
             type="button"
           >
@@ -130,7 +130,7 @@ export function RepSpotlight({
             <DropdownMenu.Trigger asChild>
               <button
                 aria-label={REP_MORE_ACTIONS_LABEL}
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-container-low text-on-surface transition-colors hover:bg-surface-container-high"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-low text-on-surface transition-colors hover:bg-surface-container-high xl:h-9 xl:w-9"
                 type="button"
               >
                 <span className="material-symbols-outlined text-[18px]">

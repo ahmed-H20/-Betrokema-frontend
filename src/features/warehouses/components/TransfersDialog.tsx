@@ -45,6 +45,75 @@ function formatTransferDate(iso: string | undefined): string {
   }).format(new Date(iso))
 }
 
+// Below md: one card per transfer instead of a table row — no dedicated
+// phone reference exists for this exact list (admin_6's own list is
+// inventory items, not transfer requests), so this follows the same visual
+// language as InventoryItemCard/ClientCard for consistency rather than
+// guessing at an unreferenced shape.
+function TransferCard({
+  transfer,
+  busy,
+  onAction,
+}: {
+  transfer: StockTransfer
+  busy: boolean
+  onAction: (transfer: StockTransfer, status: TransferStatus) => void
+}) {
+  const itemsLabel = transfer.items
+    .map(
+      (item) =>
+        `${typeof item.product === 'string' ? item.productName : item.product.name} (${formatNumber(item.quantity)})`,
+    )
+    .join('، ')
+
+  return (
+    <div className="flex flex-col gap-2 rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <bdi className="font-mono whitespace-nowrap font-bold text-primary" dir="ltr">
+          {transfer.transferCode}
+        </bdi>
+        <StatusPill
+          label={TRANSFER_STATUS_LABELS[transfer.status]}
+          tone={transferStatusTone(transfer.status)}
+        />
+      </div>
+      <div className="font-body-sm text-body-sm text-on-surface">
+        {warehouseLabel(transfer.fromWarehouse)} ← {warehouseLabel(transfer.toWarehouse)}
+      </div>
+      <div className="font-body-sm text-body-sm text-on-surface-variant">{itemsLabel}</div>
+      <div className="flex items-center justify-between gap-2 border-t border-surface-container pt-2">
+        <span className="font-label-sm text-label-sm text-on-surface-variant">
+          {formatTransferDate(transfer.requestedAt ?? transfer.createdAt)}
+        </span>
+        {transfer.status === 'pending' ? (
+          <div className="flex items-center gap-1">
+            <button
+              className="font-label-sm flex h-10 items-center rounded-lg bg-primary px-space-sm text-label-sm font-semibold text-on-primary transition-all hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={busy}
+              onClick={() => onAction(transfer, 'completed')}
+              type="button"
+            >
+              {TRANSFER_COMPLETE_ACTION}
+            </button>
+            <button
+              className="font-label-sm flex h-10 items-center rounded-lg bg-surface-container-high px-space-sm text-label-sm text-on-surface transition-all hover:bg-error-container hover:text-on-error-container disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={busy}
+              onClick={() => onAction(transfer, 'rejected')}
+              type="button"
+            >
+              {TRANSFER_REJECT_ACTION}
+            </button>
+          </div>
+        ) : transfer.status === 'approved' || transfer.status === 'completed' ? (
+          <span className="font-label-sm text-label-sm text-on-surface-variant">
+            {TRANSFER_STOCK_MOVED_NOTE}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 export function TransfersDialog({
   open,
   onOpenChange,
@@ -91,7 +160,19 @@ export function TransfersDialog({
         ) : transfers.length === 0 ? (
           <StateMessage minHeightClassName="min-h-[200px]" text={TRANSFERS_EMPTY} />
         ) : (
-          <table className="w-full border-collapse text-right">
+          <>
+          <div className="flex flex-col gap-space-sm md:hidden">
+            {transfers.map((transfer) => (
+              <TransferCard
+                busy={actingIds.has(transfer._id)}
+                key={transfer._id}
+                onAction={(target, status) => void onAction(target, status)}
+                transfer={transfer}
+              />
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
+          <table className="w-full min-w-[640px] border-collapse text-right">
             <thead>
               <tr className="bg-surface-container-low">
                 <th className="font-label-md w-44 rounded-r-lg px-space-md py-space-sm text-label-md text-on-surface-variant">
@@ -175,6 +256,8 @@ export function TransfersDialog({
               })}
             </tbody>
           </table>
+          </div>
+          </>
         )}
       </div>
       <div className="flex items-center justify-end gap-space-sm bg-surface-container px-space-lg py-space-md">

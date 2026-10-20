@@ -54,7 +54,7 @@ export function RepsDirectory({
   statusFilter: SellerStatus | undefined
   onStatusFilterChange: (status: SellerStatus | undefined) => void
   selectedSellerId: string | undefined
-  onSelectSeller: (id: string | undefined) => void
+  onSelectSeller: (id: string) => void
 }) {
   const sortLabel =
     SORT_OPTIONS.find((option) => option.value === sort)?.label ??
@@ -118,7 +118,7 @@ export function RepsDirectory({
             search
           </span>
           <input
-            className="font-body-sm h-9 w-full rounded-lg bg-surface-container-low pl-3 pr-9 text-body-sm text-on-surface placeholder-outline focus:bg-surface-container-lowest focus:outline-none"
+            className="font-body-sm h-10 w-full rounded-lg bg-surface-container-low pl-3 pr-9 text-body-sm text-on-surface placeholder-outline focus:bg-surface-container-lowest focus:outline-none md:h-9"
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={REPS_SEARCH_PLACEHOLDER}
             type="text"
@@ -128,7 +128,7 @@ export function RepsDirectory({
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button
-              className="font-label-sm flex h-9 items-center gap-1 rounded-lg bg-surface-container-low px-2.5 text-label-sm text-on-surface hover:bg-surface-container-high"
+              className="font-label-sm flex h-10 items-center gap-1 rounded-lg bg-surface-container-low px-2.5 text-label-sm text-on-surface hover:bg-surface-container-high md:h-9"
               type="button"
             >
               <span className="material-symbols-outlined text-[16px] text-secondary">

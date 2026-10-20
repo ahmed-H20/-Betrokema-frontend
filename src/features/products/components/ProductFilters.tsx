@@ -65,7 +65,7 @@ export function ProductFilters({
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           <button
             className={cn(
-              'font-label-md flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-label-md transition-all',
+              'font-label-md flex min-h-10 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-label-md transition-all lg:min-h-0 lg:rounded-lg',
               selectedCategory === 'all'
                 ? 'bg-primary text-on-primary shadow-sm'
                 : 'bg-surface-container-low text-on-surface hover:bg-surface-container',
@@ -81,7 +81,7 @@ export function ProductFilters({
           {categories.map((category) => (
             <button
               className={cn(
-                'font-label-md flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-label-md transition-colors',
+                'font-label-md flex min-h-10 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-label-md transition-colors lg:min-h-0 lg:rounded-lg',
                 selectedCategory === category._id
                   ? 'bg-primary text-on-primary shadow-sm'
                   : 'bg-surface-container-low text-on-surface hover:bg-surface-container',

@@ -84,11 +84,16 @@ export function ProductsPage() {
       <KpiBar />
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-        <div className="flex flex-col gap-4 lg:col-span-4">
+        {/* Below lg: category add-form + list collapse into a section below
+            the product list, following the mapped phone screen
+            (petrokema_admin_7) — `order` puts it visually last while
+            `lg:order-none` restores normal DOM order (right column) at
+            desktop width, unchanged. */}
+        <div className="order-2 flex flex-col gap-4 lg:order-none lg:col-span-4">
           <CategoryPanel />
         </div>
 
-        <div className="flex flex-col gap-5 lg:col-span-8">
+        <div className="order-1 flex flex-col gap-5 lg:order-none lg:col-span-8">
           <ProductFilters
             categories={categoriesQuery.data?.data ?? []}
             onSearchChange={handleSearchChange}

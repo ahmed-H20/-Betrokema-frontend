@@ -46,14 +46,14 @@ function KpiCard({
           {label}
         </span>
         <span
-          className={`flex h-9 w-9 items-center justify-center rounded-lg ${iconClassName}`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconClassName}`}
         >
           <span className="material-symbols-outlined text-[22px]">{icon}</span>
         </span>
       </div>
       <div className="my-space-sm">
-        <div className="flex items-baseline gap-space-xs">
-          <span className={`font-headline-xl text-headline-xl font-bold ${valueClassName}`}>
+        <div className="flex flex-wrap items-baseline gap-space-xs">
+          <span className={`font-headline-xl text-2xl font-bold md:text-headline-xl ${valueClassName}`}>
             {value}
           </span>
           {unit ? (

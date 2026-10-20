@@ -71,6 +71,44 @@ function KpiPill({
   )
 }
 
+// Below md: one card per invoice instead of a table row, same visual
+// language as ClientsTab's card (no dedicated phone reference for an
+// invoice-row list specifically, unlike clients — see context/ui-tokens.md).
+function InvoiceCard({ invoice }: { invoice: Invoice }) {
+  const badge = getInvoiceRowBadge(invoice)
+  const overdue = isOverdue(invoice)
+
+  return (
+    <article className="flex flex-col gap-space-sm rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+      <div className="flex items-start justify-between gap-space-sm">
+        <div className="flex min-w-0 flex-col">
+          <bdi className="font-mono whitespace-nowrap font-bold text-primary" dir="ltr">
+            {invoice.invoiceCode}
+          </bdi>
+          <span className="font-label-sm truncate text-label-sm text-on-surface-variant">
+            {clientLabel(invoice.client)}
+          </span>
+        </div>
+        <StatusPill label={badge.label} tone={badge.tone} />
+      </div>
+      <div className="flex items-center justify-between gap-space-sm border-t border-surface-container pt-2">
+        <span className="font-body-sm text-body-sm text-on-surface-variant">
+          {formatInvoiceDate(invoice.createdAt)}
+        </span>
+        <bdi
+          className={cn(
+            'font-mono whitespace-nowrap font-bold',
+            overdue ? 'text-error' : 'text-on-surface',
+          )}
+          dir="ltr"
+        >
+          {formatNumber(invoice.totalPrice)} ج.م
+        </bdi>
+      </div>
+    </article>
+  )
+}
+
 const features = tableFeatures({})
 const columnHelper = createColumnHelper<typeof features, Invoice>()
 
@@ -157,8 +195,14 @@ export function InvoicesTab({ sellerId }: { sellerId: string }) {
       ) : data.length === 0 ? (
         <StateMessage minHeightClassName="min-h-[160px]" text={INVOICES_EMPTY} />
       ) : (
-        <div className="max-h-[420px] overflow-auto rounded-lg">
-          <table className="w-full border-collapse text-right">
+        <>
+          <div className="flex max-h-[420px] flex-col gap-space-sm overflow-y-auto md:hidden">
+            {data.map((invoice) => (
+              <InvoiceCard invoice={invoice} key={invoice._id} />
+            ))}
+          </div>
+          <div className="hidden max-h-[420px] overflow-x-auto overflow-y-auto rounded-lg md:block">
+          <table className="w-full min-w-[480px] border-collapse text-right">
             <thead className="sticky top-0">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr className="bg-surface-container-low" key={headerGroup.id}>
@@ -195,7 +239,8 @@ export function InvoicesTab({ sellerId }: { sellerId: string }) {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   )

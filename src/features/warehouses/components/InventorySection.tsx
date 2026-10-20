@@ -55,6 +55,109 @@ function AvailabilityPill({ label, critical }: { label: string; critical: boolea
   )
 }
 
+// Below md: one card per inventory item, following petrokema_mobile_6's own
+// allocation-card shape (thumbnail tile with a bin-location overlay badge,
+// name+status-pill header, SKU/reorder sub-row, stock+unit and an action
+// button on a shared baseline row) — no product photo exists in this data
+// model, so the thumbnail is a plain icon tile instead of an `<img>` (same
+// "no upload endpoint" reasoning already logged for products/sellers). The
+// reference only has one action (adjust stock); this app's row also needs
+// a transfer action, added as a second button since that feature doesn't
+// exist in the reference to copy from.
+function InventoryItemCard({
+  item,
+  onEditStock,
+  onTransfer,
+}: {
+  item: InventoryItem
+  onEditStock: (item: InventoryItem) => void
+  onTransfer: (item: InventoryItem) => void
+}) {
+  const unitNoun = firstWord(item.packagingUnit)
+  return (
+    <div className="flex flex-col gap-3 rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
+          <div className="flex h-full w-full items-center justify-center text-on-surface-variant">
+            <span className="material-symbols-outlined text-[26px]">
+              package_2
+            </span>
+          </div>
+          <span
+            className="font-label-sm absolute inset-x-0 bottom-0 whitespace-nowrap bg-primary/70 py-0.5 text-center text-[9px] text-on-primary"
+            dir="ltr"
+          >
+            {item.binLocation}
+          </span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-1">
+            <h4
+              className={cn(
+                'font-headline-sm truncate text-headline-sm font-semibold',
+                item.isCritical ? 'text-error' : 'text-primary',
+              )}
+            >
+              {item.productName}
+            </h4>
+            <AvailabilityPill critical={item.isCritical} label={item.stockStatus} />
+          </div>
+          <div className="font-body-sm mt-0.5 flex items-center gap-1 text-body-sm text-on-surface-variant">
+            <bdi className="whitespace-nowrap" dir="ltr">
+              {item.sku}
+            </bdi>
+            <span>•</span>
+            <span className="truncate">
+              {INVENTORY_COL_REORDER}: {formatNumber(item.reorderLevel)} {unitNoun}
+            </span>
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <bdi
+              className={cn(
+                'font-label-lg whitespace-nowrap text-label-lg font-bold',
+                item.isCritical ? 'text-error' : 'text-primary',
+              )}
+              dir="ltr"
+            >
+              {formatNumber(item.currentStock)}{' '}
+              <span className="font-label-sm font-normal text-on-surface-variant">
+                {item.packagingUnit}
+              </span>
+            </bdi>
+            <div className="flex items-center gap-1">
+              <button
+                className="flex h-10 items-center gap-1 rounded-lg bg-surface-container px-3 text-label-sm font-label-sm text-primary transition-colors hover:bg-surface-container-high"
+                onClick={() => onEditStock(item)}
+                title={INVENTORY_UPDATE_TOOLTIP}
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  edit_note
+                </span>
+              </button>
+              <button
+                className={cn(
+                  'flex h-10 items-center gap-1 rounded-lg px-3 text-label-sm font-label-sm transition-colors',
+                  item.isCritical
+                    ? 'bg-error-container text-on-error-container hover:bg-error hover:text-on-error'
+                    : 'bg-surface-container text-primary hover:bg-surface-container-high',
+                )}
+                onClick={() => onTransfer(item)}
+                title={item.isCritical ? INVENTORY_URGENT_TRANSFER_TOOLTIP : INVENTORY_TRANSFER_TOOLTIP}
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  {item.isCritical ? 'swap_horizontal_circle' : 'move_up'}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const features = tableFeatures({})
 const columnHelper = createColumnHelper<typeof features, InventoryItem>()
 
@@ -295,8 +398,24 @@ export function InventorySection({
       ) : data.length === 0 ? (
         <StateMessage minHeightClassName="min-h-[200px]" text={INVENTORY_EMPTY} />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-right">
+        <>
+          <div className="flex flex-col gap-space-sm md:hidden">
+            {data.map((item) => (
+              <InventoryItemCard
+                item={item}
+                key={item._id}
+                onEditStock={(target) => setEditingItem(target)}
+                onTransfer={(target) =>
+                  onOpenTransfer({
+                    mode: target.isCritical ? 'destination' : 'source',
+                    productId: target.productId,
+                  })
+                }
+              />
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
+          <table className="w-full min-w-[720px] border-collapse text-right">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr className="bg-surface-container-low" key={headerGroup.id}>
@@ -330,7 +449,8 @@ export function InventorySection({
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
 
       {inventoryQuery.data ? (

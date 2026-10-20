@@ -23,6 +23,19 @@ export const USER_ROLE_LABEL = 'مسؤول النظام'
 
 export const PLACEHOLDER_TEXT = 'قيد الإنشاء'
 
+// Responsive shell (R1): phone bottom tab bar + tablet/phone nav drawer.
+// Short labels for the bottom bar only — the full sidebar/drawer nav keeps
+// NAV_ITEMS' longer labels above. See context/responsive-plan.md's Part 3
+// "bottom tab bar item set" note for why these 4 + "المزيد" were chosen.
+export const BOTTOM_NAV_INVOICES_LABEL = 'الفواتير'
+export const BOTTOM_NAV_PRODUCTS_LABEL = 'المنتجات'
+export const BOTTOM_NAV_SELLERS_LABEL = 'المناديب'
+export const BOTTOM_NAV_WAREHOUSES_LABEL = 'المخازن'
+export const BOTTOM_NAV_MORE_LABEL = 'المزيد'
+export const OPEN_NAV_DRAWER_LABEL = 'فتح القائمة'
+export const CLOSE_NAV_DRAWER_LABEL = 'إغلاق القائمة'
+export const SEARCH_ICON_LABEL = 'بحث'
+
 export const NOT_FOUND_TITLE = 'الصفحة غير موجودة'
 export const NOT_FOUND_MESSAGE =
   'تعذر العثور على الصفحة التي تحاول الوصول إليها.'
@@ -148,6 +161,11 @@ export const PAGINATION_SUMMARY = (
   total: number,
   productWord: string,
 ) => `عرض ${from} - ${to} من إجمالي ${total} ${productWord} مسجل بالمنظومة`
+// Compact phone pagination (R2-products-responsive): page-number buttons are
+// dropped below `sm`, replaced by this single indicator between the prev/next
+// buttons — see context/ui-tokens.md.
+export const PAGINATION_COMPACT_PAGE = (current: number, total: number) =>
+  `صفحة ${current} من ${total}`
 
 export const PRODUCT_MODAL_TITLE = 'إدراج منتج دهانات أو كيماويات جديد'
 export const PRODUCT_MODAL_SUBTITLE = 'كتالوج منتجات بتروكيما المركزية'
@@ -300,6 +318,10 @@ export const REP_METRIC_COMMISSION = 'العمولات المستحقة'
 export const REP_METRIC_COLLECTION = 'معدل التحصيل المالي'
 export const REP_COLLECTION_RATE_UNKNOWN = '—'
 export const REP_DETAIL_EMPTY = 'اختر مندوباً من القائمة لعرض بياناته'
+// R3-sellers-responsive: below xl the detail view replaces the list
+// (URL-driven, ?rep=<id>) instead of sitting beside it — this is that view's
+// back button, see context/ui-tokens.md.
+export const REP_DETAIL_BACK = 'العودة إلى القائمة'
 
 export const TAB_CLIENTS = (count: number) => `العملاء المسجلون (${count} عميل)`
 export const TAB_INVOICES = (count: number) => `فواتير المندوب والتحصيل (${count})`

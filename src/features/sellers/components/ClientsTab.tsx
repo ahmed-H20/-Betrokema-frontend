@@ -40,6 +40,86 @@ function effectiveStatus(client: Client): ClientPaymentStatus | 'unknown' {
   return client.paymentStatus
 }
 
+// Below md: one card per client instead of a table row, following
+// petrokema_admin_2's client-card shape (icon tile, name+status header,
+// contact row, 2-col financial grid) — its own "quick order"/"client
+// history" action buttons aren't included since neither feature exists in
+// this app yet (see context/ui-tokens.md).
+function ClientCard({ client }: { client: Client }) {
+  const status = effectiveStatus(client)
+  const label = status === 'unknown' ? CLIENT_STATUS_UNKNOWN : CLIENT_STATUS_LABELS[status]
+  const tone = status === 'unknown' ? 'neutral' : CLIENT_STATUS_TONE[status]
+  const overCredit = client.currentDebt > client.creditLimit
+  const subtitle = [client.address, client.city].filter(Boolean).join(' · ')
+
+  return (
+    <article className="flex flex-col gap-space-sm rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+      <div className="flex items-start justify-between gap-space-sm">
+        <div className="flex min-w-0 items-start gap-space-sm">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-surface-container-low text-primary">
+            <span className="material-symbols-outlined text-[22px]">
+              apartment
+            </span>
+          </div>
+          <div className="flex min-w-0 flex-col">
+            <h3 className="font-headline-sm truncate text-headline-sm text-primary">
+              {client.organizeName}
+            </h3>
+            {subtitle ? (
+              <span className="font-label-sm truncate text-label-sm text-on-surface-variant">
+                {subtitle}
+              </span>
+            ) : null}
+          </div>
+        </div>
+        <StatusPill label={label} tone={tone} />
+      </div>
+
+      <div className="flex items-center gap-space-sm rounded-lg bg-surface-container-low p-space-sm">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="font-label-md truncate text-label-md font-semibold text-on-surface">
+            {client.contactPerson || client.name}
+          </span>
+          <span
+            className="font-body-sm mt-0.5 flex items-center gap-1 text-body-sm text-on-surface-variant"
+            dir="ltr"
+          >
+            <span className="material-symbols-outlined text-[14px] text-secondary">
+              call
+            </span>
+            {client.phone}
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-space-sm">
+        <div className="rounded-lg bg-surface-container-low p-2.5">
+          <span className="font-label-sm block text-label-sm text-on-surface-variant">
+            {CLIENTS_COL_CREDIT}
+          </span>
+          <bdi className="font-label-lg whitespace-nowrap text-label-lg font-bold text-primary" dir="ltr">
+            {formatNumber(client.creditLimit)} ج.م
+          </bdi>
+        </div>
+        <div className="rounded-lg bg-surface-container-low p-2.5">
+          <span className="font-label-sm block text-label-sm text-on-surface-variant">
+            {CLIENTS_COL_DEBT}
+          </span>
+          <bdi
+            className={cn(
+              'font-label-lg whitespace-nowrap text-label-lg font-bold',
+              overCredit ? 'text-error' : 'text-primary',
+            )}
+            dir="ltr"
+          >
+            {formatNumber(client.currentDebt)} ج.م
+          </bdi>
+        </div>
+      </div>
+    </article>
+  )
+}
+
 const features = tableFeatures({})
 const columnHelper = createColumnHelper<typeof features, Client>()
 
@@ -77,7 +157,13 @@ const columns = columnHelper.columns([
   }),
   columnHelper.accessor('creditLimit', {
     header: CLIENTS_COL_CREDIT,
-    cell: (info) => <span className="font-mono text-on-surface">{formatNumber(info.getValue())} ج.م</span>,
+    cell: (info) => (
+      <span className="font-mono text-on-surface">
+        <bdi className="whitespace-nowrap" dir="ltr">
+          {formatNumber(info.getValue())} ج.م
+        </bdi>
+      </span>
+    ),
   }),
   columnHelper.accessor('currentDebt', {
     header: CLIENTS_COL_DEBT,
@@ -86,7 +172,9 @@ const columns = columnHelper.columns([
       const overCredit = client.currentDebt > client.creditLimit
       return (
         <span className={cn('font-mono font-semibold', overCredit ? 'text-error' : 'text-on-surface')}>
-          {formatNumber(info.getValue())} ج.م
+          <bdi className="whitespace-nowrap" dir="ltr">
+            {formatNumber(info.getValue())} ج.م
+          </bdi>
         </span>
       )
     },
@@ -128,7 +216,7 @@ export function ClientsTab({
           </span>
         </div>
         <button
-          className="font-label-sm flex h-9 items-center gap-1 rounded-lg bg-secondary px-space-md text-label-sm text-on-secondary shadow-xs transition-colors hover:bg-secondary/90"
+          className="font-label-sm flex h-10 items-center gap-1 rounded-lg bg-secondary px-space-md text-label-sm text-on-secondary shadow-xs transition-colors hover:bg-secondary/90 md:h-9"
           onClick={() => setAddOpen(true)}
           type="button"
         >
@@ -144,15 +232,21 @@ export function ClientsTab({
       ) : data.length === 0 ? (
         <StateMessage minHeightClassName="min-h-[160px]" text={CLIENTS_EMPTY} />
       ) : (
-        <div className="overflow-x-auto rounded-lg">
-          <table className="w-full border-collapse text-right">
+        <>
+          <div className="flex flex-col gap-space-sm md:hidden">
+            {data.map((client) => (
+              <ClientCard client={client} key={client._id} />
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto rounded-lg md:block">
+          <table className="w-full min-w-[480px] border-collapse text-right">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr className="bg-surface-container-low" key={headerGroup.id}>
                   {headerGroup.headers.map((header, index) => (
                     <th
                       className={cn(
-                        'font-label-md px-space-md py-space-sm text-label-md text-on-surface-variant',
+                        'font-label-md whitespace-nowrap px-space-md py-space-sm text-label-md text-on-surface-variant',
                         index === 0 && 'rounded-r-lg',
                         index === headerGroup.headers.length - 1 && 'rounded-l-lg',
                       )}
@@ -182,7 +276,8 @@ export function ClientsTab({
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
 
       <AddClientModal

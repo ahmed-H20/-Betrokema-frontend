@@ -63,9 +63,16 @@ function warehouseToFormValues(warehouse: Warehouse): WarehouseFormValues {
 export function WarehouseFormPanel({
   editingWarehouse,
   onDoneEditing,
+  bare = false,
 }: {
   editingWarehouse: Warehouse | undefined
   onDoneEditing: () => void
+  // R4-warehouses-responsive: below `lg` this same component renders inside
+  // a Dialog instead of the inline left-column panel — `bare` drops the
+  // panel's own card chrome (rounded/shadow/padding) and title/badge header
+  // since the Dialog + DialogHeader already supply those, so the form isn't
+  // double-framed. See context/ui-tokens.md.
+  bare?: boolean
 }) {
   const createWarehouse = useCreateWarehouse()
   const updateWarehouse = useUpdateWarehouse()
@@ -149,32 +156,39 @@ export function WarehouseFormPanel({
 
   return (
     <div
-      className="flex flex-col gap-space-md rounded-xl bg-surface-container-lowest p-space-lg shadow-sm"
+      className={cn(
+        'flex flex-col gap-space-md',
+        !bare && 'rounded-xl bg-surface-container-lowest p-space-lg shadow-sm',
+      )}
       ref={panelRef}
     >
-      <div className="flex items-center justify-between pb-space-sm">
-        <div className="flex items-center gap-space-xs">
-          <span className="material-symbols-outlined text-[22px] text-secondary">
-            domain_add
-          </span>
-          <h2 className="font-headline-md text-headline-md font-bold text-primary">
-            {isEdit ? WAREHOUSE_FORM_TITLE_EDIT(editingWarehouse?.name ?? '') : WAREHOUSE_FORM_TITLE_CREATE}
-          </h2>
-        </div>
-        <span
-          className={cn(
-            'font-label-sm rounded px-2 py-0.5 text-label-sm font-bold',
-            isEdit
-              ? 'bg-tertiary-fixed text-on-tertiary-fixed'
-              : 'bg-secondary-fixed text-on-secondary-fixed-variant',
-          )}
-        >
-          {isEdit ? WAREHOUSE_FORM_BADGE_EDIT : WAREHOUSE_FORM_BADGE_CREATE}
-        </span>
-      </div>
-      <p className="font-body-sm text-body-sm text-on-surface-variant">
-        {WAREHOUSE_FORM_SUBTITLE}
-      </p>
+      {!bare ? (
+        <>
+          <div className="flex items-center justify-between pb-space-sm">
+            <div className="flex items-center gap-space-xs">
+              <span className="material-symbols-outlined text-[22px] text-secondary">
+                domain_add
+              </span>
+              <h2 className="font-headline-md text-headline-md font-bold text-primary">
+                {isEdit ? WAREHOUSE_FORM_TITLE_EDIT(editingWarehouse?.name ?? '') : WAREHOUSE_FORM_TITLE_CREATE}
+              </h2>
+            </div>
+            <span
+              className={cn(
+                'font-label-sm rounded px-2 py-0.5 text-label-sm font-bold',
+                isEdit
+                  ? 'bg-tertiary-fixed text-on-tertiary-fixed'
+                  : 'bg-secondary-fixed text-on-secondary-fixed-variant',
+              )}
+            >
+              {isEdit ? WAREHOUSE_FORM_BADGE_EDIT : WAREHOUSE_FORM_BADGE_CREATE}
+            </span>
+          </div>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            {WAREHOUSE_FORM_SUBTITLE}
+          </p>
+        </>
+      ) : null}
 
       <form className="flex flex-col gap-space-md" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-1">

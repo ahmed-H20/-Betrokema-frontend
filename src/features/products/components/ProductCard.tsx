@@ -57,7 +57,7 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
   return (
     <div className="flex flex-col justify-between rounded-xl bg-surface-container-lowest p-5 shadow-sm transition-shadow hover:shadow-md">
       <div>
-        <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container">
               {product.image ? (
@@ -75,7 +75,7 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
             <div>
               <div className="mb-1 flex items-center gap-2">
                 <span
-                  className={`font-label-sm rounded-full px-2 py-0.5 text-label-sm ${
+                  className={`font-label-sm whitespace-nowrap rounded-full px-2 py-0.5 text-label-sm ${
                     categoryName
                       ? CATEGORY_BADGE_STYLES[categoryColorIndex % 3]
                       : 'bg-surface-container-highest text-on-surface-variant'
@@ -84,7 +84,10 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
                   {categoryName ?? PRODUCT_NO_CATEGORY}
                 </span>
                 {product.code ? (
-                  <span className="font-label-sm text-label-sm text-outline" dir="ltr">
+                  <span
+                    className="font-label-sm whitespace-nowrap text-label-sm text-outline"
+                    dir="ltr"
+                  >
                     #{product.code}
                   </span>
                 ) : null}
@@ -95,14 +98,14 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
             </div>
           </div>
           {product.isLowStock ? (
-            <span className="font-label-sm flex items-center gap-1 rounded-md bg-error-container px-2 py-1 text-label-sm font-bold text-on-error-container">
+            <span className="font-label-sm flex items-center gap-1 whitespace-nowrap rounded-md bg-error-container px-2 py-1 text-label-sm font-bold text-on-error-container">
               <span className="material-symbols-outlined text-[14px]">
                 warning
               </span>
               {PRODUCT_LOW_STOCK_BADGE}
             </span>
           ) : product.statusBadge ? (
-            <span className="font-label-sm rounded-md bg-surface-container-high px-2 py-1 text-label-sm font-semibold text-on-surface-variant">
+            <span className="font-label-sm whitespace-nowrap rounded-md bg-surface-container-high px-2 py-1 text-label-sm font-semibold text-on-surface-variant">
               {product.statusBadge}
             </span>
           ) : null}
@@ -131,14 +134,17 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
                 <span className="font-label-sm mb-0.5 text-label-sm text-on-surface-variant">
                   {PACKAGE_PRICE_LABEL(pkg.unitName, pkg.weight)}
                 </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="font-label-lg text-label-lg text-primary">
+                <div className="flex flex-wrap items-baseline gap-1">
+                  <bdi className="font-label-lg whitespace-nowrap text-label-lg text-primary" dir="ltr">
                     {formatNumber(pkg.price)} {CURRENCY_SUFFIX}
-                  </span>
+                  </bdi>
                   {pkg.oldPrice > pkg.price ? (
-                    <span className="font-label-sm text-label-sm text-outline line-through">
+                    <bdi
+                      className="font-label-sm whitespace-nowrap text-label-sm text-outline line-through"
+                      dir="ltr"
+                    >
                       {formatNumber(pkg.oldPrice)} {CURRENCY_SUFFIX}
-                    </span>
+                    </bdi>
                   ) : null}
                 </div>
                 {pkg.discountPercent > 0 ? (
@@ -164,8 +170,10 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
                 : 'text-on-surface',
             )}
           >
-            {PRODUCT_STOCK_PREFIX} <bdi dir="ltr">{formatNumber(product.quantity)}</bdi>{' '}
-            {STOCK_UNIT_SUFFIX}
+            {PRODUCT_STOCK_PREFIX}{' '}
+            <bdi className="whitespace-nowrap" dir="ltr">
+              {formatNumber(product.quantity)} {STOCK_UNIT_SUFFIX}
+            </bdi>
             {product.warehouse ? ` (${product.warehouse})` : ''}
           </span>
         </div>
@@ -173,7 +181,7 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
 
       <div className="flex items-center justify-between gap-2 border-t border-surface-container pt-3">
         <button
-          className="font-label-md flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high py-2 text-center text-label-md text-on-surface transition-colors hover:bg-surface-container-highest"
+          className="font-label-md flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high py-2 text-center text-label-md text-on-surface transition-colors hover:bg-surface-container-highest lg:min-h-0"
           onClick={() => setQuickEditOpen(true)}
           type="button"
         >
@@ -183,7 +191,7 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
           {PRODUCT_EDIT_STOCK_PRICE}
         </button>
         <button
-          className="rounded-lg p-2 text-error transition-colors hover:bg-error-container"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-error transition-colors hover:bg-error-container lg:h-auto lg:w-auto lg:p-2"
           onClick={() => setDeleteOpen(true)}
           title={PRODUCT_DELETE_BUTTON}
           type="button"

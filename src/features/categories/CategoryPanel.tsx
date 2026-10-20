@@ -69,7 +69,7 @@ function CategoryDeleteAction({ category }: { category: Category }) {
   return (
     <>
       <button
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-error transition-colors hover:bg-error-container disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-10 w-10 items-center justify-center rounded-lg text-error transition-colors hover:bg-error-container disabled:cursor-not-allowed disabled:opacity-40 lg:h-8 lg:w-8"
         disabled={blocked}
         onClick={handleOpen}
         title={blocked ? CATEGORY_DELETE_BLOCKED_TOOLTIP : CATEGORY_DELETE_TITLE}
