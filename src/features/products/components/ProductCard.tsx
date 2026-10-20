@@ -5,8 +5,6 @@ import type { Product } from '@/api/products.schema'
 import {
   CURRENCY_SUFFIX,
   GENERIC_ERROR,
-  PACKAGE_DISCOUNT_LABEL,
-  PACKAGE_PRICE_LABEL,
   PRODUCT_DELETE_BUTTON,
   PRODUCT_DELETE_CONFIRM_BUTTON,
   PRODUCT_DELETE_CONFIRM_DESCRIPTION,
@@ -14,12 +12,10 @@ import {
   PRODUCT_EDIT_STOCK_PRICE,
   PRODUCT_LOW_STOCK_BADGE,
   PRODUCT_NO_CATEGORY,
-  PRODUCT_STOCK_PREFIX,
-  STOCK_UNIT_SUFFIX,
   TOAST_PRODUCT_DELETED,
 } from '@/constants/strings'
-import { cn } from '@/lib/cn'
 import { formatNumber } from '@/lib/format'
+import { resolveImageUrl } from '@/lib/image'
 import { useDeleteProduct } from '@/features/products/hooks'
 import { QuickEditStockDialog } from '@/features/products/components/QuickEditStockDialog'
 
@@ -32,6 +28,14 @@ const CATEGORY_BADGE_STYLES = [
 type ProductCardProps = {
   product: Product
   categoryColorIndex: number
+}
+
+function getFeatureIcon(name: string): string {
+  if (name.includes('شمس') || name.includes('UV') || name.includes('حرار')) return 'wb_sunny'
+  if (name.includes('بيئة') || name.includes('أخضر')) return 'eco'
+  if (name.includes('مائي') || name.includes('رطوبة') || name.includes('عزل')) return 'water_drop'
+  if (name.includes('غسيل') || name.includes('تنظيف')) return 'clean_hands'
+  return 'verified'
 }
 
 export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
@@ -54,134 +58,157 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
     }
   }
 
+  const galleryCount = (product.images?.length || 0) + (product.image ? 1 : 0)
+
   return (
-    <div className="flex flex-col justify-between rounded-xl bg-surface-container-lowest p-5 shadow-sm transition-shadow hover:shadow-md">
+    <div className="flex flex-col justify-between rounded-xl bg-surface-container-lowest p-5 shadow-sm transition-all hover:shadow-md">
       <div>
-        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container">
-              {product.image ? (
-                <img
-                  alt={product.name}
-                  className="h-full w-full object-cover"
-                  src={product.image}
-                />
-              ) : (
-                <span className="font-headline-sm text-headline-sm text-on-surface-variant">
-                  {product.name.slice(0, 2)}
-                </span>
-              )}
-            </div>
-            <div>
-              <div className="mb-1 flex items-center gap-2">
-                <span
-                  className={`font-label-sm whitespace-nowrap rounded-full px-2 py-0.5 text-label-sm ${
-                    categoryName
-                      ? CATEGORY_BADGE_STYLES[categoryColorIndex % 3]
-                      : 'bg-surface-container-highest text-on-surface-variant'
-                  }`}
-                >
-                  {categoryName ?? PRODUCT_NO_CATEGORY}
-                </span>
-                {product.code ? (
-                  <span
-                    className="font-label-sm whitespace-nowrap text-label-sm text-outline"
-                    dir="ltr"
-                  >
-                    #{product.code}
-                  </span>
-                ) : null}
+        {/* Header: Image preview + Basic info matching petrokema_admin_1 */}
+        <div className="mb-3 flex items-start gap-3.5">
+          <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
+            {product.image ? (
+              <img
+                alt={product.name}
+                className="h-full w-full object-cover"
+                src={resolveImageUrl(product.image)}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center font-headline-sm text-headline-sm text-on-surface-variant">
+                {product.name.slice(0, 2)}
               </div>
-              <h3 className="font-headline-sm text-headline-sm leading-snug text-primary">
-                {product.name}
-              </h3>
-            </div>
-          </div>
-          {product.isLowStock ? (
-            <span className="font-label-sm flex items-center gap-1 whitespace-nowrap rounded-md bg-error-container px-2 py-1 text-label-sm font-bold text-on-error-container">
-              <span className="material-symbols-outlined text-[14px]">
-                warning
+            )}
+            {galleryCount > 1 && (
+              <span className="absolute bottom-1 end-1 flex items-center gap-0.5 rounded bg-primary/75 px-1.5 py-0.2 font-label-sm text-[9px] text-on-primary backdrop-blur-xl">
+                <span className="material-symbols-outlined text-[10px]">photo_library</span>{' '}
+                {galleryCount}
               </span>
-              {PRODUCT_LOW_STOCK_BADGE}
-            </span>
-          ) : product.statusBadge ? (
-            <span className="font-label-sm whitespace-nowrap rounded-md bg-surface-container-high px-2 py-1 text-label-sm font-semibold text-on-surface-variant">
-              {product.statusBadge}
-            </span>
-          ) : null}
+            )}
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div className="flex items-center justify-between gap-1">
+              <span
+                className={`font-label-sm whitespace-nowrap rounded-full px-2 py-0.5 text-label-sm font-semibold ${
+                  categoryName
+                    ? CATEGORY_BADGE_STYLES[categoryColorIndex % 3]
+                    : 'bg-surface-container-highest text-on-surface-variant'
+                }`}
+              >
+                {categoryName ?? PRODUCT_NO_CATEGORY}
+              </span>
+              {product.code ? (
+                <span
+                  className="font-label-sm font-mono whitespace-nowrap text-label-sm text-outline"
+                  dir="ltr"
+                >
+                  #{product.code}
+                </span>
+              ) : null}
+            </div>
+
+            <h3 className="font-headline-sm mt-1 text-headline-sm font-bold leading-snug text-primary truncate">
+              {product.name}
+            </h3>
+
+            {product.description ? (
+              <p className="font-body-sm mt-0.5 text-body-sm text-on-surface-variant line-clamp-1 truncate">
+                {product.description}
+              </p>
+            ) : null}
+          </div>
         </div>
 
-        {product.fetures.length > 0 ? (
-          <div className="mb-4 flex flex-wrap gap-1.5">
+        {/* Features Badges matching petrokema_admin_1 */}
+        {product.fetures && product.fetures.length > 0 ? (
+          <div className="mb-3 flex flex-wrap gap-1.5 py-0.5">
             {product.fetures.map((feature, index) => (
               <span
-                className="font-label-sm rounded bg-surface-container px-2 py-0.5 text-label-sm text-on-surface"
+                className="inline-flex items-center gap-1 rounded-md bg-surface-container px-2 py-0.5 font-label-sm text-label-sm text-on-surface font-medium"
                 key={`${feature.name}-${index}`}
               >
+                <span className="material-symbols-outlined text-[13px] text-secondary">
+                  {getFeatureIcon(feature.name)}
+                </span>
                 {feature.name}
               </span>
             ))}
           </div>
         ) : null}
 
-        {product.packages.length > 0 ? (
-          <div className="mb-4 grid grid-cols-2 gap-2">
+        {/* Dual / Multi-Packaging Pricing Grid matching petrokema_admin_1 */}
+        {product.packages && product.packages.length > 0 ? (
+          <div className="mb-3 grid grid-cols-2 gap-2 rounded-xl bg-surface-container-low p-2">
             {product.packages.map((pkg) => (
               <div
-                className="flex flex-col rounded-lg bg-surface-container-low p-2.5"
+                className="flex flex-col rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-2"
                 key={pkg.unitName}
               >
-                <span className="font-label-sm mb-0.5 text-label-sm text-on-surface-variant">
-                  {PACKAGE_PRICE_LABEL(pkg.unitName, pkg.weight)}
-                </span>
-                <div className="flex flex-wrap items-baseline gap-1">
-                  <bdi className="font-label-lg whitespace-nowrap text-label-lg text-primary" dir="ltr">
-                    {formatNumber(pkg.price)} {CURRENCY_SUFFIX}
-                  </bdi>
-                  {pkg.oldPrice > pkg.price ? (
-                    <bdi
-                      className="font-label-sm whitespace-nowrap text-label-sm text-outline line-through"
-                      dir="ltr"
-                    >
-                      {formatNumber(pkg.oldPrice)} {CURRENCY_SUFFIX}
-                    </bdi>
+                <div className="flex items-center justify-between border-b border-surface-container-high pb-1">
+                  <span className="font-label-md text-label-md font-semibold text-primary">
+                    {pkg.unitName}
+                  </span>
+                  {pkg.weight ? (
+                    <span className="font-label-sm text-label-sm text-on-surface-variant">
+                      {pkg.weight}
+                    </span>
                   ) : null}
                 </div>
-                {pkg.discountPercent > 0 ? (
-                  <span className="font-label-sm mt-0.5 text-label-sm font-medium text-secondary">
-                    {PACKAGE_DISCOUNT_LABEL(pkg.discountPercent)}
-                  </span>
-                ) : pkg.note ? (
-                  <span className="font-label-sm mt-0.5 text-label-sm text-on-surface-variant">
-                    {pkg.note}
-                  </span>
-                ) : null}
+                <div className="flex items-baseline justify-between pt-1.5">
+                  <div>
+                    <span className="font-headline-sm text-headline-sm font-bold text-primary">
+                      {formatNumber(pkg.price)}
+                    </span>
+                    <span className="font-label-sm mr-1 text-label-sm text-on-surface-variant">
+                      {CURRENCY_SUFFIX}
+                    </span>
+                  </div>
+                  {pkg.oldPrice > pkg.price ? (
+                    <div className="flex flex-col items-end">
+                      <span className="font-body-sm text-[11px] text-outline line-through">
+                        {formatNumber(pkg.oldPrice)} {CURRENCY_SUFFIX}
+                      </span>
+                      {pkg.discountPercent > 0 && (
+                        <span className="font-label-sm text-[10px] font-semibold text-error">
+                          خصم {pkg.discountPercent}%
+                        </span>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ))}
           </div>
         ) : null}
 
-        <div className="mb-4">
-          <span
-            className={cn(
-              'font-label-sm text-label-sm',
-              product.isLowStock
-                ? 'font-semibold text-error'
-                : 'text-on-surface',
-            )}
-          >
-            {PRODUCT_STOCK_PREFIX}{' '}
-            <bdi className="whitespace-nowrap" dir="ltr">
-              {formatNumber(product.quantity)} {STOCK_UNIT_SUFFIX}
-            </bdi>
-            {product.warehouse ? ` (${product.warehouse})` : ''}
-          </span>
+        {/* Stock Status Strip matching petrokema_admin_1 */}
+        <div className="mb-3 flex items-center justify-between rounded-lg bg-surface-container-low px-2.5 py-1.5 font-label-sm text-label-sm">
+          <div className="flex items-center gap-1.5 text-on-surface-variant">
+            <span className="material-symbols-outlined text-[16px] text-secondary">
+              inventory_2
+            </span>
+            <span>الكمية بالمخزون:</span>
+            <span className="font-bold text-primary">
+              {formatNumber(product.quantity)} وحدة
+            </span>
+          </div>
+          {product.isLowStock ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-error-container px-2 py-0.5 font-semibold text-on-error-container">
+              <span className="material-symbols-outlined text-[13px]">warning</span>
+              {PRODUCT_LOW_STOCK_BADGE}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-secondary-fixed px-2 py-0.5 font-semibold text-on-secondary-fixed-variant">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#15803d]" />
+              متوفر بالمستودع
+            </span>
+          )}
         </div>
       </div>
 
+      {/* Action Footer */}
       <div className="flex items-center justify-between gap-2 border-t border-surface-container pt-3">
         <button
-          className="font-label-md flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high py-2 text-center text-label-md text-on-surface transition-colors hover:bg-surface-container-highest lg:min-h-0"
+          className="font-label-md flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high py-2 text-center text-label-md font-semibold text-on-surface transition-colors hover:bg-surface-container-highest"
           onClick={() => setQuickEditOpen(true)}
           type="button"
         >
@@ -191,7 +218,7 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
           {PRODUCT_EDIT_STOCK_PRICE}
         </button>
         <button
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-error transition-colors hover:bg-error-container lg:h-auto lg:w-auto lg:p-2"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-error transition-colors hover:bg-error-container"
           onClick={() => setDeleteOpen(true)}
           title={PRODUCT_DELETE_BUTTON}
           type="button"

@@ -15,6 +15,7 @@ import {
 } from '@/constants/strings'
 import { formatEgyptianPhoneDisplay } from '@/lib/phone'
 import { formatNumber } from '@/lib/format'
+import { resolveImageUrl } from '@/lib/image'
 
 function MetricBox({
   label,
@@ -63,7 +64,7 @@ export function RepSpotlight({
             <img
               alt={seller.name}
               className="h-16 w-16 rounded-xl object-cover ring-2 ring-primary-fixed"
-              src={seller.photoUrl}
+              src={resolveImageUrl(seller.photoUrl)}
             />
           ) : (
             <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary-container font-headline-md text-headline-md text-on-primary ring-2 ring-primary-fixed">
@@ -95,12 +96,16 @@ export function RepSpotlight({
                   ? `${seller.governorate} • ${seller.region}`
                   : seller.governorate}
               </span>
-              <span className="flex items-center gap-1 font-mono" dir="ltr">
+              <a
+                className="flex items-center gap-1 font-mono hover:text-primary transition-colors"
+                dir="ltr"
+                href={`tel:${seller.phone}`}
+              >
                 <span className="material-symbols-outlined text-[16px] text-secondary">
                   call
                 </span>
                 {formatEgyptianPhoneDisplay(seller.phone)}
-              </span>
+              </a>
               {seller.certifiedSince ? (
                 <span className="flex items-center gap-1 font-semibold text-secondary">
                   <span className="material-symbols-outlined text-[16px]">
@@ -172,6 +177,28 @@ export function RepSpotlight({
           value={`${formatNumber(metrics.commissionAmount)} ج.م`}
         />
         <MetricBox label={REP_METRIC_COLLECTION} value={collectionRateDisplay} />
+      </div>
+
+      {/* Target Achievement Meter matching petrokema_admin_7 */}
+      <div className="rounded-lg bg-surface-container-low p-3">
+        <div className="font-label-sm mb-1.5 flex items-center justify-between text-label-sm text-on-surface-variant">
+          <span className="flex items-center gap-1 font-semibold text-primary">
+            <span className="material-symbols-outlined text-[16px] text-secondary">
+              track_changes
+            </span>
+            <span>نسبة تحقيق المستهدف الشهري:</span>
+          </span>
+          <span className="font-mono font-bold text-secondary">
+            {formatNumber(metrics.achievementRate)}% ({formatNumber(metrics.currentMonthSales)} /{' '}
+            {formatNumber(seller.monthlyTarget)} ج.م)
+          </span>
+        </div>
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-surface-container">
+          <div
+            className="h-full rounded-full bg-gradient-to-l from-secondary to-primary-container transition-all duration-500"
+            style={{ width: `${Math.min(100, Math.max(0, metrics.achievementRate))}%` }}
+          />
+        </div>
       </div>
     </div>
   )

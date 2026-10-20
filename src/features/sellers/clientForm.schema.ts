@@ -21,6 +21,7 @@ export const clientFormSchema = z.object({
   creditLimit: z.number().min(0),
   commercialType: z.string().trim(),
   notes: z.string().trim(),
+  password: z.string().trim().optional(),
 })
 export type ClientFormValues = z.infer<typeof clientFormSchema>
 
@@ -29,6 +30,7 @@ export const clientFormDefaults: DefaultValues<ClientFormValues> = {
   organizeName: '',
   contactPerson: '',
   phone: '',
+  password: '',
   governorate: 'القاهرة',
   city: 'القاهرة',
   address: '',

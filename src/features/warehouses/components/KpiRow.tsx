@@ -23,6 +23,7 @@ function KpiCard({
   valueClassName = 'text-primary',
   unit,
   footer,
+  accentColor = 'bg-primary/5',
   onClick,
 }: {
   icon: string
@@ -32,12 +33,13 @@ function KpiCard({
   valueClassName?: string
   unit?: string
   footer?: ReactNode
+  accentColor?: string
   onClick?: () => void
 }) {
   const Tag = onClick ? 'button' : 'div'
   return (
     <Tag
-      className="relative flex flex-col justify-between overflow-hidden rounded-xl bg-surface-container-lowest p-space-lg text-right shadow-sm transition-shadow hover:shadow-md"
+      className="relative flex flex-col justify-between overflow-hidden rounded-xl bg-surface-container-lowest p-space-md sm:p-space-lg text-right shadow-sm transition-all hover:shadow-md active:scale-[0.99]"
       onClick={onClick}
       type={onClick ? 'button' : undefined}
     >
@@ -48,7 +50,7 @@ function KpiCard({
         <span
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconClassName}`}
         >
-          <span className="material-symbols-outlined text-[22px]">{icon}</span>
+          <span className="material-symbols-outlined text-[20px]">{icon}</span>
         </span>
       </div>
       <div className="my-space-sm">
@@ -64,6 +66,7 @@ function KpiCard({
         </div>
       </div>
       {footer}
+      <div className={`pointer-events-none absolute -bottom-6 -left-6 h-16 w-16 rounded-full ${accentColor}`} />
     </Tag>
   )
 }
@@ -99,6 +102,7 @@ export function KpiRow({ onOpenTransfers }: { onOpenTransfers: () => void }) {
   return (
     <div className="grid grid-cols-1 gap-space-md sm:grid-cols-2 lg:grid-cols-3">
       <KpiCard
+        accentColor="bg-secondary/5"
         footer={
           <div className="flex items-center gap-1.5 text-label-sm font-label-sm text-secondary">
             <span className="h-2 w-2 rounded-full bg-secondary" />
@@ -111,6 +115,7 @@ export function KpiRow({ onOpenTransfers }: { onOpenTransfers: () => void }) {
         value={formatNumber(stats.warehouses.total)}
       />
       <KpiCard
+        accentColor="bg-primary/5"
         footer={
           <div className="flex items-center gap-space-xs text-label-sm font-label-sm text-on-surface-variant">
             <span className="material-symbols-outlined text-[16px] text-secondary">
@@ -126,6 +131,7 @@ export function KpiRow({ onOpenTransfers }: { onOpenTransfers: () => void }) {
         value={formatNumber(stats.stockAndChemicals.totalUnits)}
       />
       <KpiCard
+        accentColor="bg-error/5"
         footer={
           stats.transfersAndCritical.pendingTransfers > 0 ? (
             <div className="flex items-center gap-1.5 text-label-sm font-label-sm text-error">

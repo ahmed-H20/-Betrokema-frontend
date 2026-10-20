@@ -206,12 +206,12 @@ export const PRODUCT_FEATURE_PRESETS = [
 ] as const
 
 export const PRODUCT_MODAL_SECTION_MEDIA = 'الصور الرئيسية ومعرض المنتج'
-export const PRODUCT_IMAGE_LABEL = 'رابط الصورة الرئيسية (اختياري)'
-export const PRODUCT_IMAGE_PLACEHOLDER = 'https://example.com/image.jpg'
-export const PRODUCT_GALLERY_LABEL = 'روابط صور المعرض (اختياري)'
-export const PRODUCT_GALLERY_ADD = '+ إضافة رابط صورة'
+export const PRODUCT_IMAGE_LABEL = 'صورة المنتج الرئيسية (اختياري)'
+export const PRODUCT_IMAGE_PLACEHOLDER = 'اختر صورة من جهازك أو اسحبها هنا'
+export const PRODUCT_GALLERY_LABEL = 'معرض صور المنتج (اختياري)'
+export const PRODUCT_GALLERY_ADD = '+ إضافة صورة'
 export const PRODUCT_IMAGE_URL_ERROR =
-  'يجب إدخال رابط صالح يبدأ بـ http:// أو https://'
+  'صيغة الصورة أو الرابط غير صالح'
 
 export const REMOVE_LABEL = 'إزالة'
 export const MODAL_CANCEL = 'إلغاء الأمر'
@@ -406,8 +406,8 @@ export const REP_MODAL_TITLE_CREATE = 'تسجيل مندوب مبيعات جدي
 export const REP_MODAL_TITLE_EDIT = 'تعديل بيانات المندوب'
 export const REP_MODAL_SUBTITLE = 'إدخال بيانات المندوب الرسمية وتحديد النطاق الجغرافي'
 export const REP_NAME_LABEL = 'الاسم بالكامل (ثلاثي أو رباعي)'
-export const REP_PHOTO_URL_LABEL = 'رابط صورة المندوب (اختياري)'
-export const REP_PHOTO_URL_PLACEHOLDER = 'https://example.com/photo.jpg'
+export const REP_PHOTO_URL_LABEL = 'صورة المندوب الشخصية (اختياري)'
+export const REP_PHOTO_URL_PLACEHOLDER = 'اختر صورة المندوب من جهازك'
 export const REP_PHONE_LABEL = 'رقم الهاتف (الواتساب والمكالمات)'
 export const REP_GOVERNORATE_LABEL = 'المحافظة'
 export const REP_GOVERNORATE_PLACEHOLDER = 'اختر المحافظة'
@@ -452,6 +452,10 @@ export const VALIDATION_CLIENT_PHONE_INVALID =
 
 // Warehouses (Chunk 3)
 export const WAREHOUSES_PAGE_TITLE = 'إدارة وإعداد المخازن والمستودعات'
+export const WAREHOUSES_PAGE_SUBTITLE =
+  'التحكم التشغيلي في الأرصدة البتروكيماوية، سعات التخزين الميدانية وحركات المناقلات اللوجستية'
+export const WAREHOUSE_LIVE_SYNC = 'تزامن فوري'
+export const WAREHOUSE_CALL_ACTION = 'اتصال بالطوارئ'
 export const WAREHOUSES_EXPORT_BUTTON = 'تصدير تقرير المخزون (CSV)'
 export const WAREHOUSES_ADD_BUTTON = '+ إضافة مخزن جديد'
 
@@ -586,6 +590,14 @@ export const INVENTORY_FOOTER = (
 export const INVENTORY_UPDATE_TOOLTIP = 'تحديث الرصيد الفوري'
 export const INVENTORY_TRANSFER_TOOLTIP = 'نقل إلى مخزن آخر'
 export const INVENTORY_URGENT_TRANSFER_TOOLTIP = 'طلب توريد عاجل من مستودع آخر'
+export const INVENTORY_FILTER_ALL = 'الكل'
+export const INVENTORY_FILTER_CRITICAL = 'رصيد حرج'
+export const INVENTORY_FILTER_AVAILABLE = 'متوفر بكفاية'
+export const INVENTORY_CRITICAL_BADGE = 'رصيد حرج!'
+export const INVENTORY_BELOW_REORDER_NOTE = (limit: number, unit: string) =>
+  `المتبقي أقل من حد الأمان (${limit} ${unit})`
+export const INVENTORY_REQUEST_TRANSFER = 'طلب مناقلة'
+export const INVENTORY_ADJUST_STOCK = 'تعديل الرصيد'
 
 export const ASSIGN_PRODUCT_TITLE = (warehouseName: string) =>
   `إسناد منتج أو خامة لمستودع ${warehouseName}`
@@ -686,4 +698,40 @@ export const VALIDATION_GALON_PRICE_REQUIRED = 'السعر الأساسي للج
 export const VALIDATION_BESTELA_PRICE_REQUIRED = 'السعر الأساسي للبستلة مطلوب'
 export const VALIDATION_DISCOUNT_NEGATIVE = 'الخصم لا يمكن أن يكون سالباً'
 export const VALIDATION_DISCOUNT_MAX = 'الخصم لا يمكن أن يتجاوز 100%'
+
+// Analytics (Step 5)
+export const ANALYTICS_PAGE_TITLE = 'التقارير والإحصائيات التنفيذية'
+export const ANALYTICS_PAGE_SUBTITLE =
+  'لوحة المؤشرات التشغيلية والمالية الشاملة - مراقبة الإيرادات، كفاءة التحصيل، حركة المخزون، وأداء القطاعات'
+export const ANALYTICS_LIVE_PULSE = 'محدث آنياً'
+export const ANALYTICS_EXPORT_CSV = 'تصدير تقرير شامل (CSV)'
+export const ANALYTICS_PRINT_REPORT = 'طباعة التقرير'
+
+export const ANALYTICS_PERIOD_TODAY = 'اليوم'
+export const ANALYTICS_PERIOD_WEEK = 'هذا الأسبوع'
+export const ANALYTICS_PERIOD_MONTH = 'هذا الشهر'
+export const ANALYTICS_PERIOD_QUARTER = 'الربع السنوي'
+export const ANALYTICS_PERIOD_YEAR = 'هذا العام'
+
+export const ANALYTICS_KPI_REVENUE = 'إجمالي المبيعات والإيرادات'
+export const ANALYTICS_KPI_COLLECTIONS = 'إجمالي التحصيلات المعتمدة'
+export const ANALYTICS_KPI_REMAINING = 'المتبقي والذمم المدينة'
+export const ANALYTICS_KPI_EFFICIENCY = 'معدل كفاءة التحصيل'
+export const ANALYTICS_KPI_OVERDUE = 'المستحقات المتأخرة والحرجة'
+export const ANALYTICS_KPI_ORDERS = 'إجمالي الفواتير النشطة'
+
+export const ANALYTICS_CHART_TITLE = 'حركة الإيرادات والتحصيلات'
+export const ANALYTICS_CHART_SUBTITLE = 'تطور المبيعات النقدية والآجلة والتحصيلات خلال الأشهر الأخيرة'
+export const ANALYTICS_SECTORS_TITLE = 'توزيع المبيعات حسب القطاعات والمحافظات'
+export const ANALYTICS_SECTORS_SUBTITLE = 'الحصة السوقية وحجم الطلبات الميدانية عبر المناطق اللوجستية'
+export const ANALYTICS_TOP_PRODUCTS_TITLE = 'المنتجات الأكثر مبيعاً وطلباً'
+export const ANALYTICS_TOP_PRODUCTS_SUBTITLE = 'الأصناف الأعلى إيراداً وحركة بالمستودعات'
+export const ANALYTICS_SELLERS_TITLE = 'لوحة شرف وأداء المناديب الميدانيين'
+export const ANALYTICS_SELLERS_SUBTITLE = 'معدلات تحقيق المستهدف الشهري ونسب التحصيل الميداني'
+export const ANALYTICS_PAYMENT_METHODS_TITLE = 'قنوات وطرق السداد'
+export const ANALYTICS_PAYMENT_METHODS_SUBTITLE = 'توزيع السيولة عبر القنوات البنكية والنقدية'
+
+export const ANALYTICS_LOADING = 'جارِ تحليل البيانات واستخراج التقارير...'
+export const ANALYTICS_ERROR = 'تعذر تحميل مؤشرات التحليل المالي والتشغيلي'
+
 

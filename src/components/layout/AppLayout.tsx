@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
 import { BottomTabBar } from '@/components/layout/BottomTabBar'
 import { NavDrawer } from '@/components/layout/NavDrawer'
@@ -120,6 +120,15 @@ export function AppLayout() {
                   {today}
                 </span>
               </div>
+              <NavLink
+                to="/seller/dashboard"
+                className="flex items-center gap-1.5 text-xs font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg border border-orange-200 transition-colors shadow-xs"
+                title="الانتقال إلى واجهة المندوب الميداني"
+              >
+                <span className="material-symbols-outlined text-[16px]">badge</span>
+                <span className="hidden sm:inline">واجهة المندوب</span>
+              </NavLink>
+
               <button
                 aria-label={NOTIFICATIONS_LABEL}
                 className="relative rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"

@@ -11,6 +11,12 @@ import { InvoicesPage } from '@/features/invoices/InvoicesPage'
 import { ProductsPage } from '@/features/products/ProductsPage'
 import { SellersPage } from '@/features/sellers/SellersPage'
 import { WarehousesPage } from '@/features/warehouses/WarehousesPage'
+import { SellerLayout } from '@/features/seller/SellerLayout'
+import { SellerDashboardPage } from '@/features/seller/SellerDashboardPage'
+import { SellerClientsPage } from '@/features/seller/SellerClientsPage'
+import { SellerClientDetailPage } from '@/features/seller/SellerClientDetailPage'
+import { SellerInvoicesPage } from '@/features/seller/SellerInvoicesPage'
+import { SellerWarehousesPage } from '@/features/seller/SellerWarehousesPage'
 import { queryClient } from '@/lib/queryClient'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -32,6 +38,7 @@ function App() {
 
               {/* Protected Application Layout */}
               <Route element={<ProtectedRoute />}>
+                {/* Admin Operations Layout */}
                 <Route element={<AppLayout />} path="/">
                   <Route element={<Navigate replace to="/products" />} index />
                   <Route element={<ProductsPage />} path="products" />
@@ -39,8 +46,19 @@ function App() {
                   <Route element={<SellersPage />} path="sellers" />
                   <Route element={<WarehousesPage />} path="warehouses" />
                   <Route element={<AnalyticsPage />} path="analytics" />
-                  <Route element={<NotFoundPage />} path="*" />
                 </Route>
+
+                {/* Seller Portal (Field Sales Rep Interface - Mobile First) */}
+                <Route element={<SellerLayout />} path="/seller">
+                  <Route element={<Navigate replace to="/seller/dashboard" />} index />
+                  <Route element={<SellerDashboardPage />} path="dashboard" />
+                  <Route element={<SellerClientsPage />} path="clients" />
+                  <Route element={<SellerClientDetailPage />} path="clients/:id" />
+                  <Route element={<SellerInvoicesPage />} path="invoices" />
+                  <Route element={<SellerWarehousesPage />} path="warehouses" />
+                </Route>
+
+                <Route path="*" element={<NotFoundPage />} />
               </Route>
             </Routes>
           <Toaster

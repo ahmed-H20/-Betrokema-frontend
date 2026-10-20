@@ -65,35 +65,47 @@ export function WarehouseCard({
   const occupancyRate = warehouse.occupancyRate
   const barClassName = occupancyRate >= 90 ? 'bg-tertiary-fixed-dim' : 'bg-secondary'
 
+  const phone = warehouse.emergencyPhone || warehouse.supervisorPhone
+
   return (
     <div
       className={cn(
-        'flex flex-col justify-between rounded-xl bg-surface-container-lowest p-space-lg shadow-sm transition-all',
+        'flex flex-col justify-between rounded-xl bg-surface-container-lowest p-space-md sm:p-space-lg shadow-sm transition-all',
         selected && 'shadow-md ring-2 ring-secondary',
       )}
     >
       <div>
         <div className="mb-space-sm flex items-start justify-between gap-space-sm">
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-space-xs">
               <span
                 className={cn(
-                  'h-2.5 w-2.5 rounded-full',
+                  'h-2.5 w-2.5 shrink-0 rounded-full',
                   dotClassName,
                   selected && warehouse.status === 'نشط' && 'animate-pulse',
                 )}
               />
-              <h3 className="font-headline-sm text-headline-sm font-bold text-primary">
+              <h3 className="font-headline-sm truncate text-headline-sm font-bold text-primary">
                 {warehouse.name}
               </h3>
             </div>
-            <span className="font-body-sm mt-0.5 text-body-sm text-on-surface-variant">
-              {WAREHOUSE_CODE_LABEL} <bdi dir="ltr">{warehouse.code}</bdi>
-            </span>
+            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-body-sm text-on-surface-variant">
+              <span>
+                {WAREHOUSE_CODE_LABEL} <bdi dir="ltr">{warehouse.code}</bdi>
+              </span>
+              {warehouse.operatingClassification ? (
+                <>
+                  <span>•</span>
+                  <span className="font-label-sm rounded bg-surface-container px-1.5 py-0.5 text-label-sm font-medium text-secondary">
+                    {warehouse.operatingClassification}
+                  </span>
+                </>
+              ) : null}
+            </div>
           </div>
           <span
             className={cn(
-              'font-label-sm whitespace-nowrap rounded-full px-2.5 py-1 text-label-sm font-bold',
+              'font-label-sm shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-label-sm font-bold',
               pill.className,
             )}
           >
@@ -114,17 +126,32 @@ export function WarehouseCard({
               {warehouse.address}
             </span>
           </div>
+
           {warehouse.supervisorName ? (
             <div className="flex items-center justify-between text-body-sm">
               <span className="font-label-md flex items-center gap-1 text-label-md text-on-surface-variant">
                 <span className="material-symbols-outlined text-[16px]">badge</span>
                 {WAREHOUSE_SUPERVISOR_LABEL}
               </span>
-              <span className="font-body-sm text-body-sm font-semibold text-primary">
-                {warehouse.supervisorName}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-body-sm text-body-sm font-semibold text-primary">
+                  {warehouse.supervisorName}
+                </span>
+                {phone ? (
+                  <a
+                    className="flex h-6 items-center gap-1 rounded bg-secondary/10 px-1.5 font-mono text-[11px] font-semibold text-secondary transition-colors hover:bg-secondary hover:text-on-secondary"
+                    dir="ltr"
+                    href={`tel:${phone}`}
+                    title="اتصال بالطوارئ"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">call</span>
+                    {phone}
+                  </a>
+                ) : null}
+              </div>
             </div>
           ) : null}
+
           <div className="flex items-center justify-between text-body-sm">
             <span className="font-label-md flex items-center gap-1 text-label-md text-on-surface-variant">
               <span className="material-symbols-outlined text-[16px]">pallet</span>
@@ -145,8 +172,16 @@ export function WarehouseCard({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-space-sm py-1 text-center">
-          <div className="rounded bg-surface-container p-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 py-1 text-center">
+          <div className="rounded-lg bg-surface-container p-2">
+            <span className="font-label-sm block text-label-sm text-on-surface-variant">
+              {WAREHOUSE_TOTAL_STOCK_LABEL}
+            </span>
+            <span className="font-headline-sm text-headline-sm font-bold text-primary">
+              {formatNumber(warehouse.actualStockUnits)} {WAREHOUSE_STOCK_UNIT}
+            </span>
+          </div>
+          <div className="rounded-lg bg-surface-container p-2">
             <span className="font-label-sm block text-label-sm text-on-surface-variant">
               {WAREHOUSE_LINKED_PRODUCTS_LABEL}
             </span>
@@ -154,12 +189,12 @@ export function WarehouseCard({
               {arabicCountPhrase(warehouse.linkedProductsCount, PRODUCT_PLURAL_FORMS)}
             </span>
           </div>
-          <div className="rounded bg-surface-container p-2">
+          <div className="col-span-2 sm:col-span-1 rounded-lg bg-surface-container p-2">
             <span className="font-label-sm block text-label-sm text-on-surface-variant">
-              {WAREHOUSE_TOTAL_STOCK_LABEL}
+              {WAREHOUSE_SUPERVISOR_LABEL}
             </span>
-            <span className="font-headline-sm text-headline-sm font-bold text-primary">
-              {formatNumber(warehouse.actualStockUnits)} {WAREHOUSE_STOCK_UNIT}
+            <span className="font-label-md truncate text-label-md font-semibold text-primary block">
+              {warehouse.supervisorName || '—'}
             </span>
           </div>
         </div>
@@ -168,9 +203,9 @@ export function WarehouseCard({
       <div className="mt-space-sm flex items-center justify-between gap-space-sm pt-space-md">
         <button
           className={cn(
-            'flex h-10 flex-1 items-center justify-center gap-1 rounded-lg px-space-md text-label-md font-label-md transition-all md:h-9',
+            'flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg px-space-md text-label-md font-label-md transition-all active:scale-[0.99] md:h-9',
             selected
-              ? 'bg-primary-container text-on-primary hover:bg-primary'
+              ? 'bg-primary-container text-on-primary hover:bg-primary shadow-sm'
               : 'bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary',
           )}
           onClick={onDistribute}
@@ -179,8 +214,20 @@ export function WarehouseCard({
           <span className="material-symbols-outlined text-[18px]">inventory</span>
           {WAREHOUSE_DISTRIBUTE_BUTTON}
         </button>
+
+        {phone ? (
+          <a
+            aria-label="اتصال بالطوارئ بأمين المستودع"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container text-secondary transition-colors hover:bg-secondary hover:text-on-secondary md:h-9 md:w-9"
+            href={`tel:${phone}`}
+            title="اتصال سريع"
+          >
+            <span className="material-symbols-outlined text-[18px]">phone_in_talk</span>
+          </a>
+        ) : null}
+
         <button
-          className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container text-on-surface transition-colors hover:bg-surface-container-high md:h-9 md:w-9"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container text-on-surface transition-colors hover:bg-surface-container-high md:h-9 md:w-9"
           onClick={onEdit}
           title={WAREHOUSE_EDIT_TOOLTIP}
           type="button"
@@ -188,7 +235,7 @@ export function WarehouseCard({
           <span className="material-symbols-outlined text-[18px]">edit</span>
         </button>
         <button
-          className="flex h-10 w-10 items-center justify-center rounded-lg bg-error-container text-on-error-container transition-colors hover:bg-error hover:text-on-error md:h-9 md:w-9"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-error-container text-on-error-container transition-colors hover:bg-error hover:text-on-error md:h-9 md:w-9"
           onClick={onDeleteRequest}
           title={WAREHOUSE_DELETE_TOOLTIP}
           type="button"

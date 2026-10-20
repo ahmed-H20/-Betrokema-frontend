@@ -1,9 +1,11 @@
 import { createColumnHelper, FlexRender, tableFeatures, useTable } from '@tanstack/react-table'
 import { useState } from 'react'
-import type { InventoryItem } from '@/api/warehouses.schema'
+import type { InventoryItem, Warehouse } from '@/api/warehouses.schema'
 import { StateMessage } from '@/components/ui/StateMessage'
 import {
+  INVENTORY_ADJUST_STOCK,
   INVENTORY_ASSIGN_BUTTON,
+  INVENTORY_BELOW_REORDER_NOTE,
   INVENTORY_COL_ACTIONS,
   INVENTORY_COL_BIN,
   INVENTORY_COL_PACKAGING,
@@ -12,10 +14,15 @@ import {
   INVENTORY_COL_SKU,
   INVENTORY_COL_STATUS,
   INVENTORY_COL_STOCK,
+  INVENTORY_CRITICAL_BADGE,
   INVENTORY_CRITICAL_SUFFIX,
   INVENTORY_EMPTY,
   INVENTORY_ERROR,
+  INVENTORY_FILTER_ALL,
+  INVENTORY_FILTER_AVAILABLE,
+  INVENTORY_FILTER_CRITICAL,
   INVENTORY_LOADING,
+  INVENTORY_REQUEST_TRANSFER,
   INVENTORY_SEARCH_PLACEHOLDER,
   INVENTORY_SECTION_SUBTITLE,
   INVENTORY_SECTION_TITLE,
@@ -55,15 +62,10 @@ function AvailabilityPill({ label, critical }: { label: string; critical: boolea
   )
 }
 
-// Below md: one card per inventory item, following petrokema_mobile_6's own
+// Below md: one card per inventory item, following petrokema_mobile's own
 // allocation-card shape (thumbnail tile with a bin-location overlay badge,
-// name+status-pill header, SKU/reorder sub-row, stock+unit and an action
-// button on a shared baseline row) — no product photo exists in this data
-// model, so the thumbnail is a plain icon tile instead of an `<img>` (same
-// "no upload endpoint" reasoning already logged for products/sellers). The
-// reference only has one action (adjust stock); this app's row also needs
-// a transfer action, added as a second button since that feature doesn't
-// exist in the reference to copy from.
+// name+status-pill header, SKU/reorder sub-row, stock+unit and action
+// buttons on a shared baseline row).
 function InventoryItemCard({
   item,
   onEditStock,
@@ -75,19 +77,27 @@ function InventoryItemCard({
 }) {
   const unitNoun = firstWord(item.packagingUnit)
   return (
-    <div className="flex flex-col gap-3 rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
+    <div
+      className={cn(
+        'flex flex-col gap-3 rounded-xl bg-surface-container-lowest p-space-md shadow-sm transition-all',
+        item.isCritical && 'border-r-4 border-r-error',
+      )}
+    >
       <div className="flex items-start gap-3">
         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
           <div className="flex h-full w-full items-center justify-center text-on-surface-variant">
-            <span className="material-symbols-outlined text-[26px]">
-              package_2
-            </span>
+            <span className="material-symbols-outlined text-[26px]">package_2</span>
           </div>
           <span
-            className="font-label-sm absolute inset-x-0 bottom-0 whitespace-nowrap bg-primary/70 py-0.5 text-center text-[9px] text-on-primary"
+            className={cn(
+              'font-label-sm absolute inset-x-0 bottom-0 whitespace-nowrap py-0.5 text-center text-[9px]',
+              item.isCritical
+                ? 'bg-error text-on-error font-bold'
+                : 'bg-primary/70 text-on-primary',
+            )}
             dir="ltr"
           >
-            {item.binLocation}
+            {item.binLocation || '—'}
           </span>
         </div>
         <div className="min-w-0 flex-1">
@@ -100,18 +110,34 @@ function InventoryItemCard({
             >
               {item.productName}
             </h4>
-            <AvailabilityPill critical={item.isCritical} label={item.stockStatus} />
+            {item.isCritical ? (
+              <span className="font-label-sm shrink-0 rounded-full bg-error-container px-2 py-0.5 text-label-sm font-bold text-on-error-container animate-pulse">
+                {INVENTORY_CRITICAL_BADGE}
+              </span>
+            ) : (
+              <AvailabilityPill critical={false} label={item.stockStatus} />
+            )}
           </div>
-          <div className="font-body-sm mt-0.5 flex items-center gap-1 text-body-sm text-on-surface-variant">
-            <bdi className="whitespace-nowrap" dir="ltr">
-              {item.sku}
-            </bdi>
-            <span>•</span>
-            <span className="truncate">
-              {INVENTORY_COL_REORDER}: {formatNumber(item.reorderLevel)} {unitNoun}
-            </span>
+          <div className="font-body-sm mt-0.5 flex flex-wrap items-center gap-1.5 text-body-sm text-on-surface-variant">
+            {item.sku ? (
+              <>
+                <bdi className="whitespace-nowrap font-mono" dir="ltr">
+                  كود: {item.sku}
+                </bdi>
+                <span>•</span>
+              </>
+            ) : null}
+            {item.isCritical ? (
+              <span className="text-error font-medium">
+                {INVENTORY_BELOW_REORDER_NOTE(item.reorderLevel, unitNoun)}
+              </span>
+            ) : (
+              <span className="truncate">
+                {INVENTORY_COL_REORDER}: {formatNumber(item.reorderLevel)} {unitNoun}
+              </span>
+            )}
           </div>
-          <div className="mt-2 flex items-center justify-between gap-2">
+          <div className="mt-2.5 flex items-center justify-between gap-2">
             <bdi
               className={cn(
                 'font-label-lg whitespace-nowrap text-label-lg font-bold',
@@ -124,31 +150,31 @@ function InventoryItemCard({
                 {item.packagingUnit}
               </span>
             </bdi>
-            <div className="flex items-center gap-1">
-              <button
-                className="flex h-10 items-center gap-1 rounded-lg bg-surface-container px-3 text-label-sm font-label-sm text-primary transition-colors hover:bg-surface-container-high"
-                onClick={() => onEditStock(item)}
-                title={INVENTORY_UPDATE_TOOLTIP}
-                type="button"
-              >
-                <span className="material-symbols-outlined text-[16px]">
-                  edit_note
-                </span>
-              </button>
+            <div className="flex items-center gap-1.5">
               <button
                 className={cn(
-                  'flex h-10 items-center gap-1 rounded-lg px-3 text-label-sm font-label-sm transition-colors',
+                  'flex h-8 items-center gap-1 rounded-lg px-2.5 text-label-sm font-label-sm font-medium transition-colors',
                   item.isCritical
-                    ? 'bg-error-container text-on-error-container hover:bg-error hover:text-on-error'
+                    ? 'bg-tertiary-fixed text-on-tertiary-fixed hover:bg-tertiary-fixed-dim'
                     : 'bg-surface-container text-primary hover:bg-surface-container-high',
                 )}
                 onClick={() => onTransfer(item)}
                 title={item.isCritical ? INVENTORY_URGENT_TRANSFER_TOOLTIP : INVENTORY_TRANSFER_TOOLTIP}
                 type="button"
               >
-                <span className="material-symbols-outlined text-[16px]">
-                  {item.isCritical ? 'swap_horizontal_circle' : 'move_up'}
+                <span className="material-symbols-outlined text-[15px]">
+                  {item.isCritical ? 'sync_alt' : 'move_up'}
                 </span>
+                <span>{INVENTORY_REQUEST_TRANSFER}</span>
+              </button>
+              <button
+                className="flex h-8 items-center gap-1 rounded-lg bg-surface-container px-2.5 text-label-sm font-label-sm text-primary transition-colors hover:bg-surface-container-high"
+                onClick={() => onEditStock(item)}
+                title={INVENTORY_UPDATE_TOOLTIP}
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[15px]">edit_note</span>
+                <span className="hidden xs:inline">{INVENTORY_ADJUST_STOCK}</span>
               </button>
             </div>
           </div>
@@ -306,13 +332,18 @@ function buildColumns(
 export function InventorySection({
   warehouseId,
   warehouseName,
+  warehouses = [],
+  onSelectWarehouse,
   onOpenTransfer,
 }: {
   warehouseId: string
   warehouseName: string
+  warehouses?: Warehouse[]
+  onSelectWarehouse?: (id: string) => void
   onOpenTransfer: (opts: { mode: 'source' | 'destination'; productId: string }) => void
 }) {
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'critical' | 'available'>('all')
   const [page, setPage] = useState(1)
   const [assignFormOpen, setAssignFormOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>(undefined)
@@ -320,6 +351,7 @@ export function InventorySection({
 
   const inventoryQuery = useWarehouseInventory(warehouseId, {
     search: debouncedSearch || undefined,
+    status: statusFilter === 'all' ? undefined : statusFilter,
     page,
     limit: 10,
   })
@@ -334,16 +366,16 @@ export function InventorySection({
 
   return (
     <div
-      className="flex flex-col gap-space-lg rounded-xl bg-surface-container-lowest p-space-lg shadow-sm"
+      className="flex flex-col gap-space-md sm:gap-space-lg rounded-xl bg-surface-container-lowest p-space-md sm:p-space-lg shadow-sm"
       id="warehouse-inventory-section"
     >
-      <div className="flex flex-col gap-space-md pb-space-md md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-space-sm pb-space-sm">
         <div className="flex items-center gap-space-md">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary-fixed text-on-secondary-fixed-variant shadow-sm">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary-fixed text-on-secondary-fixed-variant shadow-sm">
             <span className="material-symbols-outlined text-[26px]">format_paint</span>
           </div>
-          <div>
-            <div className="flex items-center gap-space-sm">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-space-sm">
               <h3 className="font-headline-lg text-headline-lg font-bold text-primary">
                 {INVENTORY_SECTION_TITLE}
               </h3>
@@ -356,30 +388,119 @@ export function InventorySection({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-space-sm">
-          <div className="relative w-64">
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-outline">
-              search
-            </span>
-            <input
-              className="font-body-sm h-10 w-full rounded-lg bg-surface-container-low pl-space-md pr-9 text-body-sm text-on-surface transition-all focus:bg-surface-container focus:outline-none"
-              onChange={(event) => {
-                setSearch(event.target.value)
+
+        {/* Quick Switcher Pills for Depots (Horizontal Scrollable Mobile) */}
+        {warehouses.length > 1 ? (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-2 no-scrollbar">
+            {warehouses.map((wh) => (
+              <button
+                className={cn(
+                  'shrink-0 rounded-full px-3 py-1.5 text-label-md font-label-md transition-all active:scale-95',
+                  wh._id === warehouseId
+                    ? 'bg-primary-container text-on-primary font-semibold shadow-sm'
+                    : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high',
+                )}
+                key={wh._id}
+                onClick={() => onSelectWarehouse?.(wh._id)}
+                type="button"
+              >
+                {wh.name} ({wh.linkedProductsCount} صنف)
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {/* Filter Chips & Search Bar */}
+        <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar">
+            <button
+              className={cn(
+                'shrink-0 rounded-lg px-3 py-1.5 text-label-sm font-label-sm font-semibold transition-all',
+                statusFilter === 'all'
+                  ? 'bg-primary-container text-on-primary shadow-sm'
+                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container',
+              )}
+              onClick={() => {
+                setStatusFilter('all')
                 setPage(1)
               }}
-              placeholder={INVENTORY_SEARCH_PLACEHOLDER}
-              type="text"
-              value={search}
-            />
+              type="button"
+            >
+              {INVENTORY_FILTER_ALL}
+            </button>
+            <button
+              className={cn(
+                'flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-label-sm font-label-sm font-semibold transition-all',
+                statusFilter === 'critical'
+                  ? 'bg-error-container text-on-error-container shadow-sm'
+                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container',
+              )}
+              onClick={() => {
+                setStatusFilter('critical')
+                setPage(1)
+              }}
+              type="button"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-error" />
+              {INVENTORY_FILTER_CRITICAL}
+            </button>
+            <button
+              className={cn(
+                'flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-label-sm font-label-sm font-semibold transition-all',
+                statusFilter === 'available'
+                  ? 'bg-secondary-fixed text-on-secondary-fixed shadow-sm'
+                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container',
+              )}
+              onClick={() => {
+                setStatusFilter('available')
+                setPage(1)
+              }}
+              type="button"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-secondary" />
+              {INVENTORY_FILTER_AVAILABLE}
+            </button>
           </div>
-          <button
-            className="flex h-10 items-center gap-1.5 rounded-lg bg-primary-container px-space-md text-label-md font-label-md text-on-primary shadow-sm transition-all hover:bg-primary"
-            onClick={() => setAssignFormOpen((open) => !open)}
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            {INVENTORY_ASSIGN_BUTTON}
-          </button>
+
+          <div className="flex items-center gap-space-sm">
+            <div className="relative flex-1 sm:w-64">
+              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-outline">
+                search
+              </span>
+              <input
+                className="font-body-sm h-10 w-full rounded-lg bg-surface-container-low pl-8 pr-9 text-body-sm text-on-surface transition-all focus:bg-surface-container focus:outline-none"
+                onChange={(event) => {
+                  setSearch(event.target.value)
+                  setPage(1)
+                }}
+                placeholder={INVENTORY_SEARCH_PLACEHOLDER}
+                type="text"
+                value={search}
+              />
+              {search ? (
+                <button
+                  aria-label="مسح البحث"
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-outline hover:text-on-surface"
+                  onClick={() => {
+                    setSearch('')
+                    setPage(1)
+                  }}
+                  type="button"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              ) : null}
+            </div>
+            <button
+              className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary-container px-space-md text-label-md font-label-md text-on-primary shadow-sm transition-all hover:bg-primary"
+              onClick={() => setAssignFormOpen((open) => !open)}
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span className="hidden sm:inline">{INVENTORY_ASSIGN_BUTTON}</span>
+              <span className="sm:hidden">تخصيص صنف</span>
+            </button>
+          </div>
         </div>
       </div>
 

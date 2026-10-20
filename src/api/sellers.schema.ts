@@ -46,10 +46,18 @@ export const sellerListResponseSchema = z.object({
 })
 export type SellerListResponse = z.infer<typeof sellerListResponseSchema>
 
+export const sellerCredentialsSchema = z.object({
+  code: z.string(),
+  password: z.string(),
+  role: z.string().optional(),
+})
+export type SellerCredentials = z.infer<typeof sellerCredentialsSchema>
+
 export const sellerEnvelopeSchema = z.object({
   status: z.literal('success'),
   message: z.string().optional(),
   data: sellerSchema,
+  credentials: sellerCredentialsSchema.optional(),
 })
 
 export const sellerStatsResponseSchema = z.object({
@@ -62,9 +70,9 @@ export const sellerStatsResponseSchema = z.object({
       vacation: z.number(),
     }),
     teamMonthlySales: z.object({
-      totalAchieved: z.number(),
-      monthlyTarget: z.number(),
-      growthRate: z.number(),
+      totalAchieved: z.number().default(0),
+      monthlyTarget: z.number().default(0),
+      growthRate: z.number().nullable().optional().default(0),
     }),
     targetAchievement: z.object({
       percentage: z.number(),
@@ -87,19 +95,23 @@ export const sellerPerformanceResponseSchema = z.object({
   status: z.literal('success'),
   data: z.object({
     seller: sellerSchema,
-    metrics: z.object({
-      currentMonthSales: z.number(),
-      monthlyTarget: z.number(),
-      achievementRate: z.number(),
-      commissionRate: z.number(),
-      commissionAmount: z.number(),
-      // Falls back to a hardcoded 91 only when currentMonthSales === 0
-      // (architecture.md) — the UI must show "—" in that exact case instead
-      // of rendering this fallback as a real rate.
-      collectionRate: z.number(),
-      clientsCount: z.number(),
-      totalInvoicesCount: z.number(),
-    }),
+    metrics: z
+      .object({
+        currentMonthSales: z.number(),
+        monthlyTarget: z.number(),
+        achievementRate: z.number(),
+        commissionRate: z.number(),
+        commissionAmount: z.number(),
+        collectionRate: z.number(),
+        clientsCount: z.number(),
+        totalInvoicesCount: z.number(),
+        todaySales: z.number().optional().default(0),
+        todayOrdersCount: z.number().optional().default(0),
+        dailyTarget: z.number().optional().default(0),
+        todayAchievementRate: z.number().optional().default(0),
+        remainingTodayTarget: z.number().optional().default(0),
+      })
+      .passthrough(),
   }),
 })
 export type SellerPerformance = z.infer<
@@ -120,13 +132,23 @@ const sellerPhoneSchema = z
 const sellerPhotoUrlSchema = z
   .string()
   .trim()
-  .refine((value) => value === '' || /^https?:\/\//.test(value), {
-    message: SELLER_PHOTO_URL_ERROR,
-  })
+  .refine(
+    (value) =>
+      value === '' ||
+      value.startsWith('/uploads') ||
+      value.startsWith('/') ||
+      /^https?:\/\//i.test(value) ||
+      value.startsWith('data:image/') ||
+      value.startsWith('blob:'),
+    {
+      message: SELLER_PHOTO_URL_ERROR,
+    },
+  )
 
 export const createSellerInputSchema = z.object({
   name: z.string().trim().min(1, VALIDATION_SELLER_NAME_REQUIRED),
   phone: sellerPhoneSchema,
+  password: z.string().trim().optional(),
   title: z.string().trim().optional(),
   governorate: z.string().trim().optional(),
   region: z.string().trim().optional(),

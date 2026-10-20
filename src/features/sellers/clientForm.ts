@@ -17,5 +17,6 @@ export function buildClientPayload(
     creditLimit: form.creditLimit,
     commercialType: form.commercialType || undefined,
     notes: form.notes || undefined,
+    password: form.password || undefined,
   }
 }

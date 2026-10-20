@@ -11,9 +11,18 @@ import {
 const urlOrEmptySchema = z
   .string()
   .trim()
-  .refine((value) => value === '' || /^https?:\/\//.test(value), {
-    message: SELLER_PHOTO_URL_ERROR,
-  })
+  .refine(
+    (value) =>
+      value === '' ||
+      value.startsWith('/uploads') ||
+      value.startsWith('/') ||
+      /^https?:\/\//i.test(value) ||
+      value.startsWith('data:image/') ||
+      value.startsWith('blob:'),
+    {
+      message: SELLER_PHOTO_URL_ERROR,
+    },
+  )
 
 export const repFormSchema = z.object({
   name: z.string().trim().min(1, VALIDATION_SELLER_NAME_REQUIRED),
@@ -28,12 +37,14 @@ export const repFormSchema = z.object({
   sector: z.string().trim(),
   monthlyTarget: z.number().min(0).optional(),
   commissionRate: z.number().min(0).max(100).optional(),
+  password: z.string().trim().optional(),
 })
 export type RepFormValues = z.infer<typeof repFormSchema>
 
 export const repFormDefaults: DefaultValues<RepFormValues> = {
   name: '',
   phone: '',
+  password: '',
   photoUrl: '',
   governorate: REP_GOVERNORATE_OPTIONS[0],
   region: '',

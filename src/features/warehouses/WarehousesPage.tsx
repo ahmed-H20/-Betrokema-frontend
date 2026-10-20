@@ -9,8 +9,10 @@ import {
   WAREHOUSE_FORM_SUBTITLE,
   WAREHOUSE_FORM_TITLE_CREATE,
   WAREHOUSE_FORM_TITLE_EDIT,
+  WAREHOUSE_LIVE_SYNC,
   WAREHOUSES_ADD_BUTTON,
   WAREHOUSES_EXPORT_BUTTON,
+  WAREHOUSES_PAGE_SUBTITLE,
   WAREHOUSES_PAGE_TITLE,
 } from '@/constants/strings'
 import { buildCsv, downloadCsv } from '@/lib/csv'
@@ -102,13 +104,24 @@ export function WarehousesPage() {
   return (
     <div className="flex flex-col gap-space-lg">
       <div className="flex flex-col justify-between gap-space-md xl:flex-row xl:items-center">
-        <div className="flex items-center gap-space-sm">
-          <span className="rounded-lg bg-primary-container p-2 text-on-primary">
-            <span className="material-symbols-outlined text-[26px]">warehouse</span>
-          </span>
-          <h1 className="font-headline-xl text-headline-xl leading-tight text-primary">
-            {WAREHOUSES_PAGE_TITLE}
-          </h1>
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-start sm:gap-space-sm">
+            <div className="flex items-center gap-space-sm">
+              <span className="rounded-lg bg-primary-container p-2 text-on-primary">
+                <span className="material-symbols-outlined text-[26px]">warehouse</span>
+              </span>
+              <h1 className="font-headline-xl text-headline-xl leading-tight text-primary">
+                {WAREHOUSES_PAGE_TITLE}
+              </h1>
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary-fixed px-2.5 py-1 text-label-md font-label-md text-on-secondary-fixed">
+              <span className="h-2 w-2 rounded-full bg-secondary animate-pulse" />
+              {WAREHOUSE_LIVE_SYNC}
+            </span>
+          </div>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            {WAREHOUSES_PAGE_SUBTITLE}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-space-sm">
           <button
@@ -177,8 +190,10 @@ export function WarehousesPage() {
       {selectedWarehouse ? (
         <InventorySection
           onOpenTransfer={openTransferFromInventory}
+          onSelectWarehouse={setSelectedId}
           warehouseId={selectedWarehouse._id}
           warehouseName={selectedWarehouse.name}
+          warehouses={warehouses}
         />
       ) : null}
 
@@ -199,6 +214,29 @@ export function WarehousesPage() {
           warehouse={deleteTarget}
         />
       ) : null}
+
+      {/* Mobile Floating Action Buttons */}
+      <div className="fixed bottom-20 left-4 z-40 flex flex-col gap-2 md:hidden">
+        <button
+          aria-label="طلب مناقلة سريعة"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-lowest text-secondary shadow-lg ring-1 ring-outline-variant/30 transition-transform active:scale-95"
+          onClick={() => {
+            setTransferPreset(undefined)
+            setTransferModalOpen(true)
+          }}
+          type="button"
+        >
+          <span className="material-symbols-outlined text-[22px]">swap_horiz</span>
+        </button>
+        <button
+          aria-label={WAREHOUSES_ADD_BUTTON}
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-container text-on-primary shadow-xl transition-transform active:scale-95"
+          onClick={handleAddClick}
+          type="button"
+        >
+          <span className="material-symbols-outlined text-[28px]">add</span>
+        </button>
+      </div>
     </div>
   )
 }

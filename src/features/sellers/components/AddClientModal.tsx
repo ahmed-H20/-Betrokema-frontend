@@ -1,8 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Dialog, DialogHeader } from '@/components/ui/Dialog'
+import {
+  AccountCredentialsModal,
+  type AccountCredentials,
+} from '@/components/ui/AccountCredentialsModal'
 import {
   ADD_CLIENT_SUBMIT,
   ADD_CLIENT_SUBTITLE,
@@ -47,6 +51,7 @@ export function AddClientModal({
   sellerName?: string
 }) {
   const createClient = useCreateClient()
+  const [createdCredentials, setCreatedCredentials] = useState<AccountCredentials | null>(null)
   const {
     register,
     handleSubmit,
@@ -58,21 +63,37 @@ export function AddClientModal({
   })
 
   useEffect(() => {
-    if (open) reset(clientFormDefaults)
+    if (!open) {
+      setCreatedCredentials(null)
+      return
+    }
+    reset(clientFormDefaults)
   }, [open, reset])
 
   async function onSubmit(values: ClientFormValues) {
     try {
-      await createClient.mutateAsync(buildClientPayload(values, sellerId))
+      const result = await createClient.mutateAsync(buildClientPayload(values, sellerId))
       toast.success(TOAST_CLIENT_CREATED)
-      onOpenChange(false)
+      if (result.credentials) {
+        setCreatedCredentials({
+          name: values.name || values.organizeName,
+          code: result.credentials.code,
+          password: result.credentials.password,
+          roleTitle: 'عميل معتمد',
+          roleBadge: 'CLI - CLIENT',
+          phone: values.phone,
+        })
+      } else {
+        onOpenChange(false)
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : GENERIC_ERROR)
     }
   }
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open} widthClassName="max-w-2xl">
+    <>
+      <Dialog onOpenChange={onOpenChange} open={open} widthClassName="max-w-2xl">
       <DialogHeader
         icon="person_add"
         onClose={() => onOpenChange(false)}
@@ -146,6 +167,20 @@ export function AddClientModal({
             <label className={labelClassName}>{CLIENT_NOTES_LABEL}</label>
             <textarea className={textareaClassName} rows={2} {...register('notes')} />
           </div>
+          <div className="md:col-span-2">
+            <label className={labelClassName}>
+              كلمة المرور لتسجيل الدخول (اختياري)
+            </label>
+            <input
+              className={inputClassName}
+              placeholder="اتركه فارغاً للتوليد التلقائي (PIN مكون من 6 أرقام)"
+              type="text"
+              {...register('password')}
+            />
+            <span className="font-label-sm mt-1 block text-label-sm text-on-surface-variant">
+              💡 إذا تركته فارغاً، سيقوم النظام تلقائياً بتوليد رمز PIN سهل وسريع مكون من 6 أرقام وعرضه عليك فوراً لنسخه للعميل.
+            </span>
+          </div>
         </div>
         <div className="flex items-center justify-end gap-3 bg-surface-container px-6 py-4">
           <button
@@ -165,5 +200,17 @@ export function AddClientModal({
         </div>
       </form>
     </Dialog>
+
+    <AccountCredentialsModal
+      credentials={createdCredentials}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          setCreatedCredentials(null)
+          onOpenChange(false)
+        }
+      }}
+      open={Boolean(createdCredentials)}
+    />
+  </>
   )
 }

@@ -9,6 +9,7 @@ import {
   type CreateSellerInput,
   type EnrichedSeller,
   type Seller,
+  type SellerCredentials,
   type SellerListFilters,
   type SellerPerformance,
   type SellerStats,
@@ -46,13 +47,19 @@ export async function getPerformance(id: string): Promise<SellerPerformance> {
   return sellerPerformanceResponseSchema.parse(raw).data
 }
 
-export async function create(input: CreateSellerInput): Promise<Seller> {
+export async function create(
+  input: CreateSellerInput,
+): Promise<Seller & { credentials?: SellerCredentials }> {
   const payload = createSellerInputSchema.parse(input)
   const raw = await request<unknown>('/sellers', {
     method: 'POST',
     body: payload,
   })
-  return sellerEnvelopeSchema.parse(raw).data
+  const envelope = sellerEnvelopeSchema.parse(raw)
+  return {
+    ...envelope.data,
+    credentials: envelope.credentials,
+  }
 }
 
 export async function update(

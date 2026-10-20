@@ -134,6 +134,7 @@ export type ProductListFilters = {
   page?: number
   limit?: number
   sort?: string
+  isLowStock?: boolean
 }
 
 export const createProductInputSchema = z.object({

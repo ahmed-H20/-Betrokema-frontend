@@ -21,9 +21,13 @@ import { DeleteRepDialog } from '@/features/sellers/components/DeleteRepDialog'
 export function RepDetailPanel({
   sellerId,
   onDeleted,
+  activeTab = 'clients',
+  onTabChange,
 }: {
   sellerId: string | undefined
   onDeleted: () => void
+  activeTab?: string
+  onTabChange?: (tab: string) => void
 }) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -55,7 +59,11 @@ export function RepDetailPanel({
       />
 
       <div className="rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
-        <Tabs.Root defaultValue="clients">
+        <Tabs.Root
+          defaultValue="clients"
+          onValueChange={onTabChange}
+          value={activeTab}
+        >
           {/* Below xl: natural-width tabs scroll horizontally instead of
               squeezing into equal flex-1 shares — xl: restores the exact
               original flex-1/overflow-visible/px-2 desktop behavior. */}

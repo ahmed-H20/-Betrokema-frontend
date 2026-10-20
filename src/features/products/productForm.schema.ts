@@ -14,12 +14,21 @@ import {
   VALIDATION_QUANTITY_NEGATIVE,
 } from '@/constants/strings'
 
-const urlFieldSchema = z
+const imageFieldSchema = z
   .string()
   .trim()
-  .refine((value) => value === '' || isHttpUrl(value), {
-    message: PRODUCT_IMAGE_URL_ERROR,
-  })
+  .refine(
+    (value) =>
+      value === '' ||
+      value.startsWith('/uploads') ||
+      value.startsWith('/') ||
+      isHttpUrl(value) ||
+      value.startsWith('data:image/') ||
+      value.startsWith('blob:'),
+    {
+      message: PRODUCT_IMAGE_URL_ERROR,
+    },
+  )
 
 export const pricingFieldsSchema = z.object({
   galonPrice: z
@@ -48,8 +57,8 @@ export const productFormSchema = pricingFieldsSchema.extend({
   warehouse: z.string().trim().min(1, VALIDATION_PRODUCT_WAREHOUSE_REQUIRED),
   quantity: z.number().min(0, VALIDATION_QUANTITY_NEGATIVE),
   minStockThreshold: z.number().min(0, VALIDATION_MIN_STOCK_NEGATIVE),
-  image: urlFieldSchema,
-  images: z.array(z.object({ url: urlFieldSchema })),
+  image: imageFieldSchema,
+  images: z.array(z.object({ url: imageFieldSchema })),
   features: z.array(z.string()),
 })
 export type ProductFormValues = z.infer<typeof productFormSchema>

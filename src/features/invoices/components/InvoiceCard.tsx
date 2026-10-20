@@ -56,7 +56,7 @@ export function InvoiceCard({
   })
 
   return (
-    <article className="relative flex flex-col gap-3 rounded-xl bg-surface-container-lowest p-4 shadow-sm transition-all active:scale-[0.99] hover:shadow-md">
+    <article className="relative flex flex-col gap-3 overflow-hidden rounded-xl bg-surface-container-lowest p-4 shadow-sm transition-all active:scale-[0.99] hover:shadow-md">
       {/* Header row: ID & Status Pill */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -146,12 +146,12 @@ export function InvoiceCard({
       </div>
 
       {/* Financial Breakdown & Action Bottom Row */}
-      <div className="flex items-center justify-between pt-1">
-        <div className="flex flex-col">
+      <div className="flex flex-col gap-2.5 border-t border-outline-variant/30 pt-2.5 sm:flex-row sm:items-center sm:justify-between sm:border-0 sm:pt-1">
+        <div className="flex items-center justify-between sm:flex-col sm:items-start">
           <span className="font-label-sm text-label-sm text-on-surface-variant">
             {isPaid ? 'الصافي المسدد' : 'إجمالي المطالبة'}
           </span>
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-1.5">
             <span className="font-headline-lg text-headline-lg font-bold text-primary">
               {formatNumber(invoice.totalPrice)}
             </span>
@@ -159,21 +159,21 @@ export function InvoiceCard({
               ج.م
             </span>
             {!isPaid && (
-              <span className="mr-1.5 font-label-sm text-label-sm text-error font-medium">
-                (متبقي: {formatNumber(remaining)})
+              <span className="mr-1 rounded bg-error-container/60 px-1.5 py-0.5 font-label-sm text-xs font-semibold text-error">
+                متبقي: {formatNumber(remaining)}
               </span>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
           {/* Quick Approve Button for Pending Orders */}
           {isPending && onApproveOrder && (
             <button
               type="button"
               disabled={isApproving}
               onClick={() => onApproveOrder(invoice)}
-              className="flex h-10 items-center gap-1.5 rounded-lg bg-surface-container-high px-3.5 font-label-md text-label-md font-semibold text-[#15803d] hover:bg-surface-container-highest transition-colors active:scale-95 disabled:opacity-50"
+              className="flex-1 sm:flex-initial flex h-10 min-w-[90px] items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 font-label-sm sm:font-label-md text-label-sm sm:text-label-md font-semibold text-[#15803d] hover:bg-surface-container-highest transition-colors active:scale-95 disabled:opacity-50 whitespace-nowrap"
             >
               <span className="material-symbols-outlined text-[18px]">
                 check_circle
@@ -187,7 +187,7 @@ export function InvoiceCard({
             <button
               type="button"
               onClick={() => onAddPayment(invoice)}
-              className="flex h-10 items-center gap-1 rounded-lg bg-secondary-fixed px-3 font-label-md text-label-md font-semibold text-on-secondary-fixed hover:bg-secondary-fixed-dim transition-colors active:scale-95"
+              className="flex-1 sm:flex-initial flex h-10 min-w-[90px] items-center justify-center gap-1 rounded-lg bg-secondary-fixed px-3 font-label-sm sm:font-label-md text-label-sm sm:text-label-md font-semibold text-on-secondary-fixed hover:bg-secondary-fixed-dim transition-colors active:scale-95 whitespace-nowrap"
             >
               <span className="material-symbols-outlined text-[18px]">
                 payments
@@ -201,7 +201,10 @@ export function InvoiceCard({
             type="button"
             onClick={() => onViewDetails(invoice)}
             className={cn(
-              'flex h-10 items-center gap-1 rounded-lg px-4 font-label-md text-label-md font-semibold transition-colors active:scale-95',
+              'flex h-10 items-center justify-center gap-1 rounded-lg px-3 sm:px-4 font-label-sm sm:font-label-md text-label-sm sm:text-label-md font-semibold transition-colors active:scale-95 whitespace-nowrap',
+              isPending && !isPaid
+                ? 'w-full sm:w-auto sm:flex-initial'
+                : 'flex-1 sm:flex-initial',
               isPending
                 ? 'bg-primary text-on-primary shadow-sm hover:bg-primary-container'
                 : 'bg-surface-container-high text-primary hover:bg-surface-container-highest',

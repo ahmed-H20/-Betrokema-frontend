@@ -1,9 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import type { Seller } from '@/api/sellers.schema'
 import { Dialog, DialogHeader } from '@/components/ui/Dialog'
+import {
+  AccountCredentialsModal,
+  type AccountCredentials,
+} from '@/components/ui/AccountCredentialsModal'
+import { ImageUpload } from '@/components/ui/ImageUpload'
 import {
   GENERIC_ERROR,
   MODAL_CANCEL,
@@ -20,7 +25,6 @@ import {
   REP_PERFORMANCE_SECTION,
   REP_PHONE_LABEL,
   REP_PHOTO_URL_LABEL,
-  REP_PHOTO_URL_PLACEHOLDER,
   REP_REGION_LABEL,
   REP_SECTOR_LABEL,
   REP_TITLE_LABEL,
@@ -64,11 +68,14 @@ export function RepFormDialog({
   const createSeller = useCreateSeller()
   const updateSeller = useUpdateSeller()
   const isEdit = Boolean(seller)
+  const [createdCredentials, setCreatedCredentials] = useState<AccountCredentials | null>(null)
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RepFormValues>({
     resolver: zodResolver(repFormSchema),
@@ -76,7 +83,10 @@ export function RepFormDialog({
   })
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      setCreatedCredentials(null)
+      return
+    }
     reset(seller ? sellerToFormValues(seller) : repFormDefaults)
   }, [open, seller, reset])
 
@@ -93,18 +103,32 @@ export function RepFormDialog({
       const payload = buildSellerPayload(values)
       if (seller) {
         await updateSeller.mutateAsync({ id: seller._id, input: payload })
+        toast.success(TOAST_SELLER_SAVED)
+        onOpenChange(false)
       } else {
-        await createSeller.mutateAsync(payload)
+        const result = await createSeller.mutateAsync(payload)
+        toast.success(TOAST_SELLER_SAVED)
+        if (result.credentials) {
+          setCreatedCredentials({
+            name: values.name,
+            code: result.credentials.code,
+            password: result.credentials.password,
+            roleTitle: values.title || 'مندوب مبيعات ميداني',
+            roleBadge: 'PK - SELLER',
+            phone: values.phone,
+          })
+        } else {
+          onOpenChange(false)
+        }
       }
-      toast.success(TOAST_SELLER_SAVED)
-      onOpenChange(false)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : GENERIC_ERROR)
     }
   }
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open} widthClassName="max-w-2xl">
+    <>
+      <Dialog onOpenChange={onOpenChange} open={open} widthClassName="max-w-2xl">
       <DialogHeader
         icon="person_add"
         iconClassName="bg-primary-fixed text-on-primary-fixed"
@@ -166,19 +190,43 @@ export function RepFormDialog({
               <input className={inputClassName} type="text" {...register('region')} />
             </div>
             <div className="md:col-span-2">
-              <label className={labelClassName}>{REP_PHOTO_URL_LABEL}</label>
-              <input
-                className={inputClassName}
-                placeholder={REP_PHOTO_URL_PLACEHOLDER}
-                type="text"
-                {...register('photoUrl')}
+              <ImageUpload
+                error={errors.photoUrl?.message}
+                helperText="PNG, JPG, WebP حتى 10 ميجابايت (رفع مباشر للصور)"
+                label={REP_PHOTO_URL_LABEL}
+                onChange={(url) =>
+                  setValue('photoUrl', url, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                onClear={() =>
+                  setValue('photoUrl', '', {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                type="sellers"
+                value={watch('photoUrl')}
+                variant="avatar"
               />
-              {errors.photoUrl ? (
-                <span className="font-label-sm mt-1 block text-label-sm text-error">
-                  {errors.photoUrl.message}
-                </span>
-              ) : null}
             </div>
+            {!isEdit ? (
+              <div className="md:col-span-2">
+                <label className={labelClassName}>
+                  كلمة المرور لتسجيل الدخول (اختياري)
+                </label>
+                <input
+                  className={inputClassName}
+                  placeholder="اتركه فارغاً للتوليد التلقائي (PIN مكون من 6 أرقام)"
+                  type="text"
+                  {...register('password')}
+                />
+                <span className="font-label-sm mt-1 block text-label-sm text-on-surface-variant">
+                  💡 في حال تركته فارغاً، سيقوم النظام تلقائياً بتوليد رمز PIN سهل وسريع مكون من 6 أرقام، وسيتم عرضه فوراً على الشاشة لتتمكن من نسخه وإعطائه للمندوب.
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <div>
@@ -244,5 +292,17 @@ export function RepFormDialog({
         </div>
       </form>
     </Dialog>
+
+    <AccountCredentialsModal
+      credentials={createdCredentials}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          setCreatedCredentials(null)
+          onOpenChange(false)
+        }
+      }}
+      open={Boolean(createdCredentials)}
+    />
+  </>
   )
 }

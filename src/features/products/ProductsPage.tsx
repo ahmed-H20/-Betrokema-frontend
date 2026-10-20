@@ -8,9 +8,10 @@ import {
   PRODUCTS_PAGE_TITLE,
 } from '@/constants/strings'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
+import { CategoryModal } from '@/features/categories/CategoryModal'
 import { CategoryPanel } from '@/features/categories/CategoryPanel'
 import { useCategories } from '@/features/categories/hooks'
-import { useProducts } from '@/features/products/hooks'
+import { useProducts, useProductStats } from '@/features/products/hooks'
 import { FeaturedBanner } from '@/features/products/components/FeaturedBanner'
 import { KpiBar } from '@/features/products/components/KpiBar'
 import { Pagination } from '@/features/products/components/Pagination'
@@ -22,6 +23,8 @@ const PAGE_SIZE = 12
 
 export function ProductsPage() {
   const [createOpen, setCreateOpen] = useState(false)
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false)
+  const [lowStockOnly, setLowStockOnly] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState('-createdAt')
@@ -29,6 +32,7 @@ export function ProductsPage() {
 
   const debouncedSearch = useDebouncedValue(search, 400)
 
+  const statsQuery = useProductStats()
   const categoriesQuery = useCategories()
   const productsQuery = useProducts({
     category: selectedCategory,
@@ -36,7 +40,16 @@ export function ProductsPage() {
     sort,
     page,
     limit: PAGE_SIZE,
+    isLowStock: lowStockOnly || undefined,
   })
+
+  const criticalStock = statsQuery.data?.criticalStockAlerts
+  const criticalCount = criticalStock?.count ?? 0
+
+  function handleToggleLowStock() {
+    setLowStockOnly((prev) => !prev)
+    setPage(1)
+  }
 
   function handleSortChange(value: string) {
     setSort(value)
@@ -83,6 +96,36 @@ export function ProductsPage() {
 
       <KpiBar />
 
+      {/* Real-time Stock Alert Banner matching petrokema_admin_1 */}
+      {criticalCount > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-tertiary-fixed p-3 text-on-tertiary-fixed shadow-sm border border-on-tertiary-container/20">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-on-tertiary-container/20 text-on-tertiary-fixed">
+              <span className="material-symbols-outlined text-[20px]">warning</span>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-label-md text-label-md font-bold truncate">
+                تنبيه انخفاض المخزون
+              </span>
+              <span className="font-body-sm text-body-sm text-on-tertiary-fixed-variant truncate">
+                {criticalCount} {criticalCount === 1 ? 'منتج قارب' : 'منتجات قاربت'} على النفاد بمستودعات التشغيل
+              </span>
+            </div>
+          </div>
+          <button
+            className={`flex-shrink-0 rounded-lg px-3.5 py-1.5 font-label-sm text-label-sm font-semibold shadow-sm transition-all active:scale-95 ${
+              lowStockOnly
+                ? 'bg-primary text-on-primary'
+                : 'bg-surface-container-lowest/90 text-on-tertiary-fixed hover:bg-surface-container-lowest'
+            }`}
+            onClick={handleToggleLowStock}
+            type="button"
+          >
+            {lowStockOnly ? 'عرض الكل' : 'مراجعة'}
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         {/* Below lg: category add-form + list collapse into a section below
             the product list, following the mapped phone screen
@@ -96,6 +139,7 @@ export function ProductsPage() {
         <div className="order-1 flex flex-col gap-5 lg:order-none lg:col-span-8">
           <ProductFilters
             categories={categoriesQuery.data?.data ?? []}
+            onOpenCategoriesModal={() => setCategoryModalOpen(true)}
             onSearchChange={handleSearchChange}
             onSelectCategory={handleSelectCategory}
             onSortChange={handleSortChange}
@@ -132,6 +176,21 @@ export function ProductsPage() {
       </div>
 
       <ProductFormDialog onOpenChange={setCreateOpen} open={createOpen} />
+      <CategoryModal
+        isOpen={categoryModalOpen}
+        onClose={() => setCategoryModalOpen(false)}
+      />
+
+      {/* Mobile Floating Action Button matching petrokema_admin_1 */}
+      <button
+        type="button"
+        onClick={() => setCreateOpen(true)}
+        className="fixed bottom-20 start-4 z-40 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-label-md font-semibold text-on-primary shadow-xl ring-2 ring-primary-container/20 active:scale-95 transition-all lg:hidden"
+        aria-label="إضافة منتج جديد"
+      >
+        <span className="material-symbols-outlined text-[20px]">add_circle</span>
+        <span>إضافة منتج</span>
+      </button>
     </div>
   )
 }

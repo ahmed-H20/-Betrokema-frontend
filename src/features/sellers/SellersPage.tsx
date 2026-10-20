@@ -30,6 +30,7 @@ export function SellersPage() {
   // (R3-sellers-responsive).
   const [searchParams, setSearchParams] = useSearchParams()
   const urlSellerId = searchParams.get('rep') ?? undefined
+  const urlTab = searchParams.get('tab') || 'clients'
   const [createOpen, setCreateOpen] = useState(false)
 
   const debouncedSearch = useDebouncedValue(search, 400)
@@ -71,10 +72,20 @@ export function SellersPage() {
     ? urlSellerId
     : filteredSellers[0]?._id
 
-  function handleSelectSeller(id: string) {
+  function handleSelectSeller(id: string, tab?: string) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
       next.set('rep', id)
+      if (tab) next.set('tab', tab)
+      else next.delete('tab')
+      return next
+    })
+  }
+
+  function handleTabChange(tab: string) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('tab', tab)
       return next
     })
   }
@@ -83,6 +94,7 @@ export function SellersPage() {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
       next.delete('rep')
+      next.delete('tab')
       return next
     })
   }
@@ -131,7 +143,7 @@ export function SellersPage() {
         </div>
       </div>
 
-      <KpiRow />
+      <KpiRow onOpenCreate={() => setCreateOpen(true)} />
 
       {/* Below xl: list-then-detail (one pane at a time, URL-driven) —
           both panes stay mounted (desktop behavior unchanged, see below),
@@ -147,11 +159,12 @@ export function SellersPage() {
           <RepsDirectory
             isError={sellersQuery.isError}
             isLoading={sellersQuery.isLoading}
+            onSearchChange={setSearch}
+            onSelectInvoices={(id) => handleSelectSeller(id, 'invoices')}
             onSelectSeller={handleSelectSeller}
             onSortChange={setSort}
             onStatusFilterChange={setStatusFilter}
             search={search}
-            onSearchChange={setSearch}
             selectedSellerId={selectedSellerId}
             sellers={filteredSellers}
             sort={sort}
@@ -174,11 +187,29 @@ export function SellersPage() {
             </span>
             {REP_DETAIL_BACK}
           </button>
-          <RepDetailPanel onDeleted={handleBackToList} sellerId={selectedSellerId} />
+          <RepDetailPanel
+            activeTab={urlTab}
+            onDeleted={handleBackToList}
+            onTabChange={handleTabChange}
+            sellerId={selectedSellerId}
+          />
         </div>
       </div>
 
       <RepFormDialog onOpenChange={setCreateOpen} open={createOpen} />
+
+      {/* Mobile Floating Action Button matching petrokema_admin_5 */}
+      {!hasExplicitSelection && (
+        <button
+          aria-label="إضافة حساب مندوب جديد"
+          className="fixed bottom-20 start-4 z-40 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-label-md font-semibold text-on-primary shadow-xl ring-2 ring-primary-container/20 transition-all hover:bg-primary-container active:scale-95 xl:hidden"
+          onClick={() => setCreateOpen(true)}
+          type="button"
+        >
+          <span className="material-symbols-outlined text-[20px]">person_add</span>
+          <span>إضافة مندوب</span>
+        </button>
+      )}
     </div>
   )
 }

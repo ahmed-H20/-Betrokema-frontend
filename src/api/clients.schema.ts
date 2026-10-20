@@ -57,10 +57,18 @@ export type ClientsForSellerResponse = z.infer<
   typeof clientsForSellerResponseSchema
 >
 
+export const clientCredentialsSchema = z.object({
+  code: z.string(),
+  password: z.string(),
+  role: z.string().optional(),
+})
+export type ClientCredentials = z.infer<typeof clientCredentialsSchema>
+
 export const clientEnvelopeSchema = z.object({
   status: z.literal('success'),
   message: z.string().optional(),
   data: clientSchema,
+  credentials: clientCredentialsSchema.optional(),
 })
 
 export const createClientInputSchema = z.object({
@@ -71,6 +79,7 @@ export const createClientInputSchema = z.object({
     .string()
     .trim()
     .regex(EGYPT_MOBILE_REGEX, VALIDATION_CLIENT_PHONE_INVALID),
+  password: z.string().trim().optional(),
   seller: z.string().trim().min(1),
   governorate: z.string().trim().optional(),
   city: z.string().trim().optional(),
@@ -80,3 +89,6 @@ export const createClientInputSchema = z.object({
   notes: z.string().trim().optional(),
 })
 export type CreateClientInput = z.infer<typeof createClientInputSchema>
+
+export const updateClientInputSchema = createClientInputSchema.partial()
+export type UpdateClientInput = z.infer<typeof updateClientInputSchema>

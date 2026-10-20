@@ -14,6 +14,7 @@ import {
   STOCK_UNIT_SUFFIX,
 } from '@/constants/strings'
 import { formatNumber } from '@/lib/format'
+import { resolveImageUrl } from '@/lib/image'
 import { useFeaturedProduct } from '@/features/products/hooks'
 import { QuickEditStockDialog } from '@/features/products/components/QuickEditStockDialog'
 
@@ -50,7 +51,7 @@ export function FeaturedBanner() {
             <img
               alt={product.name}
               className="h-full w-full rounded-lg object-cover"
-              src={product.image}
+              src={resolveImageUrl(product.image)}
             />
           ) : (
             <span className="font-headline-md text-headline-md">

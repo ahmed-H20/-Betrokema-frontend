@@ -12,6 +12,7 @@ export function buildSellerPayload(
     region: form.region || undefined,
     title: form.title || undefined,
     sector: form.sector || undefined,
+    password: form.password || undefined,
     monthlyTarget: form.monthlyTarget,
     commissionRate: form.commissionRate,
   }

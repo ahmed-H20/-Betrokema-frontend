@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as clientsApi from '@/api/clients'
 import * as invoicesApi from '@/api/invoices'
 import * as sellersApi from '@/api/sellers'
-import type { CreateClientInput } from '@/api/clients.schema'
+import type { CreateClientInput, UpdateClientInput } from '@/api/clients.schema'
 import type {
   CreateSellerInput,
   SellerListFilters,
@@ -47,6 +47,14 @@ export function useClientsForSeller(sellerId: string | undefined) {
     queryKey: ['clients', 'by-seller', sellerId],
     queryFn: () => clientsApi.getForSeller(sellerId as string),
     enabled: Boolean(sellerId),
+  })
+}
+
+export function useClientDetail(clientId: string | undefined) {
+  return useQuery({
+    queryKey: ['clients', 'detail', clientId],
+    queryFn: () => clientsApi.getClientById(clientId as string),
+    enabled: Boolean(clientId),
   })
 }
 
@@ -113,6 +121,21 @@ export function useCreateClient() {
       void queryClient.invalidateQueries({
         queryKey: ['sellers', 'performance', variables.seller],
       })
+    },
+  })
+}
+
+export function useUpdateClient() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateClientInput }) =>
+      clientsApi.update(id, input),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['clients'] })
+      void queryClient.invalidateQueries({
+        queryKey: ['clients', 'detail', variables.id],
+      })
+      void queryClient.invalidateQueries({ queryKey: ['sellers'] })
     },
   })
 }

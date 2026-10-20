@@ -51,22 +51,34 @@ function ClientCard({ client }: { client: Client }) {
   const tone = status === 'unknown' ? 'neutral' : CLIENT_STATUS_TONE[status]
   const overCredit = client.currentDebt > client.creditLimit
   const subtitle = [client.address, client.city].filter(Boolean).join(' · ')
+  const cleanPhone = client.phone.replace(/\D/g, '')
+  const creditPercent =
+    client.creditLimit > 0
+      ? Math.min(100, Math.round((client.currentDebt / client.creditLimit) * 100))
+      : 0
 
   return (
-    <article className="flex flex-col gap-space-sm rounded-xl bg-surface-container-lowest p-space-md shadow-sm">
-      <div className="flex items-start justify-between gap-space-sm">
-        <div className="flex min-w-0 items-start gap-space-sm">
+    <article className="flex flex-col gap-3 rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-4 shadow-sm transition-all hover:shadow-md">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-surface-container-low text-primary">
-            <span className="material-symbols-outlined text-[22px]">
-              apartment
-            </span>
+            <span className="material-symbols-outlined text-[24px]">apartment</span>
           </div>
           <div className="flex min-w-0 flex-col">
-            <h3 className="font-headline-sm truncate text-headline-sm text-primary">
-              {client.organizeName}
-            </h3>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <h3 className="font-headline-sm truncate text-headline-sm font-bold text-primary">
+                {client.organizeName}
+              </h3>
+              {client.commercialType && (
+                <span className="rounded-full bg-secondary-fixed px-2 py-0.5 font-label-sm text-label-sm font-semibold text-on-secondary-fixed">
+                  {client.commercialType}
+                </span>
+              )}
+            </div>
             {subtitle ? (
-              <span className="font-label-sm truncate text-label-sm text-on-surface-variant">
+              <span className="font-body-sm mt-0.5 flex items-center gap-1 text-body-sm text-on-surface-variant truncate">
+                <span className="material-symbols-outlined text-[14px]">pin_drop</span>
                 {subtitle}
               </span>
             ) : null}
@@ -75,45 +87,79 @@ function ClientCard({ client }: { client: Client }) {
         <StatusPill label={label} tone={tone} />
       </div>
 
-      <div className="flex items-center gap-space-sm rounded-lg bg-surface-container-low p-space-sm">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="font-label-md truncate text-label-md font-semibold text-on-surface">
-            {client.contactPerson || client.name}
-          </span>
-          <span
-            className="font-body-sm mt-0.5 flex items-center gap-1 text-body-sm text-on-surface-variant"
-            dir="ltr"
-          >
-            <span className="material-symbols-outlined text-[14px] text-secondary">
-              call
+      {/* Contact Person & Quick Communications matching petrokema_admin_9 */}
+      <div className="flex items-center justify-between rounded-lg bg-surface-container-low p-2.5">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-highest text-xs font-bold text-primary">
+            {(client.contactPerson || client.name).slice(0, 2)}
+          </div>
+          <div className="flex min-w-0 flex-col">
+            <span className="font-label-md truncate text-label-md font-semibold text-primary">
+              {client.contactPerson || client.name}
             </span>
-            {client.phone}
-          </span>
+            <span className="font-body-sm text-body-sm text-on-surface-variant font-mono" dir="ltr">
+              {client.phone}
+            </span>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <a
+            aria-label="مراسلة واتساب"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-lowest text-[#15803d] shadow-xs transition-colors hover:bg-surface-container active:scale-95"
+            href={`https://wa.me/20${cleanPhone.startsWith('0') ? cleanPhone.slice(1) : cleanPhone}`}
+            onClick={(e) => e.stopPropagation()}
+            rel="noopener noreferrer"
+            target="_blank"
+            title="مراسلة واتساب"
+          >
+            <span className="material-symbols-outlined text-[18px]">chat</span>
+          </a>
+          <a
+            aria-label="اتصال هاتفي"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-lowest text-primary shadow-xs transition-colors hover:bg-surface-container active:scale-95"
+            href={`tel:${client.phone}`}
+            onClick={(e) => e.stopPropagation()}
+            title="اتصال هاتفي"
+          >
+            <span className="material-symbols-outlined text-[18px]">call</span>
+          </a>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-space-sm">
-        <div className="rounded-lg bg-surface-container-low p-2.5">
-          <span className="font-label-sm block text-label-sm text-on-surface-variant">
-            {CLIENTS_COL_CREDIT}
-          </span>
-          <bdi className="font-label-lg whitespace-nowrap text-label-lg font-bold text-primary" dir="ltr">
-            {formatNumber(client.creditLimit)} ج.م
-          </bdi>
+      {/* Financials & Credit Limit Gauge matching petrokema_admin_9 */}
+      <div className="rounded-lg bg-surface-container-low/70 p-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="font-label-sm block text-label-sm text-on-surface-variant">
+              {CLIENTS_COL_DEBT}
+            </span>
+            <bdi
+              className={cn(
+                'font-headline-sm text-headline-sm font-bold',
+                overCredit ? 'text-error' : 'text-primary',
+              )}
+              dir="ltr"
+            >
+              {formatNumber(client.currentDebt)} ج.م
+            </bdi>
+          </div>
+          <div className="text-left">
+            <span className="font-label-sm block text-label-sm text-on-surface-variant">
+              {CLIENTS_COL_CREDIT}
+            </span>
+            <bdi className="font-label-lg text-label-lg font-semibold text-on-surface" dir="ltr">
+              {formatNumber(client.creditLimit)} ج.م
+            </bdi>
+          </div>
         </div>
-        <div className="rounded-lg bg-surface-container-low p-2.5">
-          <span className="font-label-sm block text-label-sm text-on-surface-variant">
-            {CLIENTS_COL_DEBT}
-          </span>
-          <bdi
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-container-highest">
+          <div
             className={cn(
-              'font-label-lg whitespace-nowrap text-label-lg font-bold',
-              overCredit ? 'text-error' : 'text-primary',
+              'h-full rounded-full transition-all',
+              overCredit ? 'bg-error' : 'bg-secondary',
             )}
-            dir="ltr"
-          >
-            {formatNumber(client.currentDebt)} ج.م
-          </bdi>
+            style={{ width: `${creditPercent}%` }}
+          />
         </div>
       </div>
     </article>
@@ -199,10 +245,29 @@ export function ClientsTab({
   sellerName?: string
 }) {
   const [addOpen, setAddOpen] = useState(false)
+  const [clientSearch, setClientSearch] = useState('')
+  const [filterMode, setFilterMode] = useState<'all' | 'regular' | 'over_credit'>('all')
+
   const clientsQuery = useClientsForSeller(sellerId)
   const data = clientsQuery.data?.data ?? []
+  const summary = clientsQuery.data?.summary
 
-  const table = useTable({ features, columns, data })
+  const filteredData = data.filter((client) => {
+    if (filterMode === 'regular' && client.currentDebt > client.creditLimit) return false
+    if (filterMode === 'over_credit' && client.currentDebt <= client.creditLimit) return false
+    if (clientSearch.trim()) {
+      const q = clientSearch.trim().toLowerCase()
+      return (
+        client.organizeName.toLowerCase().includes(q) ||
+        client.name.toLowerCase().includes(q) ||
+        (client.contactPerson && client.contactPerson.toLowerCase().includes(q)) ||
+        client.phone.includes(q)
+      )
+    }
+    return true
+  })
+
+  const table = useTable({ features, columns, data: filteredData })
 
   return (
     <div className="flex flex-col gap-space-md">
@@ -225,16 +290,101 @@ export function ClientsTab({
         </button>
       </div>
 
+      {/* Summary Ribbon matching petrokema_admin_9 */}
+      {summary && data.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 rounded-xl bg-surface-container-low p-3 text-center">
+          <div className="flex flex-col items-center">
+            <span className="font-label-sm text-label-sm text-on-surface-variant">
+              العملاء المسجلين
+            </span>
+            <span className="font-headline-sm mt-0.5 text-headline-sm font-bold text-primary">
+              {formatNumber(data.length)}
+            </span>
+          </div>
+          <div className="flex flex-col items-center border-r border-l border-outline-variant/30 px-1">
+            <span className="font-label-sm text-label-sm text-on-surface-variant">
+              إجمالي المديونيات
+            </span>
+            <span className="font-headline-sm mt-0.5 text-headline-sm font-bold text-error">
+              {formatNumber(summary.totalDebt)} ج.م
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="font-label-sm text-label-sm text-on-surface-variant">
+              تجاوز الائتمان
+            </span>
+            <span className="font-headline-sm mt-0.5 text-headline-sm font-bold text-on-error-container">
+              {formatNumber(summary.overCreditCount)}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Search and Filter Chips matching petrokema_admin_9 */}
+      {data.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="relative">
+            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[18px] text-outline pointer-events-none">
+              search
+            </span>
+            <input
+              className="font-body-sm h-10 w-full rounded-lg bg-surface-container-low pl-8 pr-9 text-body-sm text-on-surface placeholder-outline focus:bg-surface-container-lowest focus:outline-none"
+              onChange={(e) => setClientSearch(e.target.value)}
+              placeholder="ابحث باسم المنشأة، المسؤول، أو الهاتف..."
+              type="text"
+              value={clientSearch}
+            />
+            {clientSearch && (
+              <button
+                aria-label="مسح البحث"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 p-0.5 text-outline hover:text-on-surface"
+                onClick={() => setClientSearch('')}
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            )}
+          </div>
+          <div className="no-scrollbar -mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1">
+            {[
+              { id: 'all', label: `الكل (${data.length})` },
+              {
+                id: 'regular',
+                label: `رصيد منتظم (${data.filter((c) => c.currentDebt <= c.creditLimit).length})`,
+              },
+              {
+                id: 'over_credit',
+                label: `تجاوز الائتمان (${data.filter((c) => c.currentDebt > c.creditLimit).length})`,
+              },
+            ].map((chip) => (
+              <button
+                className={cn(
+                  'font-label-sm inline-flex h-7 flex-shrink-0 items-center rounded-full px-3 text-label-sm transition-all active:scale-95',
+                  filterMode === chip.id
+                    ? 'bg-primary text-on-primary font-bold shadow-xs'
+                    : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container',
+                )}
+                key={chip.id}
+                onClick={() => setFilterMode(chip.id as any)}
+                type="button"
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {clientsQuery.isLoading ? (
         <StateMessage minHeightClassName="min-h-[160px]" text={CLIENTS_LOADING} />
       ) : clientsQuery.isError ? (
         <StateMessage minHeightClassName="min-h-[160px]" text={CLIENTS_ERROR} tone="error" />
-      ) : data.length === 0 ? (
+      ) : filteredData.length === 0 ? (
         <StateMessage minHeightClassName="min-h-[160px]" text={CLIENTS_EMPTY} />
       ) : (
         <>
           <div className="flex flex-col gap-space-sm md:hidden">
-            {data.map((client) => (
+            {filteredData.map((client) => (
               <ClientCard client={client} key={client._id} />
             ))}
           </div>

@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Dialog, DialogHeader } from '@/components/ui/Dialog'
 import {
@@ -10,10 +10,8 @@ import {
   PRODUCT_CATEGORY_PLACEHOLDER,
   PRODUCT_DESCRIPTION_LABEL,
   PRODUCT_DESCRIPTION_PLACEHOLDER,
-  PRODUCT_GALLERY_ADD,
   PRODUCT_GALLERY_LABEL,
   PRODUCT_IMAGE_LABEL,
-  PRODUCT_IMAGE_PLACEHOLDER,
   PRODUCT_INITIAL_QUANTITY_LABEL,
   PRODUCT_MODAL_SECTION_BASIC,
   PRODUCT_MODAL_SECTION_FEATURES,
@@ -28,7 +26,6 @@ import {
   PRODUCT_REORDER_LEVEL_LABEL,
   PRODUCT_WAREHOUSE_LABEL,
   PRODUCT_WAREHOUSE_PLACEHOLDER,
-  REMOVE_LABEL,
   TOAST_PRODUCT_CREATED,
 } from '@/constants/strings'
 import { useCategories } from '@/features/categories/hooks'
@@ -41,6 +38,8 @@ import {
 } from '@/features/products/productForm.schema'
 import { FeatureCheckboxGroup } from '@/features/products/components/FeatureCheckboxGroup'
 import { PricingFields } from '@/features/products/components/PricingFields'
+import { ImageUpload } from '@/components/ui/ImageUpload'
+import { MultiImageUpload } from '@/components/ui/MultiImageUpload'
 
 type ProductFormDialogProps = {
   open: boolean
@@ -73,7 +72,6 @@ export function ProductFormDialog({
   const {
     register,
     handleSubmit,
-    control,
     reset,
     watch,
     setValue,
@@ -83,7 +81,6 @@ export function ProductFormDialog({
     defaultValues: productFormDefaults,
   })
 
-  const imagesField = useFieldArray({ control, name: 'images' })
   const features = watch('features')
   const quantity = watch('quantity')
 
@@ -282,57 +279,39 @@ export function ProductFormDialog({
               <span className="h-2 w-2 rounded-full bg-secondary" />
               {PRODUCT_MODAL_SECTION_MEDIA}
             </h4>
-            <div className="flex flex-col gap-3">
-              <div>
-                <label className={labelClassName}>{PRODUCT_IMAGE_LABEL}</label>
-                <input
-                  className={inputClassName}
-                  placeholder={PRODUCT_IMAGE_PLACEHOLDER}
-                  type="text"
-                  {...register('image')}
-                />
-                {errors.image ? (
-                  <span className="font-label-sm mt-1 block text-label-sm text-error">
-                    {errors.image.message}
-                  </span>
-                ) : null}
-              </div>
-              <div>
-                <label className={labelClassName}>
-                  {PRODUCT_GALLERY_LABEL}
-                </label>
-                <div className="flex flex-col gap-2">
-                  {imagesField.fields.map((field, index) => (
-                    <div className="flex items-center gap-2" key={field.id}>
-                      <input
-                        className={inputClassName}
-                        placeholder={PRODUCT_IMAGE_PLACEHOLDER}
-                        type="text"
-                        {...register(
-                          `images.${index}.url` as `images.${number}.url`,
-                        )}
-                      />
-                      <button
-                        aria-label={REMOVE_LABEL}
-                        className="flex h-10 w-10 items-center justify-center rounded-lg text-error transition-colors hover:bg-error-container"
-                        onClick={() => imagesField.remove(index)}
-                        type="button"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">
-                          delete
-                        </span>
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    className="font-label-md self-start text-label-md text-secondary hover:underline"
-                    onClick={() => imagesField.append({ url: '' })}
-                    type="button"
-                  >
-                    {PRODUCT_GALLERY_ADD}
-                  </button>
-                </div>
-              </div>
+            <div className="flex flex-col gap-5">
+              <ImageUpload
+                aspectRatio="video"
+                error={errors.image?.message}
+                label={PRODUCT_IMAGE_LABEL}
+                onChange={(url) =>
+                  setValue('image', url, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                onClear={() =>
+                  setValue('image', '', {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                type="products"
+                value={watch('image')}
+              />
+
+              <MultiImageUpload
+                helperText="يمكنك رفع حتى 10 صور إضافية لمعرض المنتج (PNG, JPG, WebP)"
+                images={watch('images') || []}
+                label={PRODUCT_GALLERY_LABEL}
+                onChange={(nextImages) =>
+                  setValue('images', nextImages, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                type="products"
+              />
             </div>
           </div>
         </div>

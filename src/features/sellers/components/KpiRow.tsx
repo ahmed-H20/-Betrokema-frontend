@@ -107,7 +107,7 @@ function StatusDot({ colorClassName }: { colorClassName: string }) {
   return <span className={`h-2 w-2 rounded-full ${colorClassName}`} />
 }
 
-export function KpiRow() {
+export function KpiRow({ onOpenCreate }: { onOpenCreate?: () => void } = {}) {
   const statsQuery = useSellerStats()
 
   if (statsQuery.isLoading) {
@@ -120,18 +120,86 @@ export function KpiRow() {
   }
 
   const stats = statsQuery.data
-  const growthRate = stats.teamMonthlySales.growthRate
+  const rawGrowth = stats.teamMonthlySales.growthRate
+  const growthRate = rawGrowth ?? 0
   const isNegativeGrowth = growthRate < 0
   const totalSales = formatMillionsOrPlain(stats.teamMonthlySales.totalAchieved)
-  // The backend falls back to exactly 14.2 when there's no prior-month data
-  // to compare against (see architecture.md) — indistinguishable from a real
-  // 14.2% growth month from this response alone, so treat that exact value
-  // as "no data" and hide the growth line rather than show a number that
-  // might be fabricated.
-  const hasRealGrowthData = growthRate !== 14.2
+  const hasRealGrowthData = rawGrowth !== null && rawGrowth !== undefined && rawGrowth !== 0
 
   return (
-    <div className="grid grid-cols-1 gap-space-md sm:grid-cols-2 lg:grid-cols-4">
+    <>
+      {/* Mobile Top KPI & Operational Summary Banner (petrokema_admin_5) */}
+      <div className="relative overflow-hidden rounded-xl bg-primary-container p-5 text-on-primary shadow-sm xl:hidden">
+        <div className="pointer-events-none absolute -bottom-8 -left-6 h-32 w-32 rounded-full bg-secondary/20 blur-2xl" />
+        <div className="relative z-10 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center justify-center rounded-lg bg-surface-container-lowest/10 p-1.5 text-secondary-fixed">
+                <span className="material-symbols-outlined text-[20px]">badge</span>
+              </span>
+              <span className="font-label-md text-label-md font-semibold text-secondary-fixed">
+                فريق المبيعات الميداني
+              </span>
+            </div>
+            <span className="rounded-full bg-secondary px-2.5 py-0.5 font-label-sm text-label-sm font-semibold text-on-secondary">
+              الربع الحالي
+            </span>
+          </div>
+
+          <div className="flex items-baseline justify-between gap-4 pt-1">
+            <div>
+              <h2 className="font-headline-xl text-2xl font-bold tracking-tight text-white md:text-headline-xl">
+                {formatNumber(stats.certifiedSellers.total)} مندوباً معتمداً
+              </h2>
+              <p className="font-body-sm mt-0.5 text-body-sm text-on-primary-container">
+                {formatNumber(stats.targetAchievement.percentage)}% من إجمالي المستهدف الإقليمي
+              </p>
+            </div>
+            {hasRealGrowthData && (
+              <div className="flex flex-col items-end">
+                <div
+                  className={`flex items-center gap-1 font-label-lg text-label-lg font-bold ${
+                    isNegativeGrowth ? 'text-error-container' : 'text-secondary-container'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {isNegativeGrowth ? 'trending_down' : 'trending_up'}
+                  </span>
+                  <span>{`${isNegativeGrowth ? '' : '+'}${formatNumber(growthRate)}%`}</span>
+                </div>
+                <span className="font-label-sm text-label-sm text-outline-variant">
+                  مقارنة بالشهر السابق
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-white/15">
+            <div
+              className="h-full rounded-full bg-secondary-container transition-all duration-700"
+              style={{
+                width: `${Math.min(100, Math.max(0, stats.targetAchievement.percentage))}%`,
+              }}
+            />
+          </div>
+
+          {onOpenCreate && (
+            <button
+              className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-surface-container-lowest font-label-lg text-label-lg font-bold text-primary shadow-sm transition-transform hover:bg-surface-container-low active:scale-[0.98]"
+              onClick={onOpenCreate}
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[20px] text-secondary">
+                person_add
+              </span>
+              <span>+ إضافة حساب مندوب جديد</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop 4-Card KPI Grid (petrokema_web_admin_2) */}
+      <div className="hidden grid-cols-1 gap-space-md sm:grid-cols-2 lg:grid-cols-4 xl:grid">
       <KpiCard
         footer={
           <div className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1 rounded-lg bg-surface-container-low px-1.5 py-1">
@@ -247,5 +315,6 @@ export function KpiRow() {
         value={formatNumber(stats.activeFieldClients.total)}
       />
     </div>
+    </>
   )
 }
