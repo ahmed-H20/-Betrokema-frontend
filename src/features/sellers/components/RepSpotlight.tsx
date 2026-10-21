@@ -15,7 +15,6 @@ import {
 } from '@/constants/strings'
 import { formatEgyptianPhoneDisplay } from '@/lib/phone'
 import { formatNumber } from '@/lib/format'
-import { resolveImageUrl } from '@/lib/image'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 
 function MetricBox({

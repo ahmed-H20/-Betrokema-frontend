@@ -9,7 +9,6 @@ import {
 import { cn } from '@/lib/cn'
 import { arabicPlural, formatNumber, type ArabicPluralForms } from '@/lib/format'
 import { formatEgyptianPhoneLocal } from '@/lib/phone'
-import { resolveImageUrl } from '@/lib/image'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 
 const STATUS_DOT_CLASSES: Record<EnrichedSeller['status'], string> = {

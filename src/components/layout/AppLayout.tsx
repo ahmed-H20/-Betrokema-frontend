@@ -8,8 +8,6 @@ import { BrandMark } from '@/components/layout/BrandMark'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 import {
   APP_BADGE,
-  APP_NAME,
-  APP_SUBTITLE,
   NOTIFICATIONS_LABEL,
   OPEN_NAV_DRAWER_LABEL,
   SEARCH_ICON_LABEL,

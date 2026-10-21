@@ -10,7 +10,6 @@ import { useInvoicesForClient } from '@/features/sellers/hooks'
 import { InvoiceDetailsModal } from '@/features/invoices/components/InvoiceDetailsModal'
 import { AddPaymentModal } from '@/features/invoices/components/AddPaymentModal'
 import {
-  computeInvoiceKpis,
   getInvoiceRowBadge,
   isOverdue,
 } from '@/features/sellers/invoiceAggregation'
