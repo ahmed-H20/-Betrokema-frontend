@@ -1,6 +1,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import type { ReactNode } from 'react'
 import { CLOSE_NAV_DRAWER_LABEL } from '@/constants/strings'
+import { BrandMark } from '@/components/layout/BrandMark'
 
 type NavDrawerProps = {
   open: boolean
@@ -29,7 +30,8 @@ export function NavDrawer({ open, onOpenChange, children }: NavDrawerProps) {
           <DialogPrimitive.Title className="sr-only">
             {CLOSE_NAV_DRAWER_LABEL}
           </DialogPrimitive.Title>
-          <div className="flex h-16 shrink-0 items-center justify-end bg-surface-container-lowest px-space-lg">
+          <div className="flex h-16 shrink-0 items-center justify-between bg-surface-container-lowest px-space-lg">
+            <BrandMark />
             <DialogPrimitive.Close
               aria-label={CLOSE_NAV_DRAWER_LABEL}
               className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high"

@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth/AuthContext'
 import { BottomTabBar } from '@/components/layout/BottomTabBar'
 import { NavDrawer } from '@/components/layout/NavDrawer'
 import { SidebarNavContent } from '@/components/layout/SidebarNavContent'
+import { BrandMark } from '@/components/layout/BrandMark'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 import {
   APP_BADGE,
@@ -24,25 +25,7 @@ function formatToday() {
   }).format(new Date())
 }
 
-// Brand mark — shared by the permanent xl+ sidebar strip and the below-xl
-// header (where it stands in for the hidden sidebar's own strip).
-function BrandMark() {
-  return (
-    <div className="flex items-center gap-space-sm">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-container text-on-primary shadow-sm">
-        <span className="material-symbols-outlined text-[24px]">factory</span>
-      </div>
-      <div className="flex min-w-0 flex-col">
-        <span className="font-headline-sm truncate text-headline-sm leading-tight text-primary">
-          {APP_NAME}
-        </span>
-        <span className="font-label-sm truncate text-label-sm text-on-surface-variant">
-          {APP_SUBTITLE}
-        </span>
-      </div>
-    </div>
-  )
-}
+
 
 export function AppLayout() {
   const { user, logout } = useAuth()
