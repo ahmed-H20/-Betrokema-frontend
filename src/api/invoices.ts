@@ -82,7 +82,7 @@ export async function addPaymentToInvoice(
 
 export interface CreateInvoicePayload {
   client: string
-  seller: string
+  seller?: string
   warehouse?: string
   products: {
     productId: string

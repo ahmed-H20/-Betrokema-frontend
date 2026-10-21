@@ -53,6 +53,8 @@ export function AccountCredentialsModal({
       `🔒 كلمة المرور (رمز PIN): ${credentials.password}`,
       credentials.phone ? `📱 رقم الهاتف: ${credentials.phone}` : '',
       `🌐 رابط المنظومة: ${window.location.origin}/login`,
+      '',
+      'يمكنك الآن الدخول للمنظومة لمتابعة المنتجات والأسعار وتقديم طلبات الشراء ومتابعة الفواتير وحسابك بكل سهولة.',
     ]
       .filter(Boolean)
       .join('\n')
@@ -63,6 +65,27 @@ export function AccountCredentialsModal({
     } catch {
       toast.error('تعذر النسخ إلى الحافظة')
     }
+  }
+
+  const handleShareWhatsApp = () => {
+    if (!credentials.phone) return
+    let p = credentials.phone.replace(/\D/g, '')
+    if (p.startsWith('0')) {
+      p = '2' + p
+    } else if (!p.startsWith('2') && p.length === 10) {
+      p = '20' + p
+    }
+    const text = [
+      '🔹 مرحباً بك في منظومة بتروكيما 🔹',
+      `👤 الحساب: ${credentials.name}`,
+      `🔑 كود الدخول (اسم المستخدم): ${credentials.code}`,
+      `🔒 كلمة المرور (رمز PIN): ${credentials.password}`,
+      `🌐 رابط الدخول: ${window.location.origin}/login`,
+      '',
+      'يمكنك تسجيل الدخول الآن لمتابعة المنتجات والأسعار وإجراء الشراء ومتابعة الفواتير الخاصة بك.',
+    ].join('\n')
+
+    window.open(`https://wa.me/${p}?text=${encodeURIComponent(text)}`, '_blank')
   }
 
   return (
@@ -165,12 +188,23 @@ export function AccountCredentialsModal({
             info
           </span>
           <p className="font-body-sm text-body-sm leading-relaxed">
-            <strong>تنبيه هام:</strong> تم تشفير كلمة المرور فوراً في قاعدة البيانات لأعلى معايير الأمان. لن تتمكن من رؤيتها مرة أخرى بعد إغلاق هذه النافذة، يرجى نسخها وتزويد المستخدم بها الآن.
+            <strong>تنبيه هام:</strong> تم تشفير كلمة المرور فوراً في قاعدة البيانات لأعلى معايير الأمان. لن تتمكن من رؤيتها مرة أخرى بعد إغلاق هذه النافذة، يرجى تزويد المستخدم بها الآن ليتمكن من الدخول إلى حسابه.
           </p>
         </div>
 
         {/* Action Buttons */}
         <div className="mt-2 flex flex-col gap-2.5">
+          {credentials.phone && (
+            <button
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 font-label-lg font-semibold text-white shadow-md transition-all hover:bg-emerald-700 active:scale-[0.99]"
+              onClick={handleShareWhatsApp}
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[20px]">chat</span>
+              <span>إرسال البيانات للعميل عبر واتساب مباشرة</span>
+            </button>
+          )}
+
           <button
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 font-label-lg font-semibold text-on-primary shadow-md transition-all hover:bg-primary-container active:scale-[0.99]"
             onClick={handleCopyAll}

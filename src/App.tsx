@@ -17,6 +17,10 @@ import { SellerClientsPage } from '@/features/seller/SellerClientsPage'
 import { SellerClientDetailPage } from '@/features/seller/SellerClientDetailPage'
 import { SellerInvoicesPage } from '@/features/seller/SellerInvoicesPage'
 import { SellerWarehousesPage } from '@/features/seller/SellerWarehousesPage'
+import { ClientLayout } from '@/features/client/ClientLayout'
+import { ClientCatalogPage } from '@/features/client/ClientCatalogPage'
+import { ClientInvoicesPage } from '@/features/client/ClientInvoicesPage'
+import { ClientProfilePage } from '@/features/client/ClientProfilePage'
 import { queryClient } from '@/lib/queryClient'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -56,6 +60,14 @@ function App() {
                   <Route element={<SellerClientDetailPage />} path="clients/:id" />
                   <Route element={<SellerInvoicesPage />} path="invoices" />
                   <Route element={<SellerWarehousesPage />} path="warehouses" />
+                </Route>
+
+                {/* Client Portal (Customer Catalog & Orders - Mobile First) */}
+                <Route element={<ClientLayout />} path="/client">
+                  <Route element={<ClientCatalogPage />} index />
+                  <Route element={<ClientCatalogPage />} path="catalog" />
+                  <Route element={<ClientInvoicesPage />} path="invoices" />
+                  <Route element={<ClientProfilePage />} path="profile" />
                 </Route>
 
                 <Route path="*" element={<NotFoundPage />} />

@@ -6,7 +6,6 @@ import {
 } from '@/features/warehouses/hooks'
 import { formatNumber } from '@/lib/format'
 import { SellerCreateInvoiceModal } from './components/SellerCreateInvoiceModal'
-import { toast } from 'sonner'
 import type { Warehouse } from '@/api/warehouses.schema'
 
 export function SellerWarehousesPage() {

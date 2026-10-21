@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { toast } from 'sonner'
 import { useCreateClient, useUpdateClient } from '@/features/sellers/hooks'
+import {
+  AccountCredentialsModal,
+  type AccountCredentials,
+} from '@/components/ui/AccountCredentialsModal'
 import { useSellerContext } from '../SellerContext'
 import type { Client } from '@/api/clients.schema'
 
@@ -27,6 +31,7 @@ export function AddSellerClientModal({
   const [organizeName, setOrganizeName] = useState('')
   const [contactPerson, setContactPerson] = useState('')
   const [phone, setPhone] = useState('')
+  const [customPassword, setCustomPassword] = useState('')
   const [commercialType, setCommercialType] = useState('تاجر جملة ووكيل')
   const [governorate, setGovernorate] = useState('القاهرة')
   const [city, setCity] = useState('مدينة نصر')
@@ -35,15 +40,18 @@ export function AddSellerClientModal({
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [isLocating, setIsLocating] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [createdCredentials, setCreatedCredentials] = useState<AccountCredentials | null>(null)
 
-  // Generate random preview code for new client creation
-  const [generatedCode] = useState(() => 'PK-' + Math.floor(10000 + Math.random() * 90000))
+  // Generate preview code for new client creation
+  const [generatedCode] = useState(() => 'CLI-' + Math.floor(1000 + Math.random() * 9000))
 
   // Synchronize fields when modal opens or initialClient changes
   useEffect(() => {
     if (open) {
       setStep(1)
       setErrorMsg(null)
+      setCustomPassword('')
+      setCreatedCredentials(null)
       if (initialClient) {
         setOrganizeName(initialClient.organizeName || initialClient.name || '')
         setContactPerson(initialClient.contactPerson || initialClient.name || '')
@@ -75,7 +83,11 @@ export function AddSellerClientModal({
         setAddress('')
         setCreditLimit(100000)
         setGpsCoords(null)
+        setCustomPassword('')
       }
+    } else {
+      setCreatedCredentials(null)
+      setCustomPassword('')
     }
   }, [open, initialClient])
 
@@ -166,6 +178,7 @@ export function AddSellerClientModal({
         organizeName: organizeName.trim(),
         contactPerson: contactPerson.trim(),
         phone: phone.trim().startsWith('0') ? phone.trim() : '0' + phone.trim(),
+        password: customPassword.trim() || undefined,
         seller: activeSellerId,
         governorate,
         city,
@@ -175,12 +188,24 @@ export function AddSellerClientModal({
         notes: gpsCoords ? `GPS: ${gpsCoords.lat}, ${gpsCoords.lng}` : undefined,
       })
 
-      toast.success(
-        `تم تسجيل العميل بنجاح! كود الحساب: ${res.clientCode || res.credentials?.code || generatedCode}`,
-      )
+      if (res.credentials) {
+        setCreatedCredentials({
+          name: organizeName.trim() || contactPerson.trim(),
+          code: res.credentials.code,
+          password: res.credentials.password,
+          roleTitle: 'عميل معتمد (متجر / منشأة)',
+          roleBadge: 'CLI - CLIENT',
+          phone: phone.trim(),
+        })
+        toast.success(`تم تسجيل العميل بنجاح! كود الحساب: ${res.credentials.code}`)
+      } else {
+        toast.success(
+          `تم تسجيل العميل بنجاح! كود الحساب: ${res.clientCode || generatedCode}`,
+        )
+        onOpenChange(false)
+      }
       onSuccess?.()
       refetchAll()
-      onOpenChange(false)
     } catch (err: any) {
       setErrorMsg(err.message || 'حدث خطأ أثناء حفظ بيانات العميل')
     }
@@ -191,7 +216,15 @@ export function AddSellerClientModal({
     : createClientMutation.isPending
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <>
+      <Dialog.Root
+        open={open && !createdCredentials}
+        onOpenChange={(nextVal) => {
+          if (!nextVal && !createdCredentials) {
+            onOpenChange(false)
+          }
+        }}
+      >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content className="fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[94vh] sm:max-h-[88vh] rounded-t-3xl bg-[#f8fafc] shadow-2xl transition-all sm:inset-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl overflow-hidden">
@@ -235,10 +268,10 @@ export function AddSellerClientModal({
               </div>
               <div>
                 <span className="block text-[10px] text-slate-500 font-medium">
-                  {isEditMode ? 'كود العميل المعتمد' : 'كود العميل الجديد'}
+                  {isEditMode ? 'كود العميل المعتمد' : 'كود الدخول وحساب العميل'}
                 </span>
                 <span className="text-sm text-slate-900 font-bold tracking-wider font-mono">
-                  {isEditMode ? (initialClient?.clientCode || 'PK-10492') : generatedCode}
+                  {isEditMode ? (initialClient?.clientCode || 'CLI-0001') : generatedCode}
                 </span>
               </div>
             </div>
@@ -415,6 +448,30 @@ export function AddSellerClientModal({
                     ))}
                   </div>
                 </div>
+
+                {/* Optional Custom Password */}
+                {!isEditMode && (
+                  <div className="space-y-1 pt-1 border-t border-slate-100">
+                    <label className="block text-xs font-bold text-slate-800">
+                      كلمة المرور لتسجيل الدخول (اختياري)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={customPassword}
+                        onChange={(e) => setCustomPassword(e.target.value)}
+                        placeholder="اتركه فارغاً للتوليد التلقائي (رمز PIN مكون من 6 أرقام)"
+                        className="w-full pl-3 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-orange-500 focus:bg-white transition-all font-mono font-medium"
+                      />
+                      <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
+                        lock
+                      </span>
+                    </div>
+                    <span className="block text-[10px] text-slate-500 leading-relaxed">
+                      💡 إذا تركته فارغاً، سيقوم النظام تلقائياً بإنشاء رمز PIN سريع، وعرض الكود وكلمة المرور فوراً لتعطيهم للعميل.
+                    </span>
+                  </div>
+                )}
               </div>
             ) : (
               /* Step 2: Location, Delivery & Credit Limit */
@@ -618,5 +675,17 @@ export function AddSellerClientModal({
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+
+      <AccountCredentialsModal
+        credentials={createdCredentials}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            setCreatedCredentials(null)
+            onOpenChange(false)
+          }
+        }}
+        open={Boolean(createdCredentials)}
+      />
+    </>
   )
 }

@@ -64,7 +64,7 @@ export function getDefaultRouteForRole(role: UserRole): string {
     case 'seller':
       return '/seller/dashboard'
     case 'client':
-      return '/products'
+      return '/client'
     default:
       return '/products'
   }
