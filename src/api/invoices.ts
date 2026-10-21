@@ -109,3 +109,9 @@ export async function getForSeller(sellerId: string): Promise<Invoice[]> {
   const raw = await request<unknown>(`/invoices/seller/${sellerId}`)
   return invoicesForSellerResponseSchema.parse(raw).data
 }
+
+export async function getForClient(clientId: string): Promise<Invoice[]> {
+  const raw = await request<unknown>(`/invoices/client/${clientId}`)
+  return invoicesForSellerResponseSchema.parse(raw).data
+}
+

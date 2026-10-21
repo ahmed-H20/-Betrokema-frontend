@@ -1,3 +1,4 @@
+import * as Dialog from '@radix-ui/react-dialog'
 import { formatNumber } from '@/lib/format'
 import type { Invoice, OrderStatus } from '@/api/invoices.schema'
 
@@ -46,9 +47,13 @@ export function InvoiceDetailsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-primary/40 backdrop-blur-xs">
-      <div className="relative w-full max-w-3xl h-[88dvh] max-h-[88dvh] sm:h-auto sm:max-h-[90vh] rounded-2xl bg-surface-container-lowest shadow-2xl border border-surface-container-high flex flex-col overflow-hidden">
-        {/* Header */}
+    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-[70] bg-primary/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <Dialog.Content className="fixed inset-0 z-[70] flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-surface-container-lowest shadow-2xl md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[90vh] md:max-w-3xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl">
+          <Dialog.Title className="sr-only">تفاصيل الفاتورة {invoice.invoiceCode}</Dialog.Title>
+          <Dialog.Description className="sr-only">عرض بنود وتفاصيل الفاتورة وحالة التحصيل</Dialog.Description>
+          {/* Header */}
         <div className="shrink-0 flex items-center justify-between border-b border-surface-container-high bg-surface-container-lowest px-4 sm:px-6 py-3.5 sm:py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-container text-on-primary">
@@ -435,7 +440,8 @@ export function InvoiceDetailsModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }

@@ -18,6 +18,7 @@ import { formatNumber } from '@/lib/format'
 import { resolveImageUrl } from '@/lib/image'
 import { useDeleteProduct } from '@/features/products/hooks'
 import { QuickEditStockDialog } from '@/features/products/components/QuickEditStockDialog'
+import { ProductFormDialog } from '@/features/products/components/ProductFormDialog'
 
 const CATEGORY_BADGE_STYLES = [
   'bg-secondary-fixed text-on-secondary-fixed-variant',
@@ -39,6 +40,7 @@ function getFeatureIcon(name: string): string {
 }
 
 export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
+  const [fullEditOpen, setFullEditOpen] = useState(false)
   const [quickEditOpen, setQuickEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const deleteProduct = useDeleteProduct()
@@ -119,21 +121,28 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
         </div>
 
         {/* Features Badges matching petrokema_admin_1 */}
-        {product.fetures && product.fetures.length > 0 ? (
-          <div className="mb-3 flex flex-wrap gap-1.5 py-0.5">
-            {product.fetures.map((feature, index) => (
-              <span
-                className="inline-flex items-center gap-1 rounded-md bg-surface-container px-2 py-0.5 font-label-sm text-label-sm text-on-surface font-medium"
-                key={`${feature.name}-${index}`}
-              >
-                <span className="material-symbols-outlined text-[13px] text-secondary">
-                  {getFeatureIcon(feature.name)}
+        {(() => {
+          const rawFeatures = product.fetures || (product as any).features || []
+          const list = Array.isArray(rawFeatures)
+            ? rawFeatures.map((f: any) => typeof f === 'string' ? f : f?.name).filter(Boolean)
+            : []
+          if (list.length === 0) return null
+          return (
+            <div className="mb-3 flex flex-wrap gap-1.5 py-0.5">
+              {list.map((name: string, index: number) => (
+                <span
+                  className="inline-flex items-center gap-1 rounded-md bg-surface-container px-2 py-0.5 font-label-sm text-label-sm text-on-surface font-medium"
+                  key={`${name}-${index}`}
+                >
+                  <span className="material-symbols-outlined text-[13px] text-secondary">
+                    {getFeatureIcon(name)}
+                  </span>
+                  {name}
                 </span>
-                {feature.name}
-              </span>
-            ))}
-          </div>
-        ) : null}
+              ))}
+            </div>
+          )
+        })()}
 
         {/* Dual / Multi-Packaging Pricing Grid matching petrokema_admin_1 */}
         {product.packages && product.packages.length > 0 ? (
@@ -208,17 +217,31 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
       {/* Action Footer */}
       <div className="flex items-center justify-between gap-2 border-t border-surface-container pt-3">
         <button
-          className="font-label-md flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high py-2 text-center text-label-md font-semibold text-on-surface transition-colors hover:bg-surface-container-highest"
-          onClick={() => setQuickEditOpen(true)}
+          className="font-label-md flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary py-2 text-center text-label-md font-semibold text-on-primary transition-all hover:bg-primary/90 shadow-xs cursor-pointer"
+          onClick={() => setFullEditOpen(true)}
+          title="تعديل كافة بيانات ومواصفات وصور المنتج"
           type="button"
         >
           <span className="material-symbols-outlined text-[16px]">
-            edit_note
+            edit
           </span>
-          {PRODUCT_EDIT_STOCK_PRICE}
+          <span>تعديل المنتج</span>
         </button>
+
         <button
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-error transition-colors hover:bg-error-container"
+          className="font-label-md flex h-10 items-center justify-center gap-1.5 rounded-lg bg-surface-container-high px-3 py-2 text-center text-label-md font-semibold text-on-surface transition-colors hover:bg-surface-container-highest cursor-pointer"
+          onClick={() => setQuickEditOpen(true)}
+          title="تعديل سريع للسعر والمخزون فقط"
+          type="button"
+        >
+          <span className="material-symbols-outlined text-[16px]">
+            tune
+          </span>
+          <span className="hidden sm:inline">سعر ومخزون</span>
+        </button>
+
+        <button
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-error transition-colors hover:bg-error-container cursor-pointer"
           onClick={() => setDeleteOpen(true)}
           title={PRODUCT_DELETE_BUTTON}
           type="button"
@@ -228,6 +251,14 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
           </span>
         </button>
       </div>
+
+      {fullEditOpen ? (
+        <ProductFormDialog
+          onOpenChange={setFullEditOpen}
+          open={fullEditOpen}
+          productToEdit={product}
+        />
+      ) : null}
 
       {quickEditOpen ? (
         <QuickEditStockDialog

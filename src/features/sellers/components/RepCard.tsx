@@ -10,6 +10,7 @@ import { cn } from '@/lib/cn'
 import { arabicPlural, formatNumber, type ArabicPluralForms } from '@/lib/format'
 import { formatEgyptianPhoneLocal } from '@/lib/phone'
 import { resolveImageUrl } from '@/lib/image'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 const STATUS_DOT_CLASSES: Record<EnrichedSeller['status'], string> = {
   ACTIVE: 'bg-secondary',
@@ -58,24 +59,14 @@ function Avatar({
   seller: EnrichedSeller
   sizeClassName: string
 }) {
-  if (seller.photoUrl) {
-    return (
-      <img
-        alt={seller.name}
-        className={cn('rounded-lg object-cover', sizeClassName)}
-        src={resolveImageUrl(seller.photoUrl)}
-      />
-    )
-  }
   return (
-    <div
-      className={cn(
-        'flex items-center justify-center rounded-lg bg-primary-container font-headline-sm text-on-primary',
-        sizeClassName,
-      )}
-    >
-      {seller.name.trim().slice(0, 2)}
-    </div>
+    <UserAvatar
+      alt={seller.name}
+      className="shadow-xs"
+      shape="rounded"
+      sizeClassName={sizeClassName}
+      src={seller.photoUrl}
+    />
   )
 }
 

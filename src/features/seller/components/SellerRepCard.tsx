@@ -1,4 +1,5 @@
 import { useSellerContext } from '../SellerContext'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 export function SellerRepCard() {
   const { performance, currentSeller, allSellers, activeSellerId, setActiveSellerId, isSellerRole } =
@@ -18,9 +19,12 @@ export function SellerRepCard() {
       <div className="flex items-start justify-between gap-3 pt-1">
         <div className="flex items-center gap-3">
           <div className="relative shrink-0">
-            <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shadow-sm">
-              <span className="material-symbols-outlined text-[26px]">badge</span>
-            </div>
+            <UserAvatar
+              alt={repName}
+              shape="rounded"
+              sizeClassName="w-12 h-12 shadow-sm"
+              src={seller?.photoUrl}
+            />
             {/* Live Active Status Dot */}
             <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white ring-1 ring-emerald-200" />
           </div>

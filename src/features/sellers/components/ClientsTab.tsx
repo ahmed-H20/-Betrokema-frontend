@@ -28,6 +28,8 @@ import {
   type AccountCredentials,
 } from '@/components/ui/AccountCredentialsModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ClientInvoicesModal } from '@/features/sellers/components/ClientInvoicesModal'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import { toast } from 'sonner'
 
 const CLIENT_STATUS_TONE: Record<ClientPaymentStatus, StatusPillTone> = {
@@ -55,9 +57,11 @@ function effectiveStatus(client: Client): ClientPaymentStatus | 'unknown' {
 function ClientCard({
   client,
   onResetPassword,
+  onViewInvoices,
 }: {
   client: Client
   onResetPassword?: (client: Client) => void
+  onViewInvoices?: (client: Client) => void
 }) {
   const status = effectiveStatus(client)
   const label = status === 'unknown' ? CLIENT_STATUS_UNKNOWN : CLIENT_STATUS_LABELS[status]
@@ -103,9 +107,11 @@ function ClientCard({
       {/* Contact Person & Quick Communications matching petrokema_admin_9 */}
       <div className="flex items-center justify-between rounded-lg bg-surface-container-low p-2.5">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-highest text-xs font-bold text-primary">
-            {(client.contactPerson || client.name).slice(0, 2)}
-          </div>
+          <UserAvatar
+            alt={client.contactPerson || client.name}
+            shape="circle"
+            sizeClassName="h-8 w-8"
+          />
           <div className="flex min-w-0 flex-col">
             <span className="font-label-md truncate text-label-md font-semibold text-primary">
               {client.contactPerson || client.name}
@@ -116,6 +122,20 @@ function ClientCard({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
+          {onViewInvoices && (
+            <button
+              aria-label="عرض فواتير العميل"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary shadow-xs transition-colors hover:bg-primary/20 active:scale-95 border border-primary/20"
+              onClick={(e) => {
+                e.stopPropagation()
+                onViewInvoices(client)
+              }}
+              title="عرض كافة فواتير العميل"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+            </button>
+          )}
           {onResetPassword && (
             <button
               aria-label="إعادة تعيين كلمة المرور"
@@ -199,15 +219,18 @@ const columnHelper = createColumnHelper<typeof features, Client>()
 export function ClientsTab({
   sellerId,
   sellerName,
+  onSwitchToInvoicesTab,
 }: {
   sellerId: string
   sellerName?: string
+  onSwitchToInvoicesTab?: (client: Client) => void
 }) {
   const [addOpen, setAddOpen] = useState(false)
   const [clientSearch, setClientSearch] = useState('')
   const [filterMode, setFilterMode] = useState<'all' | 'regular' | 'over_credit'>('all')
 
   const [clientToReset, setClientToReset] = useState<Client | null>(null)
+  const [clientForInvoices, setClientForInvoices] = useState<Client | null>(null)
   const [isResetting, setIsResetting] = useState(false)
   const [credentialsModalData, setCredentialsModalData] =
     useState<AccountCredentials | null>(null)
@@ -307,17 +330,32 @@ export function ClientsTab({
         columnHelper.display({
           id: 'actions',
           header: 'إجراءات',
-          cell: (info) => (
-            <button
-              type="button"
-              onClick={() => setClientToReset(info.row.original)}
-              className="flex items-center gap-1 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-lg border border-amber-200 transition-colors shadow-xs active:scale-95"
-              title="إعادة تعيين كلمة المرور للعميل"
-            >
-              <span className="material-symbols-outlined text-[15px] text-amber-600">lock_reset</span>
-              <span>تعيين كلمة المرور</span>
-            </button>
-          ),
+          cell: (info) => {
+            const client = info.row.original
+            return (
+              <div className="flex items-center gap-1.5 flex-nowrap">
+                <button
+                  className="flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1.5 rounded-lg border border-primary/20 transition-all shadow-xs active:scale-95 cursor-pointer whitespace-nowrap"
+                  onClick={() => setClientForInvoices(client)}
+                  title="عرض جميع فواتير هذا العميل"
+                  type="button"
+                >
+                  <span className="material-symbols-outlined text-[15px] text-primary">receipt_long</span>
+                  <span>فواتير العميل</span>
+                </button>
+
+                <button
+                  className="flex items-center gap-1 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-lg border border-amber-200 transition-colors shadow-xs active:scale-95 cursor-pointer whitespace-nowrap"
+                  onClick={() => setClientToReset(client)}
+                  title="إعادة تعيين كلمة المرور للعميل"
+                  type="button"
+                >
+                  <span className="material-symbols-outlined text-[15px] text-amber-600">lock_reset</span>
+                  <span>تعيين كلمة المرور</span>
+                </button>
+              </div>
+            )
+          },
         }),
       ]),
     [],
@@ -464,6 +502,7 @@ export function ClientsTab({
                 client={client}
                 key={client._id}
                 onResetPassword={setClientToReset}
+                onViewInvoices={setClientForInvoices}
               />
             ))}
           </div>
@@ -534,6 +573,15 @@ export function ClientsTab({
         open={Boolean(credentialsModalData)}
         onOpenChange={(open) => !open && setCredentialsModalData(null)}
         credentials={credentialsModalData}
+      />
+
+      {/* Client Invoices Modal */}
+      <ClientInvoicesModal
+        open={Boolean(clientForInvoices)}
+        onOpenChange={(open) => !open && setClientForInvoices(null)}
+        client={clientForInvoices}
+        sellerName={sellerName}
+        onSwitchToInvoicesTab={onSwitchToInvoicesTab}
       />
     </div>
   )

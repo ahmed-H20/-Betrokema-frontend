@@ -82,7 +82,7 @@ export function AddPaymentModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-primary/40 backdrop-blur-xs">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-primary/40 backdrop-blur-xs">
       <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl bg-surface-container-lowest p-6 shadow-2xl border border-surface-container-high">
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-4 border-b border-surface-container-high">

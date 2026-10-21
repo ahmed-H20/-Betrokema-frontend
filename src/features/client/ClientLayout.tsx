@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
 import { ClientCartProvider, useClientCart } from './ClientCartContext'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 interface ClientNavTab {
   path: string
@@ -78,10 +79,14 @@ function ClientLayoutHeaderAndNav() {
               <button
                 type="button"
                 onClick={() => navigate('/client/profile')}
-                className="w-9 h-9 rounded-xl bg-[#0b1c2d] text-white flex items-center justify-center shadow-xs hover:opacity-90 transition-opacity"
+                className="hover:opacity-90 transition-opacity"
                 title={user?.name || 'حسابي'}
               >
-                <span className="material-symbols-outlined text-[18px]">person</span>
+                <UserAvatar
+                  alt={user?.name || 'العميل'}
+                  sizeClassName="w-9 h-9"
+                  shape="rounded"
+                />
               </button>
               <button
                 type="button"

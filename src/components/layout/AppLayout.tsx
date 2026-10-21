@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth/AuthContext'
 import { BottomTabBar } from '@/components/layout/BottomTabBar'
 import { NavDrawer } from '@/components/layout/NavDrawer'
 import { SidebarNavContent } from '@/components/layout/SidebarNavContent'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 import {
   APP_BADGE,
   APP_NAME,
@@ -140,9 +141,11 @@ export function AppLayout() {
                     {user?.code || (user?.role === 'seller' ? 'مندوب' : user?.role === 'client' ? 'عميل' : 'مسؤول')}
                   </span>
                 </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary">
-                  <span className="material-symbols-outlined text-[18px]">person</span>
-                </div>
+                <UserAvatar
+                  alt={user?.name || 'مسؤول النظام'}
+                  sizeClassName="h-8 w-8"
+                  shape="circle"
+                />
                 <button
                   type="button"
                   onClick={logout}

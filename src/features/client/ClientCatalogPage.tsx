@@ -4,7 +4,10 @@ import { useCategories } from '@/features/categories/hooks'
 import { formatNumber } from '@/lib/format'
 import { useClientCart } from './ClientCartContext'
 import type { Category } from '@/api/categories.schema'
+import type { Product } from '@/api/products.schema'
+import { resolveImageUrl } from '@/lib/image'
 import clientHeroImg from '@/assets/client-hero.jpg'
+import { ClientProductImagesModal } from './components/ClientProductImagesModal'
 
 export function ClientCatalogPage() {
   const { data: productsData, isLoading: isLoadingProducts } = useProducts({
@@ -16,6 +19,7 @@ export function ClientCatalogPage() {
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [search, setSearch] = useState('')
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null)
 
   const products = productsData?.data || []
   const categories: Category[] = categoriesData?.data || []
@@ -206,19 +210,62 @@ export function ClientCatalogPage() {
                   {/* Main Product Info (Image + Title & Description) */}
                   <div className="flex items-start gap-3">
                     {/* Product Image Frame */}
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/70 p-2 flex items-center justify-center border border-slate-200/80 shadow-xs shrink-0 overflow-hidden">
-                      {product.image ? (
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-full object-contain drop-shadow-xs transition-transform hover:scale-105 duration-300"
-                        />
-                      ) : (
-                        <span className="material-symbols-outlined text-[36px] text-orange-500">
-                          format_paint
-                        </span>
-                      )}
-                    </div>
+                    {(() => {
+                      const hasImage = Boolean(
+                        (product.image && product.image.trim()) ||
+                        (product.images && product.images.length > 0),
+                      )
+                      const displayImg =
+                        product.image || (product.images && product.images[0]) || ''
+                      const totalCount =
+                        (product.image ? 1 : 0) +
+                        (product.images?.filter((img) => img !== product.image)
+                          ?.length || 0)
+
+                      if (!hasImage) {
+                        return (
+                          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/70 p-2 flex items-center justify-center border border-slate-200/80 shadow-xs shrink-0 overflow-hidden">
+                            <span className="material-symbols-outlined text-[36px] text-orange-500">
+                              format_paint
+                            </span>
+                          </div>
+                        )
+                      }
+
+                      return (
+                        <button
+                          className="group relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/70 p-2 flex items-center justify-center border border-slate-200/80 shadow-xs shrink-0 overflow-hidden cursor-pointer hover:border-orange-500/60 hover:shadow-md transition-all active:scale-95"
+                          onClick={() => setViewingProduct(product)}
+                          title="انقر لعرض صور المنتج بالحجم الكامل"
+                          type="button"
+                        >
+                          <img
+                            alt={product.name}
+                            className="w-full h-full object-contain drop-shadow-xs transition-transform duration-300 group-hover:scale-105"
+                            src={resolveImageUrl(displayImg)}
+                          />
+                          {/* Hover magnifying overlay */}
+                          <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                            <div className="flex items-center gap-1 bg-white/95 text-slate-900 rounded-full px-2 py-0.5 text-[10px] font-bold shadow-md backdrop-blur-xs">
+                              <span className="material-symbols-outlined text-[13px] text-orange-600">
+                                zoom_in
+                              </span>
+                              <span>
+                                {totalCount > 1 ? `${totalCount} صور` : 'تكبير'}
+                              </span>
+                            </div>
+                          </div>
+                          {totalCount > 1 && (
+                            <span className="absolute bottom-1 end-1 flex items-center gap-0.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[9px] font-bold text-white backdrop-blur-xs shadow-xs">
+                              <span className="material-symbols-outlined text-[11px] text-orange-400">
+                                photo_library
+                              </span>
+                              <span>{totalCount}</span>
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })()}
 
                     {/* Product Title & Text */}
                     <div className="flex-1 min-w-0">
@@ -361,6 +408,15 @@ export function ClientCatalogPage() {
           </div>
         </div>
       </section>
+
+      {/* Product Images Lightbox Modal */}
+      <ClientProductImagesModal
+        onOpenChange={(open) => {
+          if (!open) setViewingProduct(null)
+        }}
+        open={Boolean(viewingProduct)}
+        product={viewingProduct}
+      />
     </div>
   )
 }

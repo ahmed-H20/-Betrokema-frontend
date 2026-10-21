@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
 import { formatNumber } from '@/lib/format'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 export function ClientProfilePage() {
   const navigate = useNavigate()
@@ -42,9 +43,11 @@ export function ClientProfilePage() {
       {/* Profile Card */}
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
         <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-[#0b1c2d] text-white flex items-center justify-center font-bold text-xl shadow-xs">
-            <span className="material-symbols-outlined text-[28px]">storefront</span>
-          </div>
+          <UserAvatar
+            alt={clientName}
+            shape="rounded"
+            sizeClassName="w-14 h-14 shadow-sm"
+          />
           <div>
             <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
               {clientCode}

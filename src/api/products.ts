@@ -56,6 +56,17 @@ export async function create(input: CreateProductInput): Promise<Product> {
   return productEnvelopeSchema.parse(raw).data
 }
 
+export async function update(
+  id: string,
+  input: Partial<CreateProductInput>,
+): Promise<Product> {
+  const raw = await request<unknown>(`/products/${id}`, {
+    method: 'PUT',
+    body: input,
+  })
+  return productEnvelopeSchema.parse(raw).data
+}
+
 export async function updateStockAndPrice(
   id: string,
   input: UpdateStockAndPriceInput,

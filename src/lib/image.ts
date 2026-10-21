@@ -16,10 +16,16 @@ export function resolveImageUrl(urlOrPath?: string | null): string {
     return trimmed
   }
 
-  // Ensure leading slash for relative paths (e.g. uploads/products/abc.png -> /uploads/products/abc.png)
   if (!trimmed.startsWith('/')) {
     return `/${trimmed}`
   }
 
   return trimmed
+}
+
+export const DEFAULT_AVATAR = '/default-avatar.jpg'
+
+export function resolveAvatarUrl(urlOrPath?: string | null): string {
+  if (!urlOrPath || !urlOrPath.trim()) return DEFAULT_AVATAR
+  return resolveImageUrl(urlOrPath)
 }

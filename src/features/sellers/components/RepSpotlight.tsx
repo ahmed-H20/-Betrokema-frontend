@@ -16,6 +16,7 @@ import {
 import { formatEgyptianPhoneDisplay } from '@/lib/phone'
 import { formatNumber } from '@/lib/format'
 import { resolveImageUrl } from '@/lib/image'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 function MetricBox({
   label,
@@ -62,17 +63,13 @@ export function RepSpotlight({
     <div className="flex flex-col gap-space-md rounded-xl bg-surface-container-lowest p-space-lg shadow-sm">
       <div className="flex flex-col justify-between gap-space-md sm:flex-row sm:items-center">
         <div className="flex items-start gap-space-md">
-          {seller.photoUrl ? (
-            <img
-              alt={seller.name}
-              className="h-16 w-16 rounded-xl object-cover ring-2 ring-primary-fixed"
-              src={resolveImageUrl(seller.photoUrl)}
-            />
-          ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary-container font-headline-md text-headline-md text-on-primary ring-2 ring-primary-fixed">
-              {seller.name.trim().slice(0, 2)}
-            </div>
-          )}
+          <UserAvatar
+            alt={seller.name}
+            className="ring-2 ring-primary-fixed shadow-sm"
+            shape="rounded"
+            sizeClassName="h-16 w-16"
+            src={seller.photoUrl}
+          />
           <div className="flex flex-col">
             <div className="flex flex-wrap items-center gap-space-sm">
               <span className="font-headline-md text-headline-md font-bold text-primary">

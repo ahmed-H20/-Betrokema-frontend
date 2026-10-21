@@ -55,6 +55,20 @@ export function useCreateProduct() {
   })
 }
 
+export function useUpdateProduct() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      input,
+    }: {
+      id: string
+      input: Partial<CreateProductInput>
+    }) => productsApi.update(id, input),
+    onSuccess: () => invalidateProductQueries(queryClient),
+  })
+}
+
 export function useUpdateProductStockAndPrice() {
   const queryClient = useQueryClient()
   return useMutation({

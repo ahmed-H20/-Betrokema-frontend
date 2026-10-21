@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
 import { SellerProvider } from './SellerContext'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 const SELLER_NAV_TABS = [
   { path: '/seller/dashboard', label: 'نظرة عامة', icon: 'dashboard' },
@@ -91,13 +92,12 @@ function SellerLayoutContent() {
             </button>
 
             {/* Rep Avatar & Logout */}
-            <div className="flex items-center gap-1">
-              <div
-                className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center overflow-hidden"
-                title={user?.name}
-              >
-                <span className="material-symbols-outlined text-[20px]">person</span>
-              </div>
+            <div className="flex items-center gap-1.5">
+              <UserAvatar
+                alt={user?.name || 'المندوب'}
+                sizeClassName="w-9 h-9"
+                shape="rounded"
+              />
               <button
                 type="button"
                 onClick={logout}

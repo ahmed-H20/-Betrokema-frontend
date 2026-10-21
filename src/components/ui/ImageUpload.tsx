@@ -137,11 +137,18 @@ export function ImageUpload({
                 </div>
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center p-2 text-center text-on-surface-variant group-hover:text-primary">
-                <span className="material-symbols-outlined text-[28px]">
-                  account_circle
-                </span>
-                <span className="text-[11px] font-medium mt-1">رفع صورة</span>
+              <div className="relative h-full w-full">
+                <img
+                  alt="الصورة الافتراضية"
+                  className="h-full w-full object-cover"
+                  src="/default-avatar.jpg"
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  <span className="material-symbols-outlined text-[22px]">
+                    photo_camera
+                  </span>
+                  <span className="text-[10px] font-medium">رفع صورة</span>
+                </div>
               </div>
             )}
 

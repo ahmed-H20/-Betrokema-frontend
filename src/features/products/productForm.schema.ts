@@ -21,6 +21,7 @@ const imageFieldSchema = z
     (value) =>
       value === '' ||
       value.startsWith('/uploads') ||
+      value.startsWith('uploads') ||
       value.startsWith('/') ||
       isHttpUrl(value) ||
       value.startsWith('data:image/') ||

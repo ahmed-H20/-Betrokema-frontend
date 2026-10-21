@@ -66,6 +66,14 @@ export function useInvoicesForSeller(sellerId: string | undefined) {
   })
 }
 
+export function useInvoicesForClient(clientId: string | undefined) {
+  return useQuery({
+    queryKey: ['invoices', 'by-client', clientId],
+    queryFn: () => (clientId ? invoicesApi.getForClient(clientId) : Promise.resolve([])),
+    enabled: Boolean(clientId),
+  })
+}
+
 function invalidateSellerQueries(
   queryClient: ReturnType<typeof useQueryClient>,
   sellerId?: string,

@@ -124,7 +124,11 @@ export function RepDetailPanel({
             ))}
           </Tabs.List>
           <Tabs.Content value="clients">
-            <ClientsTab sellerId={seller._id} sellerName={seller.name} />
+            <ClientsTab
+              sellerId={seller._id}
+              sellerName={seller.name}
+              onSwitchToInvoicesTab={() => onTabChange?.('invoices')}
+            />
           </Tabs.Content>
           <Tabs.Content value="invoices">
             <InvoicesTab sellerId={seller._id} />

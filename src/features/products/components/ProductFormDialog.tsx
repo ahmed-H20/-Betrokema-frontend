@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Dialog, DialogHeader } from '@/components/ui/Dialog'
+import type { Product } from '@/api/products.schema'
 import {
   GENERIC_ERROR,
   MODAL_CANCEL,
@@ -29,8 +30,15 @@ import {
   TOAST_PRODUCT_CREATED,
 } from '@/constants/strings'
 import { useCategories } from '@/features/categories/hooks'
-import { useCreateProduct, useWarehouseNames } from '@/features/products/hooks'
-import { buildCreateProductPayload } from '@/features/products/productForm'
+import {
+  useCreateProduct,
+  useUpdateProduct,
+  useWarehouseNames,
+} from '@/features/products/hooks'
+import {
+  buildCreateProductPayload,
+  buildProductFormDefaults,
+} from '@/features/products/productForm'
 import {
   productFormDefaults,
   productFormSchema,
@@ -44,6 +52,7 @@ import { MultiImageUpload } from '@/components/ui/MultiImageUpload'
 type ProductFormDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  productToEdit?: Product | null
 }
 
 const inputClassName =
@@ -64,10 +73,13 @@ const labelClassName = 'block font-label-md text-label-md text-on-surface mb-1'
 export function ProductFormDialog({
   open,
   onOpenChange,
+  productToEdit,
 }: ProductFormDialogProps) {
+  const isEditMode = Boolean(productToEdit)
   const categoriesQuery = useCategories()
   const warehousesQuery = useWarehouseNames()
   const createProduct = useCreateProduct()
+  const updateProduct = useUpdateProduct()
 
   const {
     register,
@@ -78,20 +90,37 @@ export function ProductFormDialog({
     formState: { errors, isSubmitting },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
-    defaultValues: productFormDefaults,
+    defaultValues: productToEdit
+      ? buildProductFormDefaults(productToEdit)
+      : productFormDefaults,
   })
 
   const features = watch('features')
   const quantity = watch('quantity')
 
   useEffect(() => {
-    if (open) reset(productFormDefaults)
-  }, [open, reset])
+    if (open) {
+      reset(
+        productToEdit
+          ? buildProductFormDefaults(productToEdit)
+          : productFormDefaults,
+      )
+    }
+  }, [open, productToEdit, reset])
 
   async function onSubmit(values: ProductFormValues) {
     try {
-      await createProduct.mutateAsync(buildCreateProductPayload(values))
-      toast.success(TOAST_PRODUCT_CREATED)
+      const payload = buildCreateProductPayload(values)
+      if (isEditMode && productToEdit) {
+        await updateProduct.mutateAsync({
+          id: productToEdit._id,
+          input: payload,
+        })
+        toast.success('تم حفظ وتحديث بيانات وصور المنتج بنجاح')
+      } else {
+        await createProduct.mutateAsync(payload)
+        toast.success(TOAST_PRODUCT_CREATED)
+      }
       onOpenChange(false)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : GENERIC_ERROR)
@@ -101,10 +130,14 @@ export function ProductFormDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open} widthClassName="max-w-4xl">
       <DialogHeader
-        icon="add_box"
+        icon={isEditMode ? 'edit_document' : 'add_box'}
         onClose={() => onOpenChange(false)}
-        subtitle={PRODUCT_MODAL_SUBTITLE}
-        title={PRODUCT_MODAL_TITLE}
+        subtitle={
+          isEditMode
+            ? `تعديل المواصفات الفنية والأسعار والمخزون وصور المعرض لـ: ${productToEdit?.name}`
+            : PRODUCT_MODAL_SUBTITLE
+        }
+        title={isEditMode ? 'تعديل بيانات وصور المنتج' : PRODUCT_MODAL_TITLE}
       />
       <form
         className="flex flex-1 min-h-0 flex-col overflow-hidden"
@@ -325,14 +358,20 @@ export function ProductFormDialog({
             {MODAL_CANCEL}
           </button>
           <button
-            className="font-label-md flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-label-md text-on-primary shadow-md transition-all hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isSubmitting}
+            className="font-label-md flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-label-md text-on-primary shadow-md transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            disabled={isSubmitting || createProduct.isPending || updateProduct.isPending}
             type="submit"
           >
             <span className="material-symbols-outlined text-[18px]">
-              check_circle
+              {isEditMode ? 'save' : 'check_circle'}
             </span>
-            {PRODUCT_MODAL_SUBMIT}
+            <span>
+              {isSubmitting || createProduct.isPending || updateProduct.isPending
+                ? 'جارٍ الحفظ...'
+                : isEditMode
+                  ? 'حفظ التعديلات'
+                  : PRODUCT_MODAL_SUBMIT}
+            </span>
           </button>
         </div>
       </form>
