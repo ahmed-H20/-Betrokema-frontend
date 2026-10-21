@@ -70,3 +70,43 @@ body {
 .nav-drawer-overlay[data-state='closed'] {
   animation: nav-drawer-overlay-out 180ms ease-in;
 }
+
+/* Print optimizations for invoices and modals */
+@media print {
+  nav,
+  header,
+  aside,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  body,
+  html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Make open dialog printable full-page without scroll clipping */
+  [role="dialog"] {
+    position: static !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    transform: none !important;
+    inset: auto !important;
+    background: #ffffff !important;
+  }
+
+  [role="dialog"] .overflow-y-auto {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+}
+

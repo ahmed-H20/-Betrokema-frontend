@@ -26,8 +26,6 @@ function ClientLayoutHeaderAndNav() {
     return location.pathname.startsWith(path)
   }
 
-  const isAdminOrSeller = user?.role === 'admin' || user?.role === 'manager' || user?.role === 'seller'
-
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] text-slate-800 flex flex-col antialiased overflow-x-hidden selection:bg-orange-100">
       {/* 1. Mobile & Web Header */}
@@ -56,20 +54,6 @@ function ClientLayoutHeaderAndNav() {
 
           {/* Actions Side (Left in RTL) */}
           <div className="flex items-center gap-2">
-            {/* Admin or Seller Back Switch */}
-            {isAdminOrSeller && (
-              <NavLink
-                to={user?.role === 'seller' ? '/seller/dashboard' : '/products'}
-                className="hidden sm:flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-orange-600 bg-slate-100 hover:bg-orange-50 px-2.5 py-1.5 rounded-xl border border-slate-200 transition-colors"
-                title="الرجوع للوحة العمليات"
-              >
-                <span className="material-symbols-outlined text-[16px]">
-                  {user?.role === 'seller' ? 'badge' : 'admin_panel_settings'}
-                </span>
-                <span>{user?.role === 'seller' ? 'لوحة المندوب' : 'لوحة الإدارة'}</span>
-              </NavLink>
-            )}
-
             {/* Shopping Cart Button with Count Badge */}
             <div className="relative">
               <button

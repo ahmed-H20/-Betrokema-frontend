@@ -27,7 +27,6 @@ function SellerLayoutContent() {
   const isClientDetailPage =
     location.pathname.startsWith('/seller/clients/') &&
     location.pathname !== '/seller/clients'
-  const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager'
 
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] text-slate-800 flex flex-col antialiased overflow-x-hidden">
@@ -79,32 +78,6 @@ function SellerLayoutContent() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {/* Admin Back to Portal Link */}
-            {isAdminOrManager && (
-              <>
-                <NavLink
-                  to="/products"
-                  className="hidden sm:flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-orange-600 bg-slate-100 hover:bg-orange-50 px-2.5 py-1.5 rounded-xl border border-slate-200 transition-colors"
-                  title="الرجوع للوحة التحكم الإدارية"
-                >
-                  <span className="material-symbols-outlined text-[16px]">
-                    admin_panel_settings
-                  </span>
-                  <span>لوحة الإدارة</span>
-                </NavLink>
-                <NavLink
-                  to="/client"
-                  className="hidden sm:flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-orange-600 bg-slate-100 hover:bg-orange-50 px-2.5 py-1.5 rounded-xl border border-slate-200 transition-colors"
-                  title="واجهة العميل وطلب الدهانات"
-                >
-                  <span className="material-symbols-outlined text-[16px]">
-                    storefront
-                  </span>
-                  <span>بوابة العميل</span>
-                </NavLink>
-              </>
-            )}
-
             {/* Notification Bell */}
             <button
               type="button"

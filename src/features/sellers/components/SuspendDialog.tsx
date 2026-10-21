@@ -53,7 +53,7 @@ export function SuspendDialog({
         onClose={() => onOpenChange(false)}
         title={mode === 'suspend' ? SUSPEND_DIALOG_TITLE : REACTIVATE_DIALOG_TITLE}
       />
-      <div className="flex flex-col gap-4 px-6 py-5">
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 px-6 py-5">
         <p className="font-body-md text-body-md text-on-surface">
           {mode === 'suspend' ? SUSPEND_DIALOG_DESCRIPTION : REACTIVATE_DIALOG_DESCRIPTION}
         </p>
@@ -71,7 +71,7 @@ export function SuspendDialog({
           </div>
         ) : null}
       </div>
-      <div className="flex items-center justify-end gap-3 bg-surface-container px-6 py-4">
+      <div className="shrink-0 flex items-center justify-end gap-3 bg-surface-container px-4 sm:px-6 py-3.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
         <button
           className="font-label-md rounded-lg bg-surface-container-high px-4 py-2.5 text-label-md text-on-surface transition-colors hover:bg-surface-container-highest"
           onClick={() => onOpenChange(false)}

@@ -4,6 +4,7 @@ import { useCategories } from '@/features/categories/hooks'
 import { formatNumber } from '@/lib/format'
 import { useClientCart } from './ClientCartContext'
 import type { Category } from '@/api/categories.schema'
+import clientHeroImg from '@/assets/client-hero.jpg'
 
 export function ClientCatalogPage() {
   const { data: productsData, isLoading: isLoadingProducts } = useProducts({
@@ -42,24 +43,14 @@ export function ClientCatalogPage() {
 
   return (
     <div className="flex flex-col gap-4 pb-8">
-      {/* 1. Hero Banner matching petrokema_client_mobile_1 */}
-      <section className="relative rounded-2xl overflow-hidden shadow-sm h-48 bg-slate-900 border border-slate-800">
+      {/* 1. Brand Hero Banner */}
+      <section className="relative rounded-2xl overflow-hidden shadow-xs border border-slate-200/80 bg-white">
         <img
-          src="https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=1000&auto=format&fit=crop"
-          alt="دهانات فاخرة معمارية ديكورية"
-          className="w-full h-full object-cover opacity-75"
+          src={clientHeroImg}
+          alt="بتروكيما للدهانات - كل لون حكاية بيت"
+          className="w-full h-auto aspect-[16/9] object-cover rounded-2xl block"
+          loading="eager"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent flex flex-col justify-end p-4 text-white">
-          <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-0.5">
-            منتجات معتمدة ومطابقة للمواصفات
-          </span>
-          <h1 className="text-2xl font-bold tracking-tight mb-1 text-white">
-            لون يعبّر عنك
-          </h1>
-          <p className="text-xs font-normal text-slate-200">
-            اكتشف دهانات وكيماويات عزل تناسب كل مشروع ومساحة معمارية.
-          </p>
-        </div>
       </section>
 
       {/* 2. Search Bar */}
@@ -181,7 +172,7 @@ export function ClientCatalogPage() {
                     },
                   ]
 
-            const features = product.fetures || [
+            const features = product.fetures || (product as any).features || [
               { name: 'تغطية فائقة' },
               { name: 'مقاوم للغسيل' },
             ]
@@ -189,136 +180,149 @@ export function ClientCatalogPage() {
             return (
               <article
                 key={product._id}
-                className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm transition-all hover:shadow-md"
+                className="rounded-2xl border border-slate-200/90 overflow-hidden bg-white shadow-xs hover:shadow-md transition-all flex flex-col"
               >
-                {/* 3-Column Header Bar with brand gradient accents matching petrokema_client_mobile_1 */}
-                <div className="grid grid-cols-12 text-center text-xs font-bold text-white shadow-xs">
-                  <div className="col-span-6 bg-[#4a1c1d] py-2 px-2 flex items-center justify-center gap-1.5 border-l border-white/20">
-                    <span className="material-symbols-outlined text-[15px]">inventory_2</span>
-                    <span className="tracking-tight">تفاصيل المنتج</span>
+                {/* 1. Card Top: Identity, Image, Description & Feature Chips */}
+                <div className="p-3.5 sm:p-4 space-y-3">
+                  {/* Top Badges Row */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200/70 px-2 py-0.5 rounded-lg">
+                        {categoryName}
+                      </span>
+                      {product.code && (
+                        <span className="font-mono text-slate-500 text-[10px] bg-slate-100 px-2 py-0.5 rounded-lg font-semibold">
+                          {product.code}
+                        </span>
+                      )}
+                    </div>
+
+                    <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200 shrink-0">
+                      <span>★</span>
+                      <span>{product.statusBadge || 'مطابق للمواصفات'}</span>
+                    </span>
                   </div>
-                  <div className="col-span-3 bg-[#9b492d] py-2 px-1 flex items-center justify-center gap-1 border-l border-white/20">
-                    <span className="material-symbols-outlined text-[15px]">straighten</span>
-                    <span className="tracking-tight">العبوة / الحجم</span>
-                  </div>
-                  <div className="col-span-3 bg-[#0c5966] py-2 px-1 flex items-center justify-center gap-1">
-                    <span className="material-symbols-outlined text-[15px]">payments</span>
-                    <span className="tracking-tight">السعر والطلب</span>
+
+                  {/* Main Product Info (Image + Title & Description) */}
+                  <div className="flex items-start gap-3">
+                    {/* Product Image Frame */}
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/70 p-2 flex items-center justify-center border border-slate-200/80 shadow-xs shrink-0 overflow-hidden">
+                      {product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-contain drop-shadow-xs transition-transform hover:scale-105 duration-300"
+                        />
+                      ) : (
+                        <span className="material-symbols-outlined text-[36px] text-orange-500">
+                          format_paint
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Product Title & Text */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-sm sm:text-base text-slate-900 tracking-tight leading-snug">
+                        {product.name}
+                      </h3>
+                      <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed mt-1 line-clamp-2">
+                        {product.description ||
+                          'دهان أكريليك مائي فائق الجودة يمتاز بقوة تغطية عالية ولمعان يدوم طويلاً ومقاوم للعوامل الجوية.'}
+                      </p>
+
+                      {/* Feature Chips */}
+                      {features && features.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {features.map((f, fIdx) => (
+                            <span
+                              key={fIdx}
+                              className="inline-flex items-center gap-1 text-[10px] text-slate-700 bg-slate-100/90 px-2 py-0.5 rounded-md font-medium"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0"></span>
+                              <span>{f.name}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* 3-Column Content Body */}
-                <div className="grid grid-cols-12 divide-x divide-x-reverse divide-slate-100">
-                  {/* Column 1: Enhanced Product Presentation (Image, Hierarchy, Feature Pills) */}
-                  <div className="col-span-6 p-2.5 flex flex-col justify-between bg-white text-right border-l border-slate-100">
-                    <div>
-                      {/* Product Title & Badge */}
-                      <div className="flex items-start justify-between gap-1 pb-1 mb-1.5 border-b border-slate-100">
-                        <div>
-                          <span className="text-[9px] font-semibold text-[#0c5966] bg-blue-50/70 px-1.5 py-0.5 rounded">
-                            {categoryName}
-                          </span>
-                          <h3 className="font-bold text-xs sm:text-sm text-slate-900 tracking-tight mt-0.5 leading-snug">
-                            {product.name}
-                          </h3>
-                        </div>
-                        <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-800 text-[9px] font-semibold px-1.5 py-0.5 rounded-full border border-amber-200 shrink-0">
-                          <span>★</span>
-                          <span>{product.statusBadge || 'نصف لامع'}</span>
-                        </span>
-                      </div>
+                {/* 2. Card Bottom: Available Packages & Order Rows */}
+                <div className="border-t border-slate-100 bg-slate-50/60 p-3 sm:p-3.5 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-700 pb-0.5">
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px] text-orange-600">
+                        straighten
+                      </span>
+                      <span>العبوات والأسعار المتاحة:</span>
+                    </span>
+                    <span className="text-[10px] font-normal text-slate-400">
+                      اختر الحجم للطلب المباشر
+                    </span>
+                  </div>
 
-                      {/* Product Image & Description Layout */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2/5 h-24 rounded-lg bg-gradient-to-t from-slate-100 to-slate-50 p-1 flex items-center justify-center border border-slate-200 shadow-inner flex-shrink-0">
-                          {product.image ? (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="w-full h-full object-contain rounded drop-shadow-xs"
-                            />
-                          ) : (
-                            <span className="material-symbols-outlined text-[32px] text-orange-600">
-                              format_paint
+                  <div className="space-y-1.5">
+                    {packages.map((pkg, pIdx) => (
+                      <div
+                        key={pIdx}
+                        className="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-200/80 hover:border-orange-300 shadow-xs flex items-center justify-between gap-2.5 transition-all"
+                      >
+                        {/* Package Type & Weight */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-700 flex items-center justify-center font-bold shrink-0">
+                            <span className="material-symbols-outlined text-[18px]">
+                              {pkg.weight && (pkg.weight.includes('14') || pkg.weight.includes('16') || pkg.weight.includes('بستلة'))
+                                ? 'nest_heat_link_e'
+                                : 'format_paint'}
                             </span>
-                          )}
-                        </div>
-                        <div className="w-3/5 text-right flex flex-col justify-center">
-                          <p className="text-[10px] text-slate-600 leading-relaxed font-normal mb-1.5 line-clamp-3">
-                            {product.description ||
-                              'دهان أكريليك مائي فائق الجودة يمتاز بقوة تغطية عالية ولمعان يدوم طويلاً ومقاوم للعوامل الجوية.'}
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {features.slice(0, 2).map((f, fIdx) => (
-                              <span
-                                key={fIdx}
-                                className="text-[9px] text-[#0b1c2d] bg-slate-100 px-1.5 py-0.5 rounded font-medium"
-                              >
-                                {f.name}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-xs text-slate-900 truncate">
+                                {pkg.unitName}
                               </span>
-                            ))}
+                              {pkg.weight && (
+                                <span className="font-semibold text-[10px] text-orange-700 bg-orange-50 border border-orange-200/60 px-1.5 py-0.2 rounded font-mono">
+                                  {pkg.weight}
+                                </span>
+                              )}
+                            </div>
+                            {pkg.note && (
+                              <span className="text-[10px] text-slate-400 block truncate mt-0.5">
+                                {pkg.note}
+                              </span>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Bottom Specification Badges */}
-                    <div className="flex items-center justify-between gap-1 pt-1.5 border-t border-slate-100 text-[10px]">
-                      <span className="flex-1 inline-flex items-center justify-center gap-1 bg-[#eaf1f8] text-[#1e3a5f] py-0.5 px-1 rounded-full font-medium text-[9px]">
-                        <span className="material-symbols-outlined text-[12px]">home</span>
-                        <span>داخلي / خارجي</span>
-                      </span>
-                      <span className="text-slate-500 text-[9px] font-mono shrink-0">
-                        {product.code || 'PK-STD'}
-                      </span>
-                    </div>
-                  </div>
+                        {/* Price & Order Action Button */}
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <div className="text-left font-mono">
+                            <div className="font-bold text-slate-900 text-xs sm:text-sm">
+                              {formatNumber(pkg.price)}{' '}
+                              <span className="text-[10px] font-normal font-sans text-slate-500">
+                                ج.م
+                              </span>
+                            </div>
+                            {pkg.oldPrice && pkg.oldPrice > pkg.price && (
+                              <span className="text-[9px] text-slate-400 line-through block">
+                                {formatNumber(pkg.oldPrice)} ج.م
+                              </span>
+                            )}
+                          </div>
 
-                  {/* Column 2: Weights & Capacities */}
-                  <div className="col-span-3 bg-white divide-y divide-slate-100 text-center flex flex-col justify-around text-xs">
-                    {packages.map((pkg, pIdx) => (
-                      <div
-                        key={pIdx}
-                        className={`p-2 flex-1 flex flex-col justify-center items-center ${
-                          pIdx % 2 === 0 ? 'bg-slate-50/50' : 'bg-white'
-                        }`}
-                      >
-                        <span className="text-[10px] text-slate-500 font-medium block mb-0.5">
-                          {pkg.unitName}
-                        </span>
-                        <span className="font-bold text-[#0b1c2d] text-xs">
-                          {pkg.weight || 'حجم قياسي'}
-                        </span>
-                        <span className="text-[9px] text-slate-400 mt-0.5 font-normal">
-                          {pkg.note || 'تغطية معتمدة'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Column 3: Prices & Order Call to Action */}
-                  <div className="col-span-3 bg-white divide-y divide-slate-100 text-center flex flex-col justify-around text-xs">
-                    {packages.map((pkg, pIdx) => (
-                      <div
-                        key={pIdx}
-                        className={`p-2 flex-1 flex flex-col justify-center items-center ${
-                          pIdx % 2 === 0 ? 'bg-slate-50/50' : 'bg-white'
-                        }`}
-                      >
-                        <span className="text-[9px] text-slate-400 font-medium">السعر</span>
-                        <div className="font-bold text-slate-900 text-xs sm:text-sm mt-0.5 font-mono">
-                          {formatNumber(pkg.price)}
+                          <button
+                            type="button"
+                            onClick={() => addToCart(product, pIdx, 1)}
+                            className="h-8 sm:h-9 px-3 rounded-xl bg-[#0c5966] hover:bg-[#08434d] active:scale-95 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-xs transition-all shrink-0"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">
+                              add_shopping_cart
+                            </span>
+                            <span>اطلب الآن</span>
+                          </button>
                         </div>
-                        <div className="text-[9px] text-slate-400 mb-1.5">ج.م</div>
-
-                        <button
-                          type="button"
-                          onClick={() => addToCart(product, pIdx, 1)}
-                          className="w-full bg-[#0c5966] hover:bg-[#08434d] active:scale-95 text-white text-[10px] font-semibold py-1.5 px-1.5 rounded-lg transition shadow-xs flex items-center justify-center gap-1"
-                        >
-                          <span className="material-symbols-outlined text-[13px]">add_shopping_cart</span>
-                          <span>اطلب الآن</span>
-                        </button>
                       </div>
                     ))}
                   </div>

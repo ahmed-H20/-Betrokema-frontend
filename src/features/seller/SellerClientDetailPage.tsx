@@ -9,6 +9,12 @@ import { SellerCreateInvoiceModal } from './components/SellerCreateInvoiceModal'
 import { SellerInvoiceDetailsModal } from './components/SellerInvoiceDetailsModal'
 import { toast } from 'sonner'
 import type { Invoice } from '@/api/invoices.schema'
+import { resetClientPassword } from '@/api/clients'
+import {
+  AccountCredentialsModal,
+  type AccountCredentials,
+} from '@/components/ui/AccountCredentialsModal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 export function SellerClientDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -25,6 +31,33 @@ export function SellerClientDetailPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false)
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [credentialsModalData, setCredentialsModalData] =
+    useState<AccountCredentials | null>(null)
+
+  const handleResetPassword = async () => {
+    if (!client) return
+    try {
+      setIsResettingPassword(true)
+      const res = await resetClientPassword(client._id)
+      setIsResetConfirmOpen(false)
+      setCredentialsModalData({
+        name: res.credentials.name || client.name,
+        code: res.credentials.code,
+        password: res.credentials.password,
+        roleTitle: 'عميل معتمد / معرض طلاء',
+        roleBadge: 'عميل',
+        phone: res.credentials.phone || client.phone,
+      })
+      toast.success('تمت إعادة تعيين كلمة المرور بنجاح!')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'تعذر إعادة تعيين كلمة المرور'
+      toast.error(msg)
+    } finally {
+      setIsResettingPassword(false)
+    }
+  }
 
   // Filter invoices belonging to this specific client
   const clientInvoices = useMemo(() => {
@@ -195,6 +228,18 @@ export function SellerClientDetailPage() {
               <span>محادثة واتساب</span>
             </a>
           </div>
+
+          {/* Reset Password Action Button */}
+          <button
+            type="button"
+            onClick={() => setIsResetConfirmOpen(true)}
+            className="w-full mt-2.5 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200 transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[18px] text-amber-600">
+              lock_reset
+            </span>
+            <span>إعادة تعيين كلمة المرور وإرسالها للعميل</span>
+          </button>
         </section>
 
         {/* 3. Financial Performance Snapshot */}
@@ -537,6 +582,26 @@ export function SellerClientDetailPage() {
           setSelectedInvoiceForCollect(inv)
           setIsCollectModalOpen(true)
         }}
+      />
+
+      {/* Reset Password Confirmation Dialog */}
+      <ConfirmDialog
+        open={isResetConfirmOpen}
+        onOpenChange={setIsResetConfirmOpen}
+        title="إعادة تعيين كلمة المرور للعميل"
+        description={`هل أنت متأكد من رغبتك في إعادة تعيين كلمة المرور لحساب العميل (${clientTitle})؟ سيتم توليد رمز PIN جديد مكون من 6 أرقام لتزويد العميل به فورا عبر الواتساب.`}
+        confirmLabel="نعم، تعيين كلمة مرور جديدة"
+        cancelLabel="تراجع"
+        destructive={false}
+        pending={isResettingPassword}
+        onConfirm={handleResetPassword}
+      />
+
+      {/* Credentials Modal with WhatsApp Sharing */}
+      <AccountCredentialsModal
+        open={Boolean(credentialsModalData)}
+        onOpenChange={(open) => !open && setCredentialsModalData(null)}
+        credentials={credentialsModalData}
       />
     </div>
   )

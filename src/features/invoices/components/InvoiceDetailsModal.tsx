@@ -46,10 +46,10 @@ export function InvoiceDetailsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-primary/40 backdrop-blur-xs">
-      <div className="relative w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl bg-surface-container-lowest shadow-2xl border border-surface-container-high flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-primary/40 backdrop-blur-xs">
+      <div className="relative w-full max-w-3xl h-[88dvh] max-h-[88dvh] sm:h-auto sm:max-h-[90vh] rounded-2xl bg-surface-container-lowest shadow-2xl border border-surface-container-high flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-surface-container-high bg-surface-container-lowest/95 px-6 py-4 backdrop-blur-sm">
+        <div className="shrink-0 flex items-center justify-between border-b border-surface-container-high bg-surface-container-lowest px-4 sm:px-6 py-3.5 sm:py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-container text-on-primary">
               <span className="material-symbols-outlined text-[24px]">
@@ -106,7 +106,7 @@ export function InvoiceDetailsModal({
         </div>
 
         {/* Content Body */}
-        <div className="p-6 flex flex-col gap-6">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 flex flex-col gap-6">
           {/* Settlement Progress Card matching petrokema_web_admin */}
           <div className="rounded-2xl border border-surface-container-high bg-surface-container-low/50 p-5">
             <div className="flex items-center justify-between mb-3">
@@ -379,7 +379,7 @@ export function InvoiceDetailsModal({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t border-surface-container-high bg-surface-container-lowest/95 px-6 py-4 backdrop-blur-sm">
+        <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-t border-surface-container-high bg-surface-container-lowest px-4 sm:px-6 py-3.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
           {/* Status quick transitions */}
           <div className="flex items-center gap-2">
             {isPending && onUpdateStatus && (

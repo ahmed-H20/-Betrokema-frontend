@@ -85,7 +85,11 @@ export function AccountCredentialsModal({
       'يمكنك تسجيل الدخول الآن لمتابعة المنتجات والأسعار وإجراء الشراء ومتابعة الفواتير الخاصة بك.',
     ].join('\n')
 
-    window.open(`https://wa.me/${p}?text=${encodeURIComponent(text)}`, '_blank')
+    const url = `https://wa.me/${p}?text=${encodeURIComponent(text)}`
+    const win = window.open(url, '_blank')
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+      window.location.href = url
+    }
   }
 
   return (
@@ -97,7 +101,7 @@ export function AccountCredentialsModal({
         subtitle="بيانات الحساب الجديد لتسجيل الدخول"
         title="تم إنشاء بيانات الدخول بنجاح"
       />
-      <div className="flex flex-col gap-5 p-6">
+      <div className="flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain p-4 sm:p-6 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
         {/* User Info Header */}
         <div className="flex items-center justify-between rounded-xl border border-outline-variant/30 bg-surface-container-low p-4">
           <div className="flex items-center gap-3">

@@ -77,3 +77,19 @@ export async function update(
 export async function remove(id: string): Promise<void> {
   await request<unknown>(`/sellers/${id}`, { method: 'DELETE' })
 }
+
+export async function resetSellerPassword(sellerId: string): Promise<{
+  status: string
+  message: string
+  credentials: {
+    name: string
+    code: string
+    password: string
+    phone?: string
+    role: string
+  }
+}> {
+  return await request(`/sellers/${sellerId}/reset-password`, {
+    method: 'POST',
+  })
+}

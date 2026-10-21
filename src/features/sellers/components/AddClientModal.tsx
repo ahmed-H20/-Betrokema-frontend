@@ -100,8 +100,8 @@ export function AddClientModal({
         subtitle={sellerName ? ADD_CLIENT_SUBTITLE(sellerName) : undefined}
         title={ADD_CLIENT_TITLE}
       />
-      <form className="flex flex-1 flex-col overflow-hidden" onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-1 gap-4 overflow-y-auto p-6 md:grid-cols-2">
+      <form className="flex flex-1 min-h-0 flex-col overflow-hidden" onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid grid-cols-1 gap-4 overflow-y-auto overscroll-contain flex-1 min-h-0 p-4 sm:p-6 md:grid-cols-2">
           <div>
             <label className={labelClassName}>
               {CLIENT_NAME_LABEL} <span className="text-error">*</span>
@@ -182,7 +182,7 @@ export function AddClientModal({
             </span>
           </div>
         </div>
-        <div className="flex items-center justify-end gap-3 bg-surface-container px-6 py-4">
+        <div className="shrink-0 flex items-center justify-end gap-3 bg-surface-container px-4 sm:px-6 py-3.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
           <button
             className="font-label-md rounded-lg bg-surface-container-high px-4 py-2.5 text-label-md text-on-surface transition-colors hover:bg-surface-container-highest"
             onClick={() => onOpenChange(false)}

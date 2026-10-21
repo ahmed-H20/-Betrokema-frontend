@@ -25,7 +25,7 @@ export function Dialog({
             // rounding, fills the viewport) instead of a centered card —
             // `md:` and up restores the exact previous centered-dialog
             // classes untouched.
-            'fixed inset-0 z-50 flex h-dvh w-full flex-col overflow-hidden bg-surface-container-lowest shadow-2xl',
+            'fixed inset-0 z-50 flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-surface-container-lowest shadow-2xl',
             'md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[90vh] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl',
             widthClassName,
           )}
@@ -53,7 +53,7 @@ export function DialogHeader({
   iconClassName = 'bg-secondary text-on-secondary',
 }: DialogHeaderProps) {
   return (
-    <div className="flex items-center justify-between bg-primary px-6 py-4 text-on-primary">
+    <div className="flex shrink-0 items-center justify-between bg-primary px-5 sm:px-6 py-3.5 sm:py-4 text-on-primary">
       <div className="flex items-center gap-3">
         {icon ? (
           <div

@@ -152,7 +152,7 @@ export function TransfersDialog({
         onClose={() => onOpenChange(false)}
         title={TRANSFERS_DIALOG_TITLE}
       />
-      <div className="max-h-[70vh] overflow-y-auto p-space-lg">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-space-md sm:p-space-lg">
         {transfersQuery.isLoading ? (
           <StateMessage minHeightClassName="min-h-[200px]" text={TRANSFERS_LOADING} />
         ) : transfersQuery.isError ? (
@@ -260,7 +260,7 @@ export function TransfersDialog({
           </>
         )}
       </div>
-      <div className="flex items-center justify-end gap-space-sm bg-surface-container px-space-lg py-space-md">
+      <div className="shrink-0 flex items-center justify-end gap-space-sm bg-surface-container px-space-md sm:px-space-lg py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
         <button
           className="h-10 rounded-lg bg-surface-container-high px-space-md text-on-surface-variant transition-all hover:bg-surface-container-highest"
           onClick={() => onOpenChange(false)}

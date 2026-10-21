@@ -17,6 +17,13 @@ import { InvoicesTab } from '@/features/sellers/components/InvoicesTab'
 import { ProfileTab } from '@/features/sellers/components/ProfileTab'
 import { RepFormDialog } from '@/features/sellers/components/RepFormDialog'
 import { DeleteRepDialog } from '@/features/sellers/components/DeleteRepDialog'
+import { resetSellerPassword } from '@/api/sellers'
+import {
+  AccountCredentialsModal,
+  type AccountCredentials,
+} from '@/components/ui/AccountCredentialsModal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { toast } from 'sonner'
 
 export function RepDetailPanel({
   sellerId,
@@ -31,7 +38,35 @@ export function RepDetailPanel({
 }) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
+  const [credentialsModalData, setCredentialsModalData] =
+    useState<AccountCredentials | null>(null)
   const performanceQuery = useSellerPerformance(sellerId)
+
+  const handleResetPassword = async () => {
+    const currentSeller = performanceQuery.data?.seller
+    if (!currentSeller) return
+    try {
+      setIsResetting(true)
+      const res = await resetSellerPassword(currentSeller._id)
+      setResetConfirmOpen(false)
+      setCredentialsModalData({
+        name: res.credentials.name || currentSeller.name,
+        code: res.credentials.code,
+        password: res.credentials.password,
+        roleTitle: 'مندوب مبيعات ميداني',
+        roleBadge: 'مندوب',
+        phone: res.credentials.phone || currentSeller.phone,
+      })
+      toast.success('تمت إعادة تعيين كلمة المرور للمندوب بنجاح!')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'تعذر إعادة تعيين كلمة المرور'
+      toast.error(msg)
+    } finally {
+      setIsResetting(false)
+    }
+  }
 
   if (!sellerId) {
     return <StateMessage minHeightClassName="min-h-[400px]" text={REP_DETAIL_EMPTY} />
@@ -55,6 +90,7 @@ export function RepDetailPanel({
         metrics={metrics}
         onDelete={() => setDeleteOpen(true)}
         onEdit={() => setEditOpen(true)}
+        onResetPassword={() => setResetConfirmOpen(true)}
         seller={seller}
       />
 
@@ -106,6 +142,26 @@ export function RepDetailPanel({
         onOpenChange={setDeleteOpen}
         open={deleteOpen}
         seller={seller}
+      />
+
+      {/* Reset Password Confirmation Dialog */}
+      <ConfirmDialog
+        open={resetConfirmOpen}
+        onOpenChange={setResetConfirmOpen}
+        title="إعادة تعيين كلمة مرور المندوب"
+        description={`هل أنت متأكد من رغبتك في إعادة تعيين كلمة المرور للمندوب (${seller.name})؟ سيتم توليد رمز PIN جديد مكون من 6 أرقام لتزويد المندوب به فوراً.`}
+        confirmLabel="نعم، تعيين كلمة مرور جديدة"
+        cancelLabel="تراجع"
+        destructive={false}
+        pending={isResetting}
+        onConfirm={handleResetPassword}
+      />
+
+      {/* Credentials Modal with WhatsApp Sharing */}
+      <AccountCredentialsModal
+        open={Boolean(credentialsModalData)}
+        onOpenChange={(open) => !open && setCredentialsModalData(null)}
+        credentials={credentialsModalData}
       />
     </div>
   )

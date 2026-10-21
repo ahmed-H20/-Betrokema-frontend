@@ -63,12 +63,12 @@ export function DeleteRepDialog({
     <>
       <Dialog onOpenChange={onOpenChange} open={open} widthClassName="max-w-md">
         <DialogHeader onClose={() => onOpenChange(false)} title={DELETE_SELLER_BLOCKED_TITLE} />
-        <div className="px-6 py-5">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5">
           <p className="font-body-md text-body-md text-on-surface">
             {DELETE_SELLER_BLOCKED_MESSAGE}
           </p>
         </div>
-        <div className="flex items-center justify-end gap-3 bg-surface-container px-6 py-4">
+        <div className="shrink-0 flex items-center justify-end gap-3 bg-surface-container px-4 sm:px-6 py-3.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
           <button
             className="font-label-md rounded-lg bg-surface-container-high px-4 py-2.5 text-label-md text-on-surface transition-colors hover:bg-surface-container-highest"
             onClick={() => onOpenChange(false)}

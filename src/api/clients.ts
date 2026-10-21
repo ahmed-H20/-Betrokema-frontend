@@ -52,3 +52,19 @@ export async function update(
   })
   return clientEnvelopeSchema.shape.data.parse(raw.data)
 }
+
+export async function resetClientPassword(clientId: string): Promise<{
+  status: string
+  message: string
+  credentials: {
+    name: string
+    code: string
+    password: string
+    phone?: string
+    role: string
+  }
+}> {
+  return await request(`/clients/${clientId}/reset-password`, {
+    method: 'POST',
+  })
+}

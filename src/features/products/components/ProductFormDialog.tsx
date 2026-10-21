@@ -107,10 +107,10 @@ export function ProductFormDialog({
         title={PRODUCT_MODAL_TITLE}
       />
       <form
-        className="flex flex-1 flex-col overflow-hidden"
+        className="flex flex-1 min-h-0 flex-col overflow-hidden"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="flex flex-col gap-6 overflow-y-auto p-6">
+        <div className="flex flex-1 min-h-0 flex-col gap-6 overflow-y-auto overscroll-contain p-4 sm:p-6">
           <div>
             <h4 className="font-headline-sm mb-3 flex items-center gap-2 text-headline-sm text-primary">
               <span className="h-2 w-2 rounded-full bg-secondary" />
@@ -316,7 +316,7 @@ export function ProductFormDialog({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 bg-surface-container px-6 py-4">
+        <div className="shrink-0 flex items-center justify-end gap-3 bg-surface-container px-4 sm:px-6 py-3.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
           <button
             className="font-label-md rounded-lg bg-surface-container-high px-4 py-2.5 text-label-md text-on-surface transition-colors hover:bg-surface-container-highest"
             onClick={() => onOpenChange(false)}

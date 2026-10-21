@@ -2,7 +2,7 @@ import { DirectionProvider } from '@radix-ui/react-direction'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'sonner'
-import { AuthProvider } from '@/features/auth/AuthContext'
+import { AuthProvider, getDefaultRouteForRole, useAuth } from '@/features/auth/AuthContext'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
@@ -24,6 +24,27 @@ import { ClientProfilePage } from '@/features/client/ClientProfilePage'
 import { queryClient } from '@/lib/queryClient'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
+function RoleHomeRedirect() {
+  const { isAuthenticated, isLoading, role } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm font-medium text-on-surface-variant">جاري التوجيه...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated || !role) {
+    return <Navigate replace to="/login" />
+  }
+
+  return <Navigate replace to={getDefaultRouteForRole(role)} />
+}
+
 function App() {
   return (
     // Radix primitives (Tabs, Select, DropdownMenu, ...) default their own
@@ -40,19 +61,24 @@ function App() {
               {/* Public Route */}
               <Route path="/login" element={<LoginPage />} />
 
-              {/* Protected Application Layout */}
-              <Route element={<ProtectedRoute />}>
-                {/* Admin Operations Layout */}
-                <Route element={<AppLayout />} path="/">
-                  <Route element={<Navigate replace to="/products" />} index />
-                  <Route element={<ProductsPage />} path="products" />
-                  <Route element={<InvoicesPage />} path="invoices" />
-                  <Route element={<SellersPage />} path="sellers" />
-                  <Route element={<WarehousesPage />} path="warehouses" />
-                  <Route element={<AnalyticsPage />} path="analytics" />
-                </Route>
+              {/* Dynamic Root Redirection based on Authenticated Role */}
+              <Route path="/" element={<RoleHomeRedirect />} />
 
-                {/* Seller Portal (Field Sales Rep Interface - Mobile First) */}
+              {/* Admin Operations Portal (Strictly restricted to Admin, Manager, Accountant) */}
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'manager', 'accountant']} />}>
+                <Route path="/admin" element={<Navigate replace to="/products" />} />
+                <Route path="/admin/*" element={<Navigate replace to="/products" />} />
+                <Route element={<AppLayout />}>
+                  <Route element={<ProductsPage />} path="/products" />
+                  <Route element={<InvoicesPage />} path="/invoices" />
+                  <Route element={<SellersPage />} path="/sellers" />
+                  <Route element={<WarehousesPage />} path="/warehouses" />
+                  <Route element={<AnalyticsPage />} path="/analytics" />
+                </Route>
+              </Route>
+
+              {/* Seller Portal (Strictly restricted to Field Sales Reps) */}
+              <Route element={<ProtectedRoute allowedRoles={['seller']} />}>
                 <Route element={<SellerLayout />} path="/seller">
                   <Route element={<Navigate replace to="/seller/dashboard" />} index />
                   <Route element={<SellerDashboardPage />} path="dashboard" />
@@ -61,17 +87,20 @@ function App() {
                   <Route element={<SellerInvoicesPage />} path="invoices" />
                   <Route element={<SellerWarehousesPage />} path="warehouses" />
                 </Route>
+              </Route>
 
-                {/* Client Portal (Customer Catalog & Orders - Mobile First) */}
+              {/* Client Portal (Strictly restricted to Customers / Clients) */}
+              <Route element={<ProtectedRoute allowedRoles={['client']} />}>
                 <Route element={<ClientLayout />} path="/client">
                   <Route element={<ClientCatalogPage />} index />
                   <Route element={<ClientCatalogPage />} path="catalog" />
                   <Route element={<ClientInvoicesPage />} path="invoices" />
                   <Route element={<ClientProfilePage />} path="profile" />
                 </Route>
-
-                <Route path="*" element={<NotFoundPage />} />
               </Route>
+
+              {/* Fallback 404 Route */}
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           <Toaster
             icons={{
@@ -81,7 +110,7 @@ function App() {
                 </span>
               ),
             }}
-            position="bottom-left"
+            position="top-center"
             toastOptions={{
               unstyled: true,
               classNames: {

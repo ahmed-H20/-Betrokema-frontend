@@ -145,7 +145,7 @@ export function TransferModal({
         onClose={() => onOpenChange(false)}
         title={TRANSFER_MODAL_TITLE}
       />
-      <div className="flex flex-col gap-space-md p-space-lg">
+      <div className="flex flex-1 min-h-0 flex-col gap-space-md overflow-y-auto overscroll-contain p-space-md sm:p-space-lg">
         <div className="grid grid-cols-2 gap-space-sm">
           <div className="flex flex-col gap-1">
             <label className={labelClassName}>{TRANSFER_FROM_LABEL}</label>
@@ -223,7 +223,7 @@ export function TransferModal({
           <span className="font-label-sm text-label-sm text-error">{error}</span>
         ) : null}
       </div>
-      <div className="flex items-center justify-end gap-space-sm bg-surface-container px-space-lg py-space-md">
+      <div className="shrink-0 flex items-center justify-end gap-space-sm bg-surface-container px-space-md sm:px-space-lg py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
         <button
           className="h-10 rounded-lg bg-surface-container-high px-space-md text-on-surface-variant transition-all hover:bg-surface-container-highest"
           onClick={() => onOpenChange(false)}

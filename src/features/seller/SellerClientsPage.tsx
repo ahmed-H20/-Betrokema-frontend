@@ -5,6 +5,13 @@ import { formatNumber } from '@/lib/format'
 import { AddSellerClientModal } from './components/AddSellerClientModal'
 import { SellerCreateInvoiceModal } from './components/SellerCreateInvoiceModal'
 import type { Client } from '@/api/clients.schema'
+import { resetClientPassword } from '@/api/clients'
+import {
+  AccountCredentialsModal,
+  type AccountCredentials,
+} from '@/components/ui/AccountCredentialsModal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { toast } from 'sonner'
 
 export function SellerClientsPage() {
   const { clients, totalDebt, overCreditCount, isLoading, refetchAll } = useSellerContext()
@@ -20,6 +27,34 @@ export function SellerClientsPage() {
     string | undefined
   >(undefined)
   const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false)
+  const [clientToResetPassword, setClientToResetPassword] = useState<Client | null>(null)
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [credentialsModalData, setCredentialsModalData] =
+    useState<AccountCredentials | null>(null)
+
+  const handleResetPassword = async () => {
+    if (!clientToResetPassword) return
+    try {
+      setIsResettingPassword(true)
+      const res = await resetClientPassword(clientToResetPassword._id)
+      const clientRef = clientToResetPassword
+      setClientToResetPassword(null)
+      setCredentialsModalData({
+        name: res.credentials.name || clientRef.name,
+        code: res.credentials.code,
+        password: res.credentials.password,
+        roleTitle: 'عميل معتمد / معرض طلاء',
+        roleBadge: 'عميل',
+        phone: res.credentials.phone || clientRef.phone,
+      })
+      toast.success('تمت إعادة تعيين كلمة المرور بنجاح!')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'تعذر إعادة تعيين كلمة المرور'
+      toast.error(msg)
+    } finally {
+      setIsResettingPassword(false)
+    }
+  }
 
   // Filter clients
   const filteredClients = useMemo(() => {
@@ -248,8 +283,16 @@ export function SellerClientsPage() {
                     </div>
                   </div>
 
-                  {/* Direct Contact & Edit Buttons */}
+                  {/* Direct Contact & Edit & Reset Buttons */}
                   <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setClientToResetPassword(client)}
+                      className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 flex items-center justify-center border border-amber-200 transition-colors"
+                      title="إعادة تعيين كلمة المرور للعميل"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">lock_reset</span>
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -374,6 +417,26 @@ export function SellerClientsPage() {
         open={isCreateInvoiceOpen}
         onOpenChange={setIsCreateInvoiceOpen}
         preselectedClientId={selectedClientIdForInvoice}
+      />
+
+      {/* Reset Password Confirmation Dialog */}
+      <ConfirmDialog
+        open={Boolean(clientToResetPassword)}
+        onOpenChange={(open) => !open && setClientToResetPassword(null)}
+        title="إعادة تعيين كلمة المرور للعميل"
+        description={`هل أنت متأكد من رغبتك في إعادة تعيين كلمة المرور لحساب (${clientToResetPassword?.name || clientToResetPassword?.organizeName || ''})؟ سيتم توليد رمز PIN جديد مكون من 6 أرقام لتزويده به عبر الواتساب.`}
+        confirmLabel="نعم، تعيين كلمة مرور جديدة"
+        cancelLabel="تراجع"
+        destructive={false}
+        pending={isResettingPassword}
+        onConfirm={handleResetPassword}
+      />
+
+      {/* Credentials Modal with WhatsApp Sharing */}
+      <AccountCredentialsModal
+        open={Boolean(credentialsModalData)}
+        onOpenChange={(open) => !open && setCredentialsModalData(null)}
+        credentials={credentialsModalData}
       />
     </div>
   )

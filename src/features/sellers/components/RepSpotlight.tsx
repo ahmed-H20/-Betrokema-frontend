@@ -45,11 +45,13 @@ export function RepSpotlight({
   metrics,
   onEdit,
   onDelete,
+  onResetPassword,
 }: {
   seller: Seller
   metrics: SellerPerformance['metrics']
   onEdit: () => void
   onDelete: () => void
+  onResetPassword?: () => void
 }) {
   const collectionRateDisplay =
     metrics.currentMonthSales === 0
@@ -146,14 +148,28 @@ export function RepSpotlight({
             <DropdownMenu.Portal>
               <DropdownMenu.Content
                 align="end"
-                className="z-50 min-w-[180px] rounded-lg bg-surface-container-lowest p-1 shadow-lg"
+                className="z-50 min-w-[190px] rounded-lg bg-surface-container-lowest p-1 shadow-lg border border-outline-variant/30"
                 sideOffset={4}
               >
+                {onResetPassword && (
+                  <DropdownMenu.Item
+                    className="font-label-md flex items-center gap-2 cursor-pointer rounded-md px-3 py-2 text-label-md text-amber-800 outline-none hover:bg-amber-50 data-[highlighted]:bg-amber-50"
+                    onSelect={onResetPassword}
+                  >
+                    <span className="material-symbols-outlined text-[18px] text-amber-600">
+                      lock_reset
+                    </span>
+                    <span>إعادة تعيين كلمة المرور</span>
+                  </DropdownMenu.Item>
+                )}
                 <DropdownMenu.Item
-                  className="font-label-md cursor-pointer rounded-md px-3 py-2 text-label-md text-error outline-none data-[highlighted]:bg-error-container"
+                  className="font-label-md flex items-center gap-2 cursor-pointer rounded-md px-3 py-2 text-label-md text-error outline-none data-[highlighted]:bg-error-container"
                   onSelect={onDelete}
                 >
-                  {DELETE_SELLER_BUTTON}
+                  <span className="material-symbols-outlined text-[18px]">
+                    delete
+                  </span>
+                  <span>{DELETE_SELLER_BUTTON}</span>
                 </DropdownMenu.Item>
               </DropdownMenu.Content>
             </DropdownMenu.Portal>

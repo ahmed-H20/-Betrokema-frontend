@@ -1,5 +1,5 @@
 import { createColumnHelper, FlexRender, tableFeatures, useTable } from '@tanstack/react-table'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import type { Client, ClientPaymentStatus } from '@/api/clients.schema'
 import { StateMessage } from '@/components/ui/StateMessage'
 import { StatusPill, type StatusPillTone } from '@/components/ui/StatusPill'
@@ -22,6 +22,13 @@ import { formatNumber } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { useClientsForSeller } from '@/features/sellers/hooks'
 import { AddClientModal } from '@/features/sellers/components/AddClientModal'
+import { resetClientPassword } from '@/api/clients'
+import {
+  AccountCredentialsModal,
+  type AccountCredentials,
+} from '@/components/ui/AccountCredentialsModal'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { toast } from 'sonner'
 
 const CLIENT_STATUS_TONE: Record<ClientPaymentStatus, StatusPillTone> = {
   regular: 'success',
@@ -45,7 +52,13 @@ function effectiveStatus(client: Client): ClientPaymentStatus | 'unknown' {
 // contact row, 2-col financial grid) — its own "quick order"/"client
 // history" action buttons aren't included since neither feature exists in
 // this app yet (see context/ui-tokens.md).
-function ClientCard({ client }: { client: Client }) {
+function ClientCard({
+  client,
+  onResetPassword,
+}: {
+  client: Client
+  onResetPassword?: (client: Client) => void
+}) {
   const status = effectiveStatus(client)
   const label = status === 'unknown' ? CLIENT_STATUS_UNKNOWN : CLIENT_STATUS_LABELS[status]
   const tone = status === 'unknown' ? 'neutral' : CLIENT_STATUS_TONE[status]
@@ -103,6 +116,20 @@ function ClientCard({ client }: { client: Client }) {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
+          {onResetPassword && (
+            <button
+              aria-label="إعادة تعيين كلمة المرور"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-50 text-amber-700 shadow-xs transition-colors hover:bg-amber-100 active:scale-95 border border-amber-200"
+              onClick={(e) => {
+                e.stopPropagation()
+                onResetPassword(client)
+              }}
+              title="إعادة تعيين كلمة المرور للعميل"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[18px]">lock_reset</span>
+            </button>
+          )}
           <a
             aria-label="مراسلة واتساب"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-container-lowest text-[#15803d] shadow-xs transition-colors hover:bg-surface-container active:scale-95"
@@ -169,74 +196,6 @@ function ClientCard({ client }: { client: Client }) {
 const features = tableFeatures({})
 const columnHelper = createColumnHelper<typeof features, Client>()
 
-const columns = columnHelper.columns([
-  columnHelper.accessor('organizeName', {
-    header: CLIENTS_COL_NAME,
-    cell: (info) => (
-      <div className="flex flex-col">
-        <span className="font-label-md text-label-md font-bold text-on-surface">
-          {info.getValue()}
-        </span>
-        <span className="font-label-sm text-label-sm text-on-surface-variant">
-          {[info.row.original.address, info.row.original.city]
-            .filter(Boolean)
-            .join(' · ')}
-        </span>
-      </div>
-    ),
-  }),
-  columnHelper.display({
-    id: 'contact',
-    header: CLIENTS_COL_CONTACT,
-    cell: (info) => {
-      const client = info.row.original
-      return (
-        <div className="flex flex-col">
-          <span className="text-on-surface">{client.contactPerson || client.name}</span>
-          <span className="mt-0.5 flex items-center gap-1 font-mono text-on-surface-variant" dir="ltr">
-            <span className="material-symbols-outlined text-[14px] text-secondary">chat</span>
-            <span className="font-label-sm text-label-sm">{client.phone}</span>
-          </span>
-        </div>
-      )
-    },
-  }),
-  columnHelper.accessor('creditLimit', {
-    header: CLIENTS_COL_CREDIT,
-    cell: (info) => (
-      <span className="font-mono text-on-surface">
-        <bdi className="whitespace-nowrap" dir="ltr">
-          {formatNumber(info.getValue())} ج.م
-        </bdi>
-      </span>
-    ),
-  }),
-  columnHelper.accessor('currentDebt', {
-    header: CLIENTS_COL_DEBT,
-    cell: (info) => {
-      const client = info.row.original
-      const overCredit = client.currentDebt > client.creditLimit
-      return (
-        <span className={cn('font-mono font-semibold', overCredit ? 'text-error' : 'text-on-surface')}>
-          <bdi className="whitespace-nowrap" dir="ltr">
-            {formatNumber(info.getValue())} ج.م
-          </bdi>
-        </span>
-      )
-    },
-  }),
-  columnHelper.display({
-    id: 'paymentStatus',
-    header: CLIENTS_COL_STATUS,
-    cell: (info) => {
-      const status = effectiveStatus(info.row.original)
-      const label = status === 'unknown' ? CLIENT_STATUS_UNKNOWN : CLIENT_STATUS_LABELS[status]
-      const tone = status === 'unknown' ? 'neutral' : CLIENT_STATUS_TONE[status]
-      return <StatusPill label={label} tone={tone} />
-    },
-  }),
-])
-
 export function ClientsTab({
   sellerId,
   sellerName,
@@ -247,6 +206,122 @@ export function ClientsTab({
   const [addOpen, setAddOpen] = useState(false)
   const [clientSearch, setClientSearch] = useState('')
   const [filterMode, setFilterMode] = useState<'all' | 'regular' | 'over_credit'>('all')
+
+  const [clientToReset, setClientToReset] = useState<Client | null>(null)
+  const [isResetting, setIsResetting] = useState(false)
+  const [credentialsModalData, setCredentialsModalData] =
+    useState<AccountCredentials | null>(null)
+
+  const handleResetClientPassword = async () => {
+    if (!clientToReset) return
+    try {
+      setIsResetting(true)
+      const res = await resetClientPassword(clientToReset._id)
+      const target = clientToReset
+      setClientToReset(null)
+      setCredentialsModalData({
+        name: res.credentials.name || target.name,
+        code: res.credentials.code,
+        password: res.credentials.password,
+        roleTitle: 'عميل معتمد / معرض طلاء',
+        roleBadge: 'عميل',
+        phone: res.credentials.phone || target.phone,
+      })
+      toast.success('تمت إعادة تعيين كلمة المرور للعميل بنجاح!')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'تعذر إعادة تعيين كلمة المرور'
+      toast.error(msg)
+    } finally {
+      setIsResetting(false)
+    }
+  }
+
+  const columns = useMemo(
+    () =>
+      columnHelper.columns([
+        columnHelper.accessor('organizeName', {
+          header: CLIENTS_COL_NAME,
+          cell: (info) => (
+            <div className="flex flex-col">
+              <span className="font-label-md text-label-md font-bold text-on-surface">
+                {info.getValue()}
+              </span>
+              <span className="font-label-sm text-label-sm text-on-surface-variant">
+                {[info.row.original.address, info.row.original.city]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </span>
+            </div>
+          ),
+        }),
+        columnHelper.display({
+          id: 'contact',
+          header: CLIENTS_COL_CONTACT,
+          cell: (info) => {
+            const client = info.row.original
+            return (
+              <div className="flex flex-col">
+                <span className="text-on-surface">{client.contactPerson || client.name}</span>
+                <span className="mt-0.5 flex items-center gap-1 font-mono text-on-surface-variant" dir="ltr">
+                  <span className="material-symbols-outlined text-[14px] text-secondary">chat</span>
+                  <span className="font-label-sm text-label-sm">{client.phone}</span>
+                </span>
+              </div>
+            )
+          },
+        }),
+        columnHelper.accessor('creditLimit', {
+          header: CLIENTS_COL_CREDIT,
+          cell: (info) => (
+            <span className="font-mono text-on-surface">
+              <bdi className="whitespace-nowrap" dir="ltr">
+                {formatNumber(info.getValue())} ج.م
+              </bdi>
+            </span>
+          ),
+        }),
+        columnHelper.accessor('currentDebt', {
+          header: CLIENTS_COL_DEBT,
+          cell: (info) => {
+            const client = info.row.original
+            const overCredit = client.currentDebt > client.creditLimit
+            return (
+              <span className={cn('font-mono font-semibold', overCredit ? 'text-error' : 'text-on-surface')}>
+                <bdi className="whitespace-nowrap" dir="ltr">
+                  {formatNumber(info.getValue())} ج.م
+                </bdi>
+              </span>
+            )
+          },
+        }),
+        columnHelper.display({
+          id: 'paymentStatus',
+          header: CLIENTS_COL_STATUS,
+          cell: (info) => {
+            const status = effectiveStatus(info.row.original)
+            const label = status === 'unknown' ? CLIENT_STATUS_UNKNOWN : CLIENT_STATUS_LABELS[status]
+            const tone = status === 'unknown' ? 'neutral' : CLIENT_STATUS_TONE[status]
+            return <StatusPill label={label} tone={tone} />
+          },
+        }),
+        columnHelper.display({
+          id: 'actions',
+          header: 'إجراءات',
+          cell: (info) => (
+            <button
+              type="button"
+              onClick={() => setClientToReset(info.row.original)}
+              className="flex items-center gap-1 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-lg border border-amber-200 transition-colors shadow-xs active:scale-95"
+              title="إعادة تعيين كلمة المرور للعميل"
+            >
+              <span className="material-symbols-outlined text-[15px] text-amber-600">lock_reset</span>
+              <span>تعيين كلمة المرور</span>
+            </button>
+          ),
+        }),
+      ]),
+    [],
+  )
 
   const clientsQuery = useClientsForSeller(sellerId)
   const data = clientsQuery.data?.data ?? []
@@ -385,7 +460,11 @@ export function ClientsTab({
         <>
           <div className="flex flex-col gap-space-sm md:hidden">
             {filteredData.map((client) => (
-              <ClientCard client={client} key={client._id} />
+              <ClientCard
+                client={client}
+                key={client._id}
+                onResetPassword={setClientToReset}
+              />
             ))}
           </div>
           <div className="hidden overflow-x-auto rounded-lg md:block">
@@ -435,6 +514,26 @@ export function ClientsTab({
         open={addOpen}
         sellerId={sellerId}
         sellerName={sellerName}
+      />
+
+      {/* Reset Password Confirmation Dialog */}
+      <ConfirmDialog
+        open={Boolean(clientToReset)}
+        onOpenChange={(open) => !open && setClientToReset(null)}
+        title="إعادة تعيين كلمة المرور للعميل"
+        description={`هل أنت متأكد من رغبتك في إعادة تعيين كلمة المرور لحساب العميل (${clientToReset?.name || clientToReset?.organizeName || ''})؟ سيتم توليد رمز PIN جديد مكون من 6 أرقام لتزويده به فوراً عبر الواتساب.`}
+        confirmLabel="نعم، تعيين كلمة مرور جديدة"
+        cancelLabel="تراجع"
+        destructive={false}
+        pending={isResetting}
+        onConfirm={handleResetClientPassword}
+      />
+
+      {/* Credentials Modal with WhatsApp Sharing */}
+      <AccountCredentialsModal
+        open={Boolean(credentialsModalData)}
+        onOpenChange={(open) => !open && setCredentialsModalData(null)}
+        credentials={credentialsModalData}
       />
     </div>
   )
