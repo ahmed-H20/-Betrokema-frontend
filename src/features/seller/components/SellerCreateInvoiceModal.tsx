@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { toast } from 'sonner'
-import html2canvas from 'html2canvas'
+import { captureInvoicePaperToBlob } from '@/lib/invoiceCapture'
 import { useSellerContext } from '../SellerContext'
 import { useCreateInvoice } from '@/features/invoices/hooks'
 import { useProducts } from '@/features/products/hooks'
@@ -70,6 +70,34 @@ export function SellerCreateInvoiceModal({
 
   // Ref to the live paper sheet for capturing high-res snapshot
   const paperRef = useRef<HTMLDivElement>(null)
+  const hiddenCaptureRef = useRef<HTMLDivElement>(null)
+  const previewContainerRef = useRef<HTMLDivElement>(null)
+  const [paperZoomMode, setPaperZoomMode] = useState<'fit' | 'full'>('fit')
+  const [containerWidth, setContainerWidth] = useState<number>(0)
+  const [paperHeight, setPaperHeight] = useState<number>(1123)
+
+  useEffect(() => {
+    const el = previewContainerRef.current
+    if (!el) return
+    const update = () => {
+      if (el) setContainerWidth(el.clientWidth)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    window.addEventListener('resize', update)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', update)
+    }
+  }, [mobileView, open])
+
+  useEffect(() => {
+    if (paperRef.current) {
+      const h = paperRef.current.offsetHeight
+      if (h > 0) setPaperHeight(h)
+    }
+  })
 
   // Temporary Draft Code for the live preview
   const draftInvoiceCode = useMemo(() => {
@@ -206,21 +234,12 @@ export function SellerCreateInvoiceModal({
       }))
   }, [lineItems])
 
-  // Capture image helper using html2canvas
+  // Capture image helper using high-res deterministic capture
   const capturePaperAsBlob = async (): Promise<Blob | null> => {
-    const element = paperRef.current
+    const element = hiddenCaptureRef.current || paperRef.current
     if (!element) return null
     try {
-      const canvas = await html2canvas(element, {
-        scale: 2, // 2x resolution for razor-sharp text
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      })
-      return new Promise<Blob | null>((resolve) => {
-        canvas.toBlob((b) => resolve(b), 'image/png', 0.95)
-      })
+      return await captureInvoicePaperToBlob(element)
     } catch (err) {
       console.warn('Invoice image capture warning:', err)
       return null
@@ -300,56 +319,66 @@ export function SellerCreateInvoiceModal({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed inset-x-0 bottom-0 z-50 flex flex-col h-[94dvh] max-h-[94dvh] sm:h-[92vh] sm:max-h-[92vh] rounded-t-3xl bg-[#f8fafc] shadow-2xl transition-all sm:inset-auto sm:left-1/2 sm:top-1/2 sm:w-[96vw] sm:max-w-7xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl overflow-hidden">
+        <Dialog.Content className="fixed inset-0 z-50 flex flex-col h-[100dvh] max-h-[100dvh] w-full rounded-none bg-[#f8fafc] shadow-2xl transition-all sm:inset-auto sm:left-1/2 sm:top-1/2 sm:w-[96vw] sm:max-w-7xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:h-[92vh] sm:max-h-[92vh] sm:rounded-2xl overflow-hidden">
+          {/* Offscreen dedicated container for 100% pristine, deterministic 794px A4 capture on phone & desktop */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none fixed"
+            style={{
+              top: 0,
+              left: '-9999px',
+              width: '794px',
+              minWidth: '794px',
+              maxWidth: '794px',
+              zIndex: -9999,
+              visibility: 'visible',
+              opacity: 1,
+            }}
+          >
+            <div ref={hiddenCaptureRef} style={{ width: '794px', minWidth: '794px', maxWidth: '794px', background: '#ffffff' }}>
+              <PrintableInvoicePaper
+                invoiceCode={draftInvoiceCode}
+                createdAt={new Date()}
+                clientName={selectedClient?.name || 'عميل نقدي'}
+                clientOrganization={selectedClient?.organizeName || ''}
+                clientPhone={selectedClient?.phone || ''}
+                clientAddress={selectedClient?.address || selectedClient?.city || ''}
+                warehouseName={warehouse}
+                sellerName={currentSeller?.name || 'مندوب المبيعات الميداني'}
+                items={paperItems}
+                includeVat={includeVat}
+                vatRate={14}
+                notes={notes}
+              />
+            </div>
+          </div>
+
           {/* 1. Modal Top Bar */}
-          <div className="flex items-center justify-between p-3.5 sm:px-6 sm:py-4 border-b border-slate-200 bg-white shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-[#002855]/10 text-[#002855] border border-[#002855]/20 flex items-center justify-center font-bold">
-                <span className="material-symbols-outlined text-[22px]">post_add</span>
+          <div className="flex items-center justify-between p-3 sm:px-6 sm:py-3.5 border-b border-slate-200 bg-white shrink-0">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#002855]/10 text-[#002855] border border-[#002855]/20 flex items-center justify-center font-bold shrink-0">
+                <span className="material-symbols-outlined text-[20px] sm:text-[22px]">post_add</span>
               </div>
-              <div>
-                <Dialog.Title className="text-base font-bold text-slate-900 leading-tight flex items-center gap-2">
-                  <span>إصدار فاتورة مبيعات ميدانية</span>
+              <div className="min-w-0">
+                <Dialog.Title className="text-sm sm:text-base font-bold text-slate-900 leading-tight flex items-center gap-2">
+                  <span className="truncate">إصدار فاتورة مبيعات ميدانية</span>
                   <span className="hidden sm:inline-flex rounded-full bg-[#002855]/10 px-2 py-0.5 text-[11px] font-bold text-[#002855]">
                     {draftInvoiceCode}
                   </span>
                 </Dialog.Title>
-                <span className="text-[11px] text-slate-500 font-medium">
-                  معاينة حية ومباشرة لشكل الورقة المطبوعة (A4 WYSIWYG)
-                </span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="sm:hidden text-[10px] font-mono font-bold text-[#002855] bg-[#002855]/10 px-1.5 py-0.2 rounded">
+                    {draftInvoiceCode}
+                  </span>
+                  <span className="hidden sm:inline text-[11px] text-slate-500 font-medium">
+                    معاينة حية ومباشرة لشكل الورقة المطبوعة (A4 WYSIWYG)
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Top Action Buttons (Mobile View Toggle & Print & Close) */}
-            <div className="flex items-center gap-2">
-              {/* Mobile View Toggle */}
-              <div className="flex lg:hidden rounded-lg bg-slate-100 p-0.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setMobileView('form')}
-                  className={cn(
-                    'px-2.5 py-1 rounded-md font-semibold transition-all',
-                    mobileView === 'form'
-                      ? 'bg-white text-[#002855] shadow-xs'
-                      : 'text-slate-600',
-                  )}
-                >
-                  النموذج ✍️
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMobileView('preview')}
-                  className={cn(
-                    'px-2.5 py-1 rounded-md font-semibold transition-all',
-                    mobileView === 'preview'
-                      ? 'bg-white text-[#002855] shadow-xs'
-                      : 'text-slate-600',
-                  )}
-                >
-                  المعاينة 📄
-                </button>
-              </div>
-
+            {/* Top Action Buttons (Print & Close) */}
+            <div className="flex items-center gap-2 shrink-0">
               {/* Direct Print Button */}
               <button
                 type="button"
@@ -372,6 +401,38 @@ export function SellerCreateInvoiceModal({
                   <span className="material-symbols-outlined text-[20px]">close</span>
                 </button>
               </Dialog.Close>
+            </div>
+          </div>
+
+          {/* Dedicated Full-Width Segmented Mobile Tab Switcher */}
+          <div className="lg:hidden px-3 py-2 bg-slate-100/90 border-b border-slate-200 shrink-0">
+            <div className="grid grid-cols-2 p-1 bg-slate-200/80 rounded-xl text-xs font-bold text-center gap-1">
+              <button
+                type="button"
+                onClick={() => setMobileView('form')}
+                className={cn(
+                  'py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 text-xs font-bold',
+                  mobileView === 'form'
+                    ? 'bg-white text-[#002855] shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900',
+                )}
+              >
+                <span className="material-symbols-outlined text-[17px]">edit_note</span>
+                <span>بيانات الفاتورة ✍️</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileView('preview')}
+                className={cn(
+                  'py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 text-xs font-bold',
+                  mobileView === 'preview'
+                    ? 'bg-white text-[#002855] shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900',
+                )}
+              >
+                <span className="material-symbols-outlined text-[17px]">description</span>
+                <span>معاينة ورقة A4 📄</span>
+              </button>
             </div>
           </div>
 
@@ -557,7 +618,7 @@ export function SellerCreateInvoiceModal({
                                   <span>{formatNumber(item.price)} ج.م</span>
                                   {Boolean(item.oldPrice && item.oldPrice > item.price) && (
                                     <span className="line-through text-slate-400 text-[10px] font-normal">
-                                      {formatNumber(item.oldPrice)}
+                                      {formatNumber(item.oldPrice || 0)}
                                     </span>
                                   )}
                                 </div>
@@ -653,56 +714,130 @@ export function SellerCreateInvoiceModal({
             {/* LEFT COLUMN (Live Printable A4 Sheet - 58% on Desktop) */}
             <div
               className={cn(
-                'lg:col-span-7 flex-col h-full overflow-y-auto overscroll-contain bg-slate-200/60 p-3 sm:p-6',
+                'lg:col-span-7 flex-col h-full overflow-y-auto overscroll-contain bg-slate-200/60 p-2 sm:p-6',
                 mobileView === 'preview' ? 'flex' : 'hidden lg:flex',
               )}
             >
               {/* Toolbar Above Paper Sheet */}
-              <div className="flex items-center justify-between mb-3 px-1 text-xs text-slate-600">
+              <div className="flex items-center justify-between mb-3 px-1 text-xs text-slate-600 gap-2 flex-wrap">
                 <div className="flex items-center gap-1.5 font-bold text-[#002855]">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>معاينة ورقة الفاتورة الرسمية (تتحدث حياً مع التعديلات)</span>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span className="truncate">معاينة ورقة الفاتورة الرسمية (A4)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-500">
+                  {/* Mobile Zoom Mode Toggle */}
+                  <div className="flex lg:hidden items-center bg-white border border-slate-200 p-0.5 rounded-lg text-[11px] font-bold shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => setPaperZoomMode('fit')}
+                      className={cn(
+                        'px-2 py-1 rounded-md transition-all flex items-center gap-1',
+                        paperZoomMode === 'fit'
+                          ? 'bg-[#002855] text-white shadow-xs'
+                          : 'text-slate-600',
+                      )}
+                    >
+                      <span>ملاءمة</span>
+                      <span>📱</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaperZoomMode('full')}
+                      className={cn(
+                        'px-2 py-1 rounded-md transition-all flex items-center gap-1',
+                        paperZoomMode === 'full'
+                          ? 'bg-[#002855] text-white shadow-xs'
+                          : 'text-slate-600',
+                      )}
+                    >
+                      <span>100%</span>
+                      <span>🔍</span>
+                    </button>
+                  </div>
+                  <span className="hidden sm:inline text-[11px] text-slate-500">
                     A4 Standard Sheet (210 × 297 mm)
                   </span>
                 </div>
               </div>
 
-              {/* The Real Printable Paper Component Attached with paperRef */}
-              <div className="flex justify-center pb-6">
-                <div ref={paperRef} className="w-full">
-                  <PrintableInvoicePaper
-                    invoiceCode={draftInvoiceCode}
-                    createdAt={new Date()}
-                    clientName={selectedClient?.name || 'عميل نقدي'}
-                    clientOrganization={selectedClient?.organizeName || ''}
-                    clientPhone={selectedClient?.phone || ''}
-                    clientAddress={selectedClient?.address || selectedClient?.city || ''}
-                    warehouseName={warehouse}
-                    sellerName={currentSeller?.name || 'مندوب المبيعات الميداني'}
-                    items={paperItems}
-                    includeVat={includeVat}
-                    vatRate={14}
-                    notes={notes}
-                  />
-                </div>
+              {/* The Real Printable Paper Component with Mathematical Scale Centering */}
+              <div
+                ref={previewContainerRef}
+                className="w-full flex justify-center pb-8 overflow-x-auto"
+              >
+                {(() => {
+                  const scale =
+                    paperZoomMode === 'fit' && containerWidth > 0 && containerWidth < 810
+                      ? Math.min(1, Math.max(0.32, (containerWidth - 24) / 794))
+                      : 1
+
+                  return (
+                    <div
+                      style={
+                        scale < 1
+                          ? {
+                              width: `${Math.round(794 * scale)}px`,
+                              height: `${Math.round(paperHeight * scale)}px`,
+                              position: 'relative',
+                              overflow: 'hidden',
+                              flexShrink: 0,
+                            }
+                          : {
+                              width: '794px',
+                              minWidth: '794px',
+                            }
+                      }
+                    >
+                      <div
+                        ref={paperRef}
+                        className="w-[794px] min-w-[794px] max-w-[794px] bg-white shadow-xl rounded-lg overflow-hidden"
+                        style={
+                          scale < 1
+                            ? {
+                                position: 'absolute',
+                                left: '50%',
+                                top: 0,
+                                transform: `translateX(-50%) scale(${scale})`,
+                                transformOrigin: 'top center',
+                              }
+                            : undefined
+                        }
+                      >
+                        <PrintableInvoicePaper
+                          invoiceCode={draftInvoiceCode}
+                          createdAt={new Date()}
+                          clientName={selectedClient?.name || 'عميل نقدي'}
+                          clientOrganization={selectedClient?.organizeName || ''}
+                          clientPhone={selectedClient?.phone || ''}
+                          clientAddress={selectedClient?.address || selectedClient?.city || ''}
+                          warehouseName={warehouse}
+                          sellerName={currentSeller?.name || 'مندوب المبيعات الميداني'}
+                          items={paperItems}
+                          includeVat={includeVat}
+                          vatRate={14}
+                          notes={notes}
+                        />
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           </div>
 
           {/* 3. Sticky Bottom Action Bar */}
-          <div className="p-3 sm:px-6 sm:py-3.5 border-t border-slate-200 bg-white shrink-0 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="p-3 sm:px-6 sm:py-3.5 border-t border-slate-200 bg-white shrink-0 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row items-center justify-between gap-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             {/* Grand Total Indicator */}
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-slate-500 font-semibold">إجمالي الفاتورة الصافي:</span>
-              <span className="text-lg font-black font-mono text-[#E85D04]">
-                {formatCurrency(grandTotal)}
-              </span>
+            <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 font-semibold">إجمالي الفاتورة:</span>
+                <span className="text-base sm:text-lg font-black font-mono text-[#E85D04]">
+                  {formatCurrency(grandTotal)}
+                </span>
+              </div>
               {includeVat && (
                 <span className="text-[10px] text-slate-400">
-                  (شامل 14% ضريبة: {formatCurrency(vatAmount)})
+                  (ضريبة: {formatCurrency(vatAmount)})
                 </span>
               )}
             </div>
@@ -712,7 +847,7 @@ export function SellerCreateInvoiceModal({
               <Dialog.Close asChild>
                 <button
                   type="button"
-                  className="flex-1 sm:flex-none h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center transition-all"
+                  className="flex-1 sm:flex-none h-10 sm:h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center transition-all"
                 >
                   إلغاء والعودة
                 </button>
@@ -722,17 +857,17 @@ export function SellerCreateInvoiceModal({
                 type="button"
                 onClick={handleSubmit}
                 disabled={createInvoiceMutation.isPending || isCapturing || subtotal <= 0}
-                className="flex-1 sm:flex-none h-11 px-6 rounded-xl bg-gradient-to-r from-[#002855] via-[#003B7B] to-[#002855] hover:opacity-95 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-[#002855]/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                className="flex-[2] sm:flex-none h-10 sm:h-11 px-4 sm:px-6 rounded-xl bg-gradient-to-r from-[#002855] via-[#003B7B] to-[#002855] hover:opacity-95 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-[#002855]/20 transition-all active:scale-[0.98] disabled:opacity-50"
               >
-                <span className="material-symbols-outlined text-[19px]">
+                <span className="material-symbols-outlined text-[18px]">
                   {isCapturing ? 'photo_camera' : 'check_circle'}
                 </span>
                 <span>
                   {isCapturing
-                    ? 'جارِ التقاط وحفظ صورة الفاتورة...'
+                    ? 'جارِ الحفظ...'
                     : createInvoiceMutation.isPending
-                      ? 'جارِ إصدار الفاتورة...'
-                      : 'إصدار الفاتورة وحفظ الصورة والباركود'}
+                      ? 'جارِ الإصدار...'
+                      : 'إصدار الفاتورة وحفظ الصورة'}
                 </span>
               </button>
             </div>

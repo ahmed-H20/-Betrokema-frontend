@@ -101,10 +101,12 @@ export interface CreateInvoicePayload {
 }
 
 export async function uploadInvoiceImage(file: Blob | File): Promise<string> {
+  const mime = file.type || 'image/webp'
+  const ext = mime.includes('webp') ? 'webp' : mime.includes('jpeg') ? 'jpg' : 'png'
   const actualFile =
     file instanceof File
       ? file
-      : new File([file], `invoice-${Date.now()}.png`, { type: 'image/png' })
+      : new File([file], `invoice-${Date.now()}.${ext}`, { type: mime })
   const res = await uploadSingleImage(actualFile, 'invoices')
   return res.url || res.path
 }

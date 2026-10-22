@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { formatNumber } from '@/lib/format'
+import { captureAndDownloadInvoicePaper } from '@/lib/invoiceCapture'
 import { PrintableInvoicePaper, type PrintableInvoicePaperItem } from '@/features/invoices/components/PrintableInvoicePaper'
 import type { Invoice } from '@/api/invoices.schema'
 
@@ -18,6 +19,10 @@ export function ClientInvoiceDetailsModal({
   initialTab = 'items',
 }: ClientInvoiceDetailsModalProps) {
   const [activeTab, setActiveTab] = useState<'items' | 'payments' | 'paper'>(initialTab)
+  const [paperZoomMode, setPaperZoomMode] = useState<'fit' | 'full'>('fit')
+  const [isCapturing, setIsCapturing] = useState(false)
+  const paperRef = useRef<HTMLDivElement>(null)
+  const hiddenCaptureRef = useRef<HTMLDivElement>(null)
 
   if (!invoice) return null
 
@@ -95,11 +100,59 @@ export function ClientInvoiceDetailsModal({
     }
   }
 
+  const handleDownloadImage = async () => {
+    const el = hiddenCaptureRef.current || paperRef.current
+    if (!el) return
+    setIsCapturing(true)
+    try {
+      await captureAndDownloadInvoicePaper(el, `فاتورة-${invoice.invoiceCode}.png`)
+    } catch (err) {
+      console.error('Invoice download warning:', err)
+    } finally {
+      setIsCapturing(false)
+    }
+  }
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content className={`fixed inset-x-0 bottom-0 z-50 flex flex-col h-[90dvh] max-h-[90dvh] sm:h-auto sm:max-h-[92vh] rounded-t-3xl bg-[#f8fafc] shadow-2xl transition-all sm:inset-auto sm:left-1/2 sm:top-1/2 sm:w-full ${activeTab === 'paper' ? 'sm:max-w-4xl' : 'sm:max-w-xl'} sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl overflow-hidden`}>
+          {/* Hidden offscreen container for high-res deterministic capture at exactly 794px */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'fixed',
+              left: '-9999px',
+              top: 0,
+              width: '794px',
+              minWidth: '794px',
+              maxWidth: '794px',
+              zIndex: -9999,
+              visibility: 'visible',
+              opacity: 1,
+            }}
+          >
+            <div ref={hiddenCaptureRef} style={{ width: '794px', minWidth: '794px', maxWidth: '794px', background: '#ffffff' }}>
+              <PrintableInvoicePaper
+                invoiceCode={invoice.invoiceCode}
+                createdAt={invoice.createdAt}
+                clientName={clientName}
+                clientOrganization={clientOrg}
+                clientPhone={clientPhone}
+                clientAddress={clientAddress}
+                warehouseName={invoice.warehouse || 'المستودع الرئيسي'}
+                sellerName={sellerName}
+                items={paperItems}
+                includeVat={(invoice.taxAmount || 0) > 0}
+                vatRate={14}
+                discountAmount={0}
+                notes={invoice.notes || ''}
+                invoiceImageUrl={invoice.invoiceImageUrl || ''}
+              />
+            </div>
+          </div>
+
           {/* 1. Header */}
           <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 bg-white shrink-0">
             <div className="flex items-center gap-2.5">
@@ -477,6 +530,41 @@ export function ClientInvoiceDetailsModal({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
+                    {/* Mobile Zoom Toggle */}
+                    <div className="flex sm:hidden items-center bg-slate-100 p-0.5 rounded-lg text-[11px] font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setPaperZoomMode('fit')}
+                        className={`px-2 py-1 rounded-md transition-all ${
+                          paperZoomMode === 'fit' ? 'bg-white text-[#002855] shadow-xs' : 'text-slate-500'
+                        }`}
+                      >
+                        ملاءمة 📱
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaperZoomMode('full')}
+                        className={`px-2 py-1 rounded-md transition-all ${
+                          paperZoomMode === 'full' ? 'bg-white text-[#002855] shadow-xs' : 'text-slate-500'
+                        }`}
+                      >
+                        100% 🔍
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isCapturing}
+                      onClick={handleDownloadImage}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#002855] hover:bg-[#001f42] text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50"
+                      title="تنزيل صورة الفاتورة الأصلية بنفس الأبعاد والبيانات على الهاتف أو الكمبيوتر"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        {isCapturing ? 'progress_activity' : 'download'}
+                      </span>
+                      <span>{isCapturing ? 'جارِ التحميل...' : 'تنزيل صورة الفاتورة'}</span>
+                    </button>
+
                     {invoice.invoiceImageUrl && (
                       <a
                         href={invoice.invoiceImageUrl}
@@ -485,13 +573,13 @@ export function ClientInvoiceDetailsModal({
                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-all shadow-xs"
                       >
                         <span className="material-symbols-outlined text-[18px]">open_in_new</span>
-                        <span>فتح الصورة الأصلية</span>
+                        <span className="hidden sm:inline">فتح الأصلية</span>
                       </a>
                     )}
                     <button
                       type="button"
                       onClick={handlePrint}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#002855] hover:bg-[#001f42] text-white text-xs font-bold transition-all shadow-xs"
+                      className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all shadow-xs"
                     >
                       <span className="material-symbols-outlined text-[18px]">print</span>
                       <span>طباعة A4</span>
@@ -500,24 +588,43 @@ export function ClientInvoiceDetailsModal({
                 </div>
 
                 {/* Printable Paper Render Wrapper */}
-                <div className="overflow-x-auto flex justify-center p-3 sm:p-5 bg-slate-200/60 rounded-2xl border border-slate-300/80">
-                  <div className="w-[794px] min-w-[700px] bg-white shadow-xl rounded-lg overflow-hidden shrink-0">
-                    <PrintableInvoicePaper
-                      invoiceCode={invoice.invoiceCode}
-                      createdAt={invoice.createdAt}
-                      clientName={clientName}
-                      clientOrganization={clientOrg}
-                      clientPhone={clientPhone}
-                      clientAddress={clientAddress}
-                      warehouseName={invoice.warehouse || 'المستودع الرئيسي'}
-                      sellerName={sellerName}
-                      items={paperItems}
-                      includeVat={(invoice.taxAmount || 0) > 0}
-                      vatRate={14}
-                      discountAmount={0}
-                      notes={invoice.notes || ''}
-                      invoiceImageUrl={invoice.invoiceImageUrl || ''}
-                    />
+                <div className="overflow-x-auto flex justify-center p-2 sm:p-5 bg-slate-200/60 rounded-2xl border border-slate-300/80">
+                  <div
+                    className={
+                      paperZoomMode === 'fit'
+                        ? 'w-full flex justify-center overflow-hidden py-1'
+                        : 'shrink-0 overflow-x-auto'
+                    }
+                  >
+                    <div
+                      ref={paperRef}
+                      className="w-[794px] min-w-[794px] bg-white shadow-xl rounded-lg overflow-hidden origin-top transition-transform"
+                      style={
+                        paperZoomMode === 'fit' && typeof window !== 'undefined' && window.innerWidth < 820
+                          ? {
+                              transform: `scale(${Math.min(1, Math.max(0.38, (window.innerWidth - 48) / 810))})`,
+                              marginBottom: `calc((1 - ${Math.min(1, Math.max(0.38, (window.innerWidth - 48) / 810))}) * -100%)`,
+                            }
+                          : {}
+                      }
+                    >
+                      <PrintableInvoicePaper
+                        invoiceCode={invoice.invoiceCode}
+                        createdAt={invoice.createdAt}
+                        clientName={clientName}
+                        clientOrganization={clientOrg}
+                        clientPhone={clientPhone}
+                        clientAddress={clientAddress}
+                        warehouseName={invoice.warehouse || 'المستودع الرئيسي'}
+                        sellerName={sellerName}
+                        items={paperItems}
+                        includeVat={(invoice.taxAmount || 0) > 0}
+                        vatRate={14}
+                        discountAmount={0}
+                        notes={invoice.notes || ''}
+                        invoiceImageUrl={invoice.invoiceImageUrl || ''}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import html2canvas from 'html2canvas'
+import { captureInvoicePaperToBlob } from '@/lib/invoiceCapture'
 import { formatCurrency } from '@/lib/format'
 import { getAllClients } from '@/api/clients'
 import * as sellersApi from '@/api/sellers'
@@ -83,6 +83,7 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
   ])
 
   const paperRef = useRef<HTMLDivElement>(null)
+  const hiddenCaptureRef = useRef<HTMLDivElement>(null)
 
   // Draft Code
   const draftInvoiceCode = useMemo(() => {
@@ -143,6 +144,12 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
     setLineItems(newItems)
   }
 
+  const handlePriceChange = (index: number, price: number) => {
+    const newItems = [...lineItems]
+    newItems[index] = { ...newItems[index], price: Math.max(0, price) }
+    setLineItems(newItems)
+  }
+
   const handleUnitChange = (index: number, unitName: string) => {
     const item = lineItems[index]
     const prod = products.find((p) => p._id === item.productId)
@@ -200,21 +207,12 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
       totalPrice: (i.price || 0) * (i.quantity || 1),
     }))
 
-  // Capture snapshot
+  // Capture snapshot using high-res deterministic capture
   const capturePaperAsBlob = async (): Promise<Blob | null> => {
-    const element = paperRef.current
+    const element = hiddenCaptureRef.current || paperRef.current
     if (!element) return null
     try {
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-      })
-      return new Promise<Blob | null>((resolve) => {
-        canvas.toBlob((b) => resolve(b), 'image/png', 0.95)
-      })
+      return await captureInvoicePaperToBlob(element)
     } catch (err) {
       console.warn('Invoice image capture warning:', err)
       return null
@@ -285,6 +283,39 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
       <div className="relative flex flex-col w-full max-w-7xl h-[94vh] max-h-[94vh] rounded-2xl bg-[#f8fafc] shadow-2xl border border-slate-200 overflow-hidden">
+        {/* Hidden offscreen container for high-res deterministic capture at exactly 794px */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            left: '-9999px',
+            top: 0,
+            width: '794px',
+            minWidth: '794px',
+            maxWidth: '794px',
+            zIndex: -9999,
+            visibility: 'visible',
+            opacity: 1,
+          }}
+        >
+          <div ref={hiddenCaptureRef} style={{ width: '794px', minWidth: '794px', maxWidth: '794px', background: '#ffffff' }}>
+            <PrintableInvoicePaper
+              invoiceCode={draftInvoiceCode}
+              createdAt={new Date()}
+              clientName={selectedClient?.name || 'عميل نقدي'}
+              clientOrganization={selectedClient?.organizeName || ''}
+              clientPhone={selectedClient?.phone || ''}
+              clientAddress={selectedClient?.address || selectedClient?.city || ''}
+              warehouseName={warehouse}
+              sellerName={selectedSeller?.name || 'المندوب المعتمد'}
+              items={paperItems}
+              includeVat={includeVat}
+              vatRate={14}
+              notes={notes}
+            />
+          </div>
+        </div>
+
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 bg-white border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-3">
@@ -627,8 +658,19 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
               </span>
             </div>
 
-            <div className="flex justify-center pb-6">
-              <div ref={paperRef} className="w-full">
+            <div className="flex justify-center pb-6 overflow-x-auto">
+              <div
+                ref={paperRef}
+                className="w-[794px] min-w-[794px] bg-white shadow-xl rounded-lg overflow-hidden origin-top transition-transform"
+                style={
+                  typeof window !== 'undefined' && window.innerWidth < 820
+                    ? {
+                        transform: `scale(${Math.min(1, Math.max(0.38, (window.innerWidth - 48) / 810))})`,
+                        marginBottom: `calc((1 - ${Math.min(1, Math.max(0.38, (window.innerWidth - 48) / 810))}) * -100%)`,
+                      }
+                    : {}
+                }
+              >
                 <PrintableInvoicePaper
                   invoiceCode={draftInvoiceCode}
                   createdAt={new Date()}
@@ -649,7 +691,7 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
         </div>
 
         {/* Sticky Bottom Actions */}
-        <div className="p-3 sm:px-6 sm:py-3.5 border-t border-slate-200 bg-white shrink-0 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="p-3 sm:px-6 sm:py-3.5 border-t border-slate-200 bg-white shrink-0 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row items-center justify-between gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="flex items-center gap-2 text-xs">
             <span className="text-slate-500 font-semibold">إجمالي الفاتورة الصافي:</span>
             <span className="text-lg font-black font-mono text-[#E85D04]">

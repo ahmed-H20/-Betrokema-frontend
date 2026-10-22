@@ -116,43 +116,49 @@ export function PrintableInvoicePaper({
   return (
     <div
       className={cn(
-        'printable-paper-sheet mx-auto flex w-full max-w-[820px] flex-col justify-between overflow-hidden rounded-md border border-slate-200/90 bg-white p-6 sm:p-10 text-slate-900 shadow-xl transition-all print:m-0 print:w-full print:max-w-none print:border-none print:p-0 print:shadow-none',
+        'printable-paper-sheet mx-auto flex w-[794px] min-w-[794px] max-w-[794px] flex-col justify-between overflow-hidden rounded-md border border-slate-200/90 bg-white p-8 text-slate-900 shadow-xl transition-all print:m-0 print:w-full print:min-w-0 print:max-w-none print:border-none print:p-0 print:shadow-none',
         className,
       )}
+      style={{
+        fontFamily: "'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        letterSpacing: 'normal',
+        textRendering: 'geometricPrecision',
+      }}
       dir="rtl"
       id={id}
     >
       {/* 1. Header (Logo & Company Credentials) */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="flex flex-col gap-3.5">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-3">
           {/* Company details in Arabic */}
           <div className="flex flex-col text-right">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#002855]">
+            <h1 className="text-2xl font-black text-[#002855] leading-snug">
               شركة بتروكيما للصناعات والدهانات الحديثة
             </h1>
-            <span className="text-xs font-semibold text-[#00B4D8] font-sans tracking-wide">
+            <span className="text-xs font-semibold text-[#00B4D8] font-sans">
               Petrokema for Chemical Industries & Modern Paints
             </span>
-            {/* <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-slate-600">
+            <div className="mt-1 flex items-center gap-x-2 text-[10px] font-medium text-slate-500">
               <span>س.ت: 78945</span>
               <span>•</span>
               <span>ب.ض: 789-456-321</span>
               <span>•</span>
               <span>المنطقة الصناعية - السادس من أكتوبر</span>
-            </div> */}
-            {/* <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+            </div>
+            <div className="flex items-center gap-x-2 text-[10px] text-slate-500">
               <span>هاتف: 02-38341234 / 01001234567</span>
               <span>•</span>
               <span>البريد: info@petrokema.eg</span>
-            </div> */}
+            </div>
           </div>
 
           {/* Official Company Logo */}
           <div className="flex shrink-0 flex-col items-center">
             <img
               alt="شعار شركة بتروكيما للدهانات"
-              className="h-16 w-auto object-contain sm:h-20"
+              className="h-16 w-auto object-contain"
               src="/logo.png"
+              crossOrigin="anonymous"
             />
           </div>
         </div>
@@ -161,24 +167,24 @@ export function PrintableInvoicePaper({
         <div className="h-1.5 w-full rounded-full bg-gradient-to-l from-[#002855] via-[#00B4D8] to-[#E85D04]" />
 
         {/* 2. Invoice Title Banner */}
-        <div className="flex flex-wrap items-center justify-between rounded-xl bg-[#002855] px-4 py-2.5 text-white shadow-sm">
+        <div className="flex items-center justify-between rounded-xl bg-[#002855] px-4 py-2.5 text-white shadow-sm">
           <div className="flex items-center gap-2">
-            <span className="text-sm sm:text-base font-bold">
+            <span className="text-sm font-bold">
               فاتورة مبيعات / إذن صرف وتوريد بضاعة
             </span>
           </div>
-          <div className="flex items-center gap-2 font-mono text-sm sm:text-base font-bold">
+          <div className="flex items-center gap-2 font-mono text-sm font-bold">
             <span className="text-slate-300">رقم الفاتورة:</span>
-            <span className="rounded bg-white/15 px-2.5 py-0.5 text-white tracking-wider">
+            <span className="rounded bg-white/15 px-2.5 py-0.5 text-white">
               {invoiceCode}
             </span>
           </div>
         </div>
 
         {/* 3. Invoice & Parties Metadata Box */}
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3 sm:grid-cols-2 text-xs">
+        <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 text-xs">
           {/* Client Details */}
-          <div className="flex flex-col gap-1.5 border-b border-slate-200/80 pb-2 sm:border-b-0 sm:border-l sm:border-slate-200/80 sm:pl-3">
+          <div className="flex flex-col gap-1.5 border-l border-slate-200/80 pl-3">
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-[#002855]">السيد العميل:</span>
               <span className="font-semibold text-slate-900 truncate">
@@ -200,7 +206,7 @@ export function PrintableInvoicePaper({
           </div>
 
           {/* Invoice Meta */}
-          <div className="flex flex-col gap-1.5 sm:pr-3">
+          <div className="flex flex-col gap-1.5 pr-3">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-slate-700">تاريخ الإصدار:</span>
               <span className="font-bold text-slate-900">{formattedDate}</span>
@@ -252,25 +258,25 @@ export function PrintableInvoicePaper({
                     <td className="px-2.5 py-2 text-center font-mono font-medium text-slate-500">
                       {!isEmpty ? idx + 1 : ' '}
                     </td>
-                    <td className="px-2.5 py-2 font-mono text-slate-700">
+                    <td className="px-2.5 py-2 font-mono text-slate-700 whitespace-nowrap">
                       {!isEmpty ? item.code || '—' : ' '}
                     </td>
                     <td className="px-3 py-2 font-semibold text-slate-900">
                       {!isEmpty ? item.name : ' '}
                     </td>
-                    <td className="px-2.5 py-2 text-center text-slate-700">
+                    <td className="px-2.5 py-2 text-center text-slate-700 whitespace-nowrap">
                       {!isEmpty ? item.unit || '—' : ' '}
                     </td>
-                    <td className="px-2.5 py-2 text-center font-mono font-bold text-slate-900">
+                    <td className="px-2.5 py-2 text-center font-mono font-bold text-slate-900 whitespace-nowrap">
                       {!isEmpty ? formatNumber(item.quantity) : ' '}
                     </td>
-                    <td className="px-2.5 py-2 text-left font-mono text-slate-700">
+                    <td className="px-2.5 py-2 text-left font-mono text-slate-700 whitespace-nowrap">
                       {!isEmpty ? (
                         <div className="flex flex-col items-start leading-tight">
                           <span className="font-bold text-slate-900">{formatCurrency(item.price)}</span>
                           {Boolean(item.oldPrice && item.oldPrice > item.price) && (
                             <span className="text-[10px] text-slate-400 line-through">
-                              {formatCurrency(item.oldPrice)}
+                              {formatCurrency(item.oldPrice || 0)}
                             </span>
                           )}
                         </div>
@@ -278,7 +284,7 @@ export function PrintableInvoicePaper({
                         ' '
                       )}
                     </td>
-                    <td className="px-3 py-2 text-left font-mono font-bold text-[#002855]">
+                    <td className="px-3 py-2 text-left font-mono font-bold text-[#002855] whitespace-nowrap">
                       {!isEmpty ? formatCurrency(itemTotal) : ' '}
                     </td>
                   </tr>
@@ -290,7 +296,7 @@ export function PrintableInvoicePaper({
 
         {/* 5. Financial Summary & Arabic Tafqeet */}
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col-reverse justify-between gap-4 sm:flex-row sm:items-start">
+          <div className="flex flex-row justify-between gap-4 items-start">
             {/* Notes / Terms */}
             <div className="flex flex-1 flex-col justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-[11px] text-slate-600">
               <div>
@@ -310,7 +316,7 @@ export function PrintableInvoicePaper({
             </div>
 
             {/* Calculations Box */}
-            <div className="w-full sm:w-72 overflow-hidden rounded-xl border border-slate-300 text-xs shadow-2xs">
+            <div className="w-72 shrink-0 overflow-hidden rounded-xl border border-slate-300 text-xs shadow-2xs">
               {effectiveDiscount > 0 ? (
                 <>
                   <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-1.5">
@@ -370,7 +376,7 @@ export function PrintableInvoicePaper({
         </div>
 
         {/* 6. Signatures & Live Scannable QR Code */}
-        <div className="mt-2 grid grid-cols-1 items-center gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 sm:grid-cols-3">
+        <div className="mt-2 grid grid-cols-3 items-center gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
           {/* Customer Receipt Signature */}
           <div className="flex flex-col items-center text-center">
             <span className="text-xs font-bold text-slate-800">
@@ -379,7 +385,7 @@ export function PrintableInvoicePaper({
             <span className="mt-1 text-[10px] text-slate-500">
               (استلمت البضاعة كاملة ومطابقة بحالة جيدة)
             </span>
-            <div className="mt-8 w-44 border-b border-dashed border-slate-400" />
+            <div className="mt-8 w-36 border-b border-dashed border-slate-400" />
           </div>
 
           {/* Dynamic Scannable QR Code */}
@@ -393,7 +399,7 @@ export function PrintableInvoicePaper({
               />
             </div>
             <span className="mt-1.5 text-[10px] font-bold text-[#002855]">
-              امسح بالكاميرا لفتح الفتورة الاكترونية 📱
+              امسح بالكاميرا لفتح الصورة الأصلية 📱
             </span>
             <span className="text-[9px] text-slate-500">
               رمز تحقق وتوثيق معتمد
@@ -405,24 +411,24 @@ export function PrintableInvoicePaper({
             <span className="text-xs font-bold text-slate-800">
               توقيع واعتماد مسؤول المبيعات
             </span>
-            <span className="mt-1 text-[10px] text-[#002855] font-semibold">
+            <span className="mt-1 text-[10px] text-[#002855] font-semibold truncate max-w-[150px]">
               {sellerName}
             </span>
-            <div className="mt-8 w-44 border-b border-dashed border-slate-400" />
+            <div className="mt-8 w-36 border-b border-dashed border-slate-400" />
           </div>
         </div>
       </div>
 
       {/* 7. Bottom Brand Stripe & Footer Credentials */}
       <div className="mt-6 flex flex-col gap-2 border-t border-slate-200 pt-3 text-center text-[10px] text-slate-500 print:mt-4">
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 font-medium">
+        <div className="flex items-center justify-center gap-x-4 font-medium">
           <span>شركة بتروكيما للصناعات الكيماوية والدهانات</span>
           <span>•</span>
           <span>قطاع المبيعات والتوزيع المركزي</span>
           <span>•</span>
-          {/* <span>خدمة العملاء: 01001234567</span>
+          <span>خدمة العملاء: 01001234567</span>
           <span>•</span>
-          <span>الموقع الرسمي: www.petrokema.eg</span> */}
+          <span>الموقع الرسمي: www.petrokema.eg</span>
         </div>
         <div className="h-1 w-full rounded-full bg-gradient-to-r from-[#002855] via-[#00B4D8] to-[#E85D04]" />
       </div>
