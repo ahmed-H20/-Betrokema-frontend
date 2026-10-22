@@ -11,17 +11,16 @@ export default defineConfig({
     },
   },
   server: {
-    // Backend has no CORS middleware (see context/architecture.md). Requests to
-    // /api/* from the Vite dev server are forwarded server-side to the backend,
-    // so the browser never makes a cross-origin call in dev.
     proxy: {
       '/api': {
-        target: 'http://localhost:8400',
+        target: 'https://betrokema-backend.vercel.app',
         changeOrigin: true,
+        secure: false,
       },
       '/uploads': {
-        target: 'http://localhost:8400',
+        target: 'https://betrokema-backend.vercel.app',
         changeOrigin: true,
+        secure: false,
       },
     },
   },

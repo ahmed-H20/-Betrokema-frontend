@@ -90,6 +90,8 @@ export interface CreateInvoicePayload {
   products: {
     productId: string
     price: number
+    oldPrice?: number
+    discountPercent?: number
     quantity: number
     unit?: string
   }[]

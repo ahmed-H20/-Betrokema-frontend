@@ -67,6 +67,8 @@ export const invoiceProductItemSchema = z
       .nullable()
       .optional(),
     price: z.number().default(0),
+    oldPrice: z.number().optional().default(0),
+    discountPercent: z.number().optional().default(0),
     quantity: z.number().default(1),
     unit: z.string().optional().default('وحدة'),
     totalPrice: z.number().default(0),

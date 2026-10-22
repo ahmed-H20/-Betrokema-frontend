@@ -19,6 +19,8 @@ interface LineItem {
   name: string
   unit: string
   price: number
+  oldPrice?: number
+  discountPercent?: number
   quantity: number
 }
 
@@ -63,7 +65,7 @@ export function SellerCreateInvoiceModal({
   const [mobileView, setMobileView] = useState<'form' | 'preview'>('form')
 
   const [lineItems, setLineItems] = useState<LineItem[]>([
-    { productId: '', code: '', name: '', unit: '', price: 0, quantity: 1 },
+    { productId: '', code: '', name: '', unit: '', price: 0, oldPrice: 0, discountPercent: 0, quantity: 1 },
   ])
 
   // Ref to the live paper sheet for capturing high-res snapshot
@@ -88,7 +90,7 @@ export function SellerCreateInvoiceModal({
       }
       if (lineItems.length === 0 || !lineItems[0].productId) {
         setLineItems([
-          { productId: '', code: '', name: '', unit: '', price: 0, quantity: 1 },
+          { productId: '', code: '', name: '', unit: '', price: 0, oldPrice: 0, discountPercent: 0, quantity: 1 },
         ])
       }
     }
@@ -102,6 +104,8 @@ export function SellerCreateInvoiceModal({
       const firstPkg = prod.packages?.[0]
       const unitName = firstPkg?.unitName || 'بستلة (14 لتر)'
       const unitPrice = firstPkg?.price || 500
+      const oldPrice = firstPkg?.oldPrice || 0
+      const discountPercent = firstPkg?.discountPercent || 0
 
       newItems[index] = {
         productId: prod._id,
@@ -109,6 +113,8 @@ export function SellerCreateInvoiceModal({
         name: prod.name,
         unit: unitName,
         price: unitPrice,
+        oldPrice,
+        discountPercent,
         quantity: newItems[index].quantity || 1,
       }
     } else {
@@ -118,6 +124,8 @@ export function SellerCreateInvoiceModal({
         name: '',
         unit: '',
         price: 0,
+        oldPrice: 0,
+        discountPercent: 0,
         quantity: 1,
       }
     }
@@ -132,12 +140,16 @@ export function SellerCreateInvoiceModal({
 
     const matchedPkg = prod.packages?.find((pkg) => pkg.unitName === unitName)
     const newPrice = matchedPkg ? matchedPkg.price : item.price
+    const oldPrice = matchedPkg ? (matchedPkg.oldPrice || 0) : 0
+    const discountPercent = matchedPkg ? (matchedPkg.discountPercent || 0) : 0
 
     const newItems = [...lineItems]
     newItems[index] = {
       ...item,
       unit: unitName,
       price: newPrice,
+      oldPrice,
+      discountPercent,
     }
     setLineItems(newItems)
   }
@@ -188,6 +200,8 @@ export function SellerCreateInvoiceModal({
         unit: i.unit,
         quantity: i.quantity,
         price: i.price,
+        oldPrice: i.oldPrice,
+        discountPercent: i.discountPercent,
         totalPrice: (i.price || 0) * (i.quantity || 1),
       }))
   }, [lineItems])
@@ -257,6 +271,8 @@ export function SellerCreateInvoiceModal({
         products: validItems.map((item) => ({
           productId: item.productId,
           price: Number(item.price),
+          oldPrice: Number(item.oldPrice || 0),
+          discountPercent: Number(item.discountPercent || 0),
           quantity: Number(item.quantity),
           unit: item.unit,
         })),
@@ -483,55 +499,79 @@ export function SellerCreateInvoiceModal({
 
                         {/* Package, Quantity & Price */}
                         {item.productId && (
-                          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100">
-                            {/* Package Unit */}
-                            <div className="space-y-0.5">
-                              <label className="text-[10px] text-slate-500 font-semibold block">
-                                العبوة
-                              </label>
-                              <select
-                                value={item.unit}
-                                onChange={(e) => handleUnitChange(idx, e.target.value)}
-                                className="w-full h-8 px-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800"
-                              >
-                                {availablePackages.length > 0 ? (
-                                  availablePackages.map((pkg, pIdx) => (
-                                    <option key={pIdx} value={pkg.unitName}>
-                                      {pkg.unitName}
+                          <div className="space-y-2 pt-1 border-t border-slate-100">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                              {/* Package Unit */}
+                              <div className="space-y-0.5">
+                                <label className="text-[10px] text-slate-500 font-semibold block">
+                                  العبوة (من الـ DB)
+                                </label>
+                                <select
+                                  value={item.unit}
+                                  onChange={(e) => handleUnitChange(idx, e.target.value)}
+                                  className="w-full h-8 px-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 font-medium"
+                                >
+                                  {availablePackages.length > 0 ? (
+                                    availablePackages.map((pkg, pIdx) => (
+                                      <option key={pIdx} value={pkg.unitName}>
+                                        {pkg.unitName}
+                                      </option>
+                                    ))
+                                  ) : (
+                                    <option value={item.unit || 'بستلة'}>
+                                      {item.unit || 'بستلة'}
                                     </option>
-                                  ))
-                                ) : (
-                                  <option value={item.unit || 'بستلة'}>
-                                    {item.unit || 'بستلة'}
-                                  </option>
-                                )}
-                              </select>
-                            </div>
-
-                            {/* Quantity */}
-                            <div className="space-y-0.5">
-                              <label className="text-[10px] text-slate-500 font-semibold block">
-                                الكمية
-                              </label>
-                              <input
-                                type="number"
-                                min={1}
-                                value={item.quantity}
-                                onChange={(e) =>
-                                  handleQuantityChange(idx, parseInt(e.target.value) || 1)
-                                }
-                                className="w-full h-8 px-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-center font-bold font-mono text-slate-800"
-                              />
-                            </div>
-
-                            {/* Unit Price */}
-                            <div className="space-y-0.5">
-                              <label className="text-[10px] text-slate-500 font-semibold block">
-                                السعر
-                              </label>
-                              <div className="h-8 px-2 bg-slate-100 border border-slate-200 rounded-lg text-xs flex items-center justify-center font-mono font-bold text-slate-800">
-                                {formatNumber(item.price)}
+                                  )}
+                                </select>
                               </div>
+
+                              {/* Quantity */}
+                              <div className="space-y-0.5">
+                                <label className="text-[10px] text-slate-500 font-semibold block">
+                                  الكمية المطلوبة
+                                </label>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={item.quantity}
+                                  onChange={(e) =>
+                                    handleQuantityChange(idx, parseInt(e.target.value) || 1)
+                                  }
+                                  className="w-full h-8 px-2 bg-white border border-slate-300 rounded-lg text-xs text-center font-bold font-mono text-slate-800"
+                                />
+                              </div>
+
+                              {/* Unit Price (Locked from DB) */}
+                              <div className="space-y-0.5">
+                                <div className="flex items-center justify-between">
+                                  <label className="text-[10px] text-slate-500 font-semibold block">
+                                    السعر الثابت (DB)
+                                  </label>
+                                  {Boolean(item.discountPercent && item.discountPercent > 0) && (
+                                    <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1 rounded font-bold">
+                                      خصم {item.discountPercent}%
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="h-8 px-2 bg-slate-100 border border-slate-200 rounded-lg text-xs flex items-center justify-between font-mono font-bold text-slate-800">
+                                  <span>{formatNumber(item.price)} ج.م</span>
+                                  {Boolean(item.oldPrice && item.oldPrice > item.price) && (
+                                    <span className="line-through text-slate-400 text-[10px] font-normal">
+                                      {formatNumber(item.oldPrice)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Item Subtotal Calculation bar */}
+                            <div className="flex items-center justify-between bg-blue-50/70 border border-blue-100/70 rounded-lg px-2.5 py-1 text-[11px]">
+                              <span className="text-slate-600 font-medium">
+                                إجمالي الصنف ({item.quantity} × {formatNumber(item.price)} ج.م):
+                              </span>
+                              <span className="font-mono font-bold text-[#002855]">
+                                {formatNumber((item.price || 0) * (item.quantity || 1))} ج.م
+                              </span>
                             </div>
                           </div>
                         )}

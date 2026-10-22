@@ -1,7 +1,7 @@
 import type { AuthUser } from './auth.schema'
 
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
+const RAW_BASE: string = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
+const BASE_URL: string = RAW_BASE.replace(/\/+$/, '')
 
 export class ApiClientError extends Error {
   readonly statusCode: number
@@ -69,7 +69,8 @@ export async function request<TResponse>(
   headers.set('Content-Type', 'application/json')
   if (token) headers.set('Authorization', `Bearer ${token}`)
 
-  const response = await fetch(`${BASE_URL}${path}`, {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const response = await fetch(`${BASE_URL}${normalizedPath}`, {
     ...options,
     headers,
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,

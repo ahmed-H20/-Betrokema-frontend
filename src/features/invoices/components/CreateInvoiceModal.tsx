@@ -25,6 +25,8 @@ interface LineItem {
   name: string
   unit: string
   price: number
+  oldPrice?: number
+  discountPercent?: number
   quantity: number
 }
 
@@ -77,7 +79,7 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
   const [mobileView, setMobileView] = useState<'form' | 'preview'>('form')
 
   const [lineItems, setLineItems] = useState<LineItem[]>([
-    { productId: '', code: '', name: '', unit: UNIT_OPTIONS[0], price: 0, quantity: 1 },
+    { productId: '', code: '', name: '', unit: UNIT_OPTIONS[0], price: 0, oldPrice: 0, discountPercent: 0, quantity: 1 },
   ])
 
   const paperRef = useRef<HTMLDivElement>(null)
@@ -107,6 +109,8 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
       const firstPkg = product.packages?.[0]
       const unitName = firstPkg?.unitName || UNIT_OPTIONS[0]
       const unitPrice = firstPkg?.price || 500
+      const oldPrice = firstPkg?.oldPrice || 0
+      const discountPercent = firstPkg?.discountPercent || 0
 
       newItems[index] = {
         productId,
@@ -114,6 +118,8 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
         name: product.name,
         unit: unitName,
         price: unitPrice,
+        oldPrice,
+        discountPercent,
         quantity: newItems[index].quantity || 1,
       }
     } else {
@@ -123,15 +129,11 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
         name: '',
         unit: UNIT_OPTIONS[0],
         price: 0,
+        oldPrice: 0,
+        discountPercent: 0,
         quantity: 1,
       }
     }
-    setLineItems(newItems)
-  }
-
-  const handlePriceChange = (index: number, price: number) => {
-    const newItems = [...lineItems]
-    newItems[index] = { ...newItems[index], price: Math.max(0, price) }
     setLineItems(newItems)
   }
 
@@ -141,16 +143,31 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
     setLineItems(newItems)
   }
 
-  const handleUnitChange = (index: number, unit: string) => {
+  const handleUnitChange = (index: number, unitName: string) => {
+    const item = lineItems[index]
+    const prod = products.find((p) => p._id === item.productId)
+    if (!prod) return
+
+    const matchedPkg = prod.packages?.find((pkg) => pkg.unitName === unitName)
+    const newPrice = matchedPkg ? matchedPkg.price : item.price
+    const oldPrice = matchedPkg ? (matchedPkg.oldPrice || 0) : 0
+    const discountPercent = matchedPkg ? (matchedPkg.discountPercent || 0) : 0
+
     const newItems = [...lineItems]
-    newItems[index] = { ...newItems[index], unit }
+    newItems[index] = {
+      ...item,
+      unit: unitName,
+      price: newPrice,
+      oldPrice,
+      discountPercent,
+    }
     setLineItems(newItems)
   }
 
   const addLineItem = () => {
     setLineItems([
       ...lineItems,
-      { productId: '', code: '', name: '', unit: UNIT_OPTIONS[0], price: 0, quantity: 1 },
+      { productId: '', code: '', name: '', unit: UNIT_OPTIONS[0], price: 0, oldPrice: 0, discountPercent: 0, quantity: 1 },
     ])
   }
 

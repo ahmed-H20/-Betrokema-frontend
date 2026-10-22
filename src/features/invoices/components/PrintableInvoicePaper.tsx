@@ -9,6 +9,8 @@ export interface PrintableInvoicePaperItem {
   unit?: string
   quantity: number
   price: number
+  oldPrice?: number
+  discountPercent?: number
   totalPrice?: number
 }
 
@@ -63,7 +65,14 @@ export function PrintableInvoicePaper({
       day: 'numeric',
     }).format(new Date())
 
-  // Calculate financials
+  // Calculate financials and discounts
+  const itemsDiscountSum = items.reduce((acc, item) => {
+    if (item.oldPrice && item.oldPrice > item.price) {
+      return acc + (item.oldPrice - item.price) * (item.quantity || 1)
+    }
+    return acc
+  }, 0)
+
   const subtotal = items.reduce((acc, item) => {
     const itemTotal =
       typeof item.totalPrice === 'number' && item.totalPrice > 0
@@ -72,8 +81,12 @@ export function PrintableInvoicePaper({
     return acc + itemTotal
   }, 0)
 
-  const vatAmount = includeVat ? Math.round((subtotal * vatRate) / 100) : 0
-  const grandTotal = Math.max(0, subtotal + vatAmount - (discountAmount || 0))
+  const grossBeforeDiscount = itemsDiscountSum > 0 ? subtotal + itemsDiscountSum : subtotal
+  const effectiveDiscount = discountAmount > 0 ? discountAmount : itemsDiscountSum
+  const netSubtotal = grossBeforeDiscount - effectiveDiscount
+
+  const vatAmount = includeVat ? Math.round((netSubtotal * vatRate) / 100) : 0
+  const grandTotal = Math.max(0, netSubtotal + vatAmount)
 
   // Determine QR code target URL
   // If invoiceImageUrl is set, use it. Otherwise, point to the planned deterministic invoice image on the server.
@@ -252,7 +265,18 @@ export function PrintableInvoicePaper({
                       {!isEmpty ? formatNumber(item.quantity) : ' '}
                     </td>
                     <td className="px-2.5 py-2 text-left font-mono text-slate-700">
-                      {!isEmpty ? formatCurrency(item.price) : ' '}
+                      {!isEmpty ? (
+                        <div className="flex flex-col items-start leading-tight">
+                          <span className="font-bold text-slate-900">{formatCurrency(item.price)}</span>
+                          {Boolean(item.oldPrice && item.oldPrice > item.price) && (
+                            <span className="text-[10px] text-slate-400 line-through">
+                              {formatCurrency(item.oldPrice)}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        ' '
+                      )}
                     </td>
                     <td className="px-3 py-2 text-left font-mono font-bold text-[#002855]">
                       {!isEmpty ? formatCurrency(itemTotal) : ' '}
@@ -287,12 +311,35 @@ export function PrintableInvoicePaper({
 
             {/* Calculations Box */}
             <div className="w-full sm:w-72 overflow-hidden rounded-xl border border-slate-300 text-xs shadow-2xs">
-              <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-1.5">
-                <span className="text-slate-600">الإجمالي الفرعي:</span>
-                <span className="font-mono font-bold text-slate-900">
-                  {formatCurrency(subtotal)}
-                </span>
-              </div>
+              {effectiveDiscount > 0 ? (
+                <>
+                  <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-1.5">
+                    <span className="text-slate-600">الإجمالي قبل الخصم:</span>
+                    <span className="font-mono text-slate-700">
+                      {formatCurrency(grossBeforeDiscount)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-slate-200 bg-emerald-50/60 px-3 py-1.5 text-emerald-800">
+                    <span className="font-bold">إجمالي الخصم المعتمد:</span>
+                    <span className="font-mono font-bold">
+                      -{formatCurrency(effectiveDiscount)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-1.5">
+                    <span className="text-slate-600">الصافي بعد الخصم:</span>
+                    <span className="font-mono font-bold text-slate-900">
+                      {formatCurrency(netSubtotal)}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-1.5">
+                  <span className="text-slate-600">الإجمالي الفرعي:</span>
+                  <span className="font-mono font-bold text-slate-900">
+                    {formatCurrency(subtotal)}
+                  </span>
+                </div>
+              )}
 
               {includeVat && (
                 <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-1.5">
@@ -301,15 +348,6 @@ export function PrintableInvoicePaper({
                   </span>
                   <span className="font-mono font-bold text-slate-900">
                     {formatCurrency(vatAmount)}
-                  </span>
-                </div>
-              )}
-
-              {discountAmount > 0 && (
-                <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-1.5 text-emerald-700">
-                  <span>الخصم الممنوح:</span>
-                  <span className="font-mono font-bold">
-                    -{formatCurrency(discountAmount)}
                   </span>
                 </div>
               )}

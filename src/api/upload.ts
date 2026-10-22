@@ -1,6 +1,7 @@
 import { getAuthToken, ApiClientError } from './client'
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
+const RAW_BASE: string = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
+const BASE_URL: string = RAW_BASE.replace(/\/+$/, '')
 
 export interface UploadFileResult {
   url: string
