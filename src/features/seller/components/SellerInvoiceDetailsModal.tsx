@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
+import html2canvas from 'html2canvas'
 import { formatNumber } from '@/lib/format'
 import { toast } from 'sonner'
+import { uploadInvoiceImage, updateInvoice } from '@/api/invoices'
+import { PrintableInvoicePaper, type PrintableInvoicePaperItem } from '@/features/invoices/components/PrintableInvoicePaper'
 import type { Invoice } from '@/api/invoices.schema'
 
 interface SellerInvoiceDetailsModalProps {
@@ -9,6 +12,7 @@ interface SellerInvoiceDetailsModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onCollectPayment?: (invoice: Invoice) => void
+  initialTab?: 'items' | 'payments' | 'paper'
 }
 
 export function SellerInvoiceDetailsModal({
@@ -16,31 +20,104 @@ export function SellerInvoiceDetailsModal({
   open,
   onOpenChange,
   onCollectPayment,
+  initialTab = 'items',
 }: SellerInvoiceDetailsModalProps) {
-  const [activeTab, setActiveTab] = useState<'items' | 'payments'>('items')
+  const [activeTab, setActiveTab] = useState<'items' | 'payments' | 'paper'>(initialTab)
+  const [localInvoice, setLocalInvoice] = useState<Invoice | null>(invoice)
+  const [isCapturing, setIsCapturing] = useState(false)
+  const paperRef = useRef<HTMLDivElement>(null)
 
-  if (!invoice) return null
+  useEffect(() => {
+    setLocalInvoice(invoice)
+    if (initialTab) {
+      setActiveTab(initialTab)
+    }
+  }, [invoice, initialTab])
 
-  const isPaid = invoice.paymentStatus === 'paid'
-  const isPartial = invoice.paymentStatus === 'partially_paid' || (invoice.totalPaid > 0 && !isPaid)
-  const remaining = Math.max(0, invoice.totalPrice - invoice.totalPaid)
+  const currentInvoice = localInvoice || invoice
+  if (!currentInvoice) return null
+
+  const isPaid = currentInvoice.paymentStatus === 'paid'
+  const isPartial = currentInvoice.paymentStatus === 'partially_paid' || (currentInvoice.totalPaid > 0 && !isPaid)
+  const remaining = Math.max(0, currentInvoice.totalPrice - currentInvoice.totalPaid)
   const paidPercent =
-    invoice.totalPrice > 0
-      ? Math.min(100, Math.round((invoice.totalPaid / invoice.totalPrice) * 100))
+    currentInvoice.totalPrice > 0
+      ? Math.min(100, Math.round((currentInvoice.totalPaid / currentInvoice.totalPrice) * 100))
       : 0
 
-  const clientObj = typeof invoice.client === 'object' && invoice.client !== null ? invoice.client : null
+  const clientObj = typeof currentInvoice.client === 'object' && currentInvoice.client !== null ? currentInvoice.client : null
   const clientName = clientObj?.name || 'عميل نقدي'
   const clientOrg = clientObj?.organizeName || ''
   const clientPhone = clientObj?.phone || ''
   const clientAddress = clientObj?.address || clientObj?.city || 'موقع العميل'
+  const sellerObj = typeof currentInvoice.seller === 'object' && currentInvoice.seller !== null ? currentInvoice.seller : null
+  const sellerName = sellerObj?.name || 'مندوب المبيعات الميداني'
 
   // Subtotal before tax
-  const taxAmount = invoice.taxAmount || 0
-  const subtotal = invoice.totalPrice - taxAmount
+  const taxAmount = currentInvoice.taxAmount || 0
+  const subtotal = currentInvoice.totalPrice - taxAmount
+
+  // Map products to printable paper items
+  const paperItems: PrintableInvoicePaperItem[] = (currentInvoice.products || []).map((p) => {
+    const prodObj = typeof p.productId === 'object' && p.productId !== null ? (p.productId as Record<string, any>) : null
+    return {
+      code: prodObj?.productCode || prodObj?.code || '',
+      name: prodObj?.name || 'صنف دهانات وبويات',
+      unit: p.unit || prodObj?.unit || 'عبوة',
+      quantity: p.quantity,
+      price: p.price,
+      totalPrice: p.totalPrice || p.price * p.quantity,
+    }
+  })
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handleSaveInvoiceImage = async () => {
+    if (!paperRef.current || !currentInvoice?._id) return
+    setIsCapturing(true)
+    try {
+      const canvas = await html2canvas(paperRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      })
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((b) => resolve(b), 'image/png', 0.95)
+      })
+      if (!blob) throw new Error('فشل إنشاء ملف الصورة')
+      const uploadedUrl = await uploadInvoiceImage(blob)
+      const updated = await updateInvoice(currentInvoice._id, { invoiceImageUrl: uploadedUrl })
+      setLocalInvoice(updated)
+      toast.success('تم توليد وحفظ صورة الفاتورة بنجاح على السيرفر وربط الباركود بها! 🎉')
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err?.message || 'حدث خطأ أثناء حفظ صورة الفاتورة')
+    } finally {
+      setIsCapturing(false)
+    }
+  }
+
+  const handleDownloadImage = async () => {
+    if (!currentInvoice?.invoiceImageUrl) return
+    try {
+      const response = await fetch(currentInvoice.invoiceImageUrl)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `فاتورة-بتروكيما-${currentInvoice.invoiceCode}.png`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      toast.success('بدأ تنزيل صورة الفاتورة بنجاح')
+    } catch {
+      window.open(currentInvoice.invoiceImageUrl, '_blank')
+    }
   }
 
   const handleShareWhatsApp = () => {
@@ -51,7 +128,7 @@ export function SellerInvoiceDetailsModal({
     const cleanPhone = clientPhone.replace(/\D/g, '')
     const formattedPhone = cleanPhone.startsWith('0') ? '2' + cleanPhone : cleanPhone
     const text = encodeURIComponent(
-      `مرحباً ${clientName}،\nتفاصيل فاتورة بتروكيما #${invoice.invoiceCode}:\nإجمالي القيمة: ${formatNumber(invoice.totalPrice)} ج.م\nالمدفوع: ${formatNumber(invoice.totalPaid)} ج.م\nالمتبقي: ${formatNumber(remaining)} ج.م\nالحالة: ${isPaid ? 'مسددة بالكامل ✅' : 'متبقي للسداد ⏳'}\nشكراً لتعاملكم معنا!`
+      `مرحباً ${clientName}،\nتفاصيل فاتورة بتروكيما #${currentInvoice.invoiceCode}:\nإجمالي القيمة: ${formatNumber(currentInvoice.totalPrice)} ج.م\nالمدفوع: ${formatNumber(currentInvoice.totalPaid)} ج.م\nالمتبقي: ${formatNumber(remaining)} ج.م\nالحالة: ${isPaid ? 'مسددة بالكامل ✅' : 'متبقي للسداد ⏳'}${currentInvoice.invoiceImageUrl ? `\nرابط صورة الفاتورة الرسمية:\n${currentInvoice.invoiceImageUrl}` : ''}\nشكراً لتعاملكم معنا!`
     )
     const url = `https://wa.me/${formattedPhone}?text=${text}`
     const win = window.open(url, '_blank')
@@ -64,7 +141,7 @@ export function SellerInvoiceDetailsModal({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed inset-x-0 bottom-0 z-50 flex flex-col h-[88dvh] max-h-[88dvh] sm:h-auto sm:max-h-[90vh] rounded-t-3xl bg-[#f8fafc] shadow-2xl transition-all sm:inset-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl overflow-hidden">
+        <Dialog.Content className={`fixed inset-x-0 bottom-0 z-50 flex flex-col h-[90dvh] max-h-[90dvh] sm:h-auto sm:max-h-[92vh] rounded-t-3xl bg-[#f8fafc] shadow-2xl transition-all sm:inset-auto sm:left-1/2 sm:top-1/2 sm:w-full ${activeTab === 'paper' ? 'sm:max-w-4xl' : 'sm:max-w-xl'} sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl overflow-hidden`}>
           {/* 1. Fixed Header */}
           <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 bg-white shrink-0">
             <div className="flex items-center gap-2.5">
@@ -74,7 +151,7 @@ export function SellerInvoiceDetailsModal({
               <div>
                 <div className="flex items-center gap-2">
                   <Dialog.Title className="font-bold text-base text-slate-900 font-mono leading-tight">
-                    {invoice.invoiceCode}
+                    {currentInvoice.invoiceCode}
                   </Dialog.Title>
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
@@ -91,13 +168,42 @@ export function SellerInvoiceDetailsModal({
                 <p className="text-xs text-slate-500 mt-0.5">
                   تاريخ الإصدار:{' '}
                   {new Intl.DateTimeFormat('ar-EG', { dateStyle: 'medium' }).format(
-                    new Date(invoice.createdAt)
+                    new Date(currentInvoice.createdAt)
                   )}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
+              {/* Prominent Image Button */}
+              {currentInvoice.invoiceImageUrl && (
+                <a
+                  href={currentInvoice.invoiceImageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-all shadow-xs"
+                  title="عرض صورة الفاتورة المعتمدة الأصلية"
+                >
+                  <span className="material-symbols-outlined text-[18px]">image</span>
+                  <span className="hidden sm:inline">صورة الفاتورة</span>
+                </a>
+              )}
+
+              {/* Toggle to Printable Paper View */}
+              <button
+                type="button"
+                onClick={() => setActiveTab(activeTab === 'paper' ? 'items' : 'paper')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs ${
+                  activeTab === 'paper'
+                    ? 'bg-[#002855] text-white border-[#002855]'
+                    : 'bg-orange-50 text-orange-700 hover:bg-orange-100 border-orange-200'
+                }`}
+                title="معاينة الفاتورة المطبوعة A4"
+              >
+                <span className="material-symbols-outlined text-[18px]">description</span>
+                <span className="hidden sm:inline">{activeTab === 'paper' ? 'بيانات الفاتورة' : 'فاتورة A4'}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handlePrint}
@@ -127,7 +233,7 @@ export function SellerInvoiceDetailsModal({
                   <span className="text-xs text-slate-400 block font-medium">صافي القيمة المستحقة</span>
                   <div className="flex items-baseline gap-1 mt-0.5">
                     <span className="text-2xl font-bold text-orange-400">
-                      {formatNumber(invoice.totalPrice)}
+                      {formatNumber(currentInvoice.totalPrice)}
                     </span>
                     <span className="text-xs text-slate-400">ج.م</span>
                   </div>
@@ -143,7 +249,7 @@ export function SellerInvoiceDetailsModal({
               {/* Progress Bar */}
               <div className="space-y-1.5 pt-1 border-t border-slate-700/80">
                 <div className="flex justify-between items-center text-xs text-slate-300">
-                  <span>تم تحصيل {formatNumber(invoice.totalPaid)} ج.م</span>
+                  <span>تم تحصيل {formatNumber(currentInvoice.totalPaid)} ج.م</span>
                   <span className="font-semibold text-orange-300">{paidPercent}%</span>
                 </div>
                 <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
@@ -173,52 +279,67 @@ export function SellerInvoiceDetailsModal({
                 <span className="text-slate-400 block text-[10px] font-medium">تفاصيل التوريد:</span>
                 <div className="flex items-center gap-1.5 text-slate-700 mt-1">
                   <span className="material-symbols-outlined text-[16px] text-orange-600">warehouse</span>
-                  <span className="font-semibold">{invoice.warehouse || 'المستودع الرئيسي'}</span>
+                  <span className="font-semibold">{currentInvoice.warehouse || 'المستودع الرئيسي'}</span>
                 </div>
-                {invoice.dueDate && (
+                {currentInvoice.dueDate && (
                   <div className="flex items-center gap-1.5 text-slate-600 mt-1">
                     <span className="material-symbols-outlined text-[16px] text-slate-400">calendar_today</span>
                     <span>
                       الاستحقاق:{' '}
                       {new Intl.DateTimeFormat('ar-EG', { dateStyle: 'medium' }).format(
-                        new Date(invoice.dueDate)
+                        new Date(currentInvoice.dueDate)
                       )}
                     </span>
                   </div>
                 )}
-                {invoice.notes && (
+                {currentInvoice.notes && (
                   <p className="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg mt-2 border border-slate-100">
-                    {invoice.notes}
+                    {currentInvoice.notes}
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Navigation Tabs (Items vs Payments) */}
-            <div className="flex rounded-xl bg-slate-200/70 p-1">
+            {/* Navigation Tabs (Items vs Payments vs Paper) */}
+            <div className="flex rounded-xl bg-slate-200/70 p-1 gap-1">
               <button
                 type="button"
                 onClick={() => setActiveTab('items')}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                   activeTab === 'items'
                     ? 'bg-white text-orange-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]">format_paint</span>
-                <span>الأصناف والمنتجات ({invoice.products?.length || 0})</span>
+                <span>الأصناف ({currentInvoice.products?.length || 0})</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('payments')}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                   activeTab === 'payments'
                     ? 'bg-white text-orange-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]">payments</span>
-                <span>سندات التحصيل ({invoice.payments?.length || 0})</span>
+                <span>التحصيلات ({currentInvoice.payments?.length || 0})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('paper')}
+                className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  activeTab === 'paper'
+                    ? 'bg-[#002855] text-white shadow-sm'
+                    : 'text-slate-700 hover:text-slate-900 bg-white/50'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">description</span>
+                <span>📄 الفاتورة A4</span>
+                {currentInvoice.invoiceImageUrl && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" title="يوجد صورة معتمدة" />
+                )}
               </button>
             </div>
 
@@ -231,8 +352,8 @@ export function SellerInvoiceDetailsModal({
                 </div>
 
                 <div className="divide-y divide-slate-100">
-                  {invoice.products && invoice.products.length > 0 ? (
-                    invoice.products.map((p, idx) => {
+                  {currentInvoice.products && currentInvoice.products.length > 0 ? (
+                    currentInvoice.products.map((p, idx) => {
                       const pObj =
                         typeof p.productId === 'object' && p.productId !== null
                           ? (p.productId as Record<string, any>)
@@ -285,7 +406,7 @@ export function SellerInvoiceDetailsModal({
                   )}
                   <div className="pt-2 border-t border-slate-200 flex justify-between font-bold text-slate-900 text-sm">
                     <span>صافي الفاتورة الكلي:</span>
-                    <span className="text-orange-600 font-mono">{formatNumber(invoice.totalPrice)} ج.م</span>
+                    <span className="text-orange-600 font-mono">{formatNumber(currentInvoice.totalPrice)} ج.م</span>
                   </div>
                 </div>
               </div>
@@ -300,8 +421,8 @@ export function SellerInvoiceDetailsModal({
                 </div>
 
                 <div className="divide-y divide-slate-100">
-                  {invoice.payments && invoice.payments.length > 0 ? (
-                    invoice.payments.map((pmt, idx) => (
+                  {currentInvoice.payments && currentInvoice.payments.length > 0 ? (
+                    currentInvoice.payments.map((pmt, idx) => (
                       <div key={pmt._id || idx} className="p-3.5 flex items-center justify-between text-xs">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
@@ -321,7 +442,7 @@ export function SellerInvoiceDetailsModal({
                           <p className="text-[11px] text-slate-500">
                             المستلم: {pmt.receiverName || 'المندوب الميداني'} •{' '}
                             {new Intl.DateTimeFormat('ar-EG', { dateStyle: 'medium' }).format(
-                              new Date(pmt.paymentDate || invoice.createdAt)
+                              new Date(pmt.paymentDate || currentInvoice.createdAt)
                             )}
                           </p>
                           {pmt.notes && <p className="text-[10px] text-slate-400">{pmt.notes}</p>}
@@ -342,6 +463,115 @@ export function SellerInvoiceDetailsModal({
                 </div>
               </div>
             )}
+
+            {/* Tab 3: Official Printable Invoice Paper (A4) with Image controls */}
+            {activeTab === 'paper' && (
+              <div className="space-y-4">
+                {/* Paper Controls & Image Status Banner */}
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[20px] text-[#002855]">
+                        verified
+                      </span>
+                      <h4 className="font-bold text-sm text-slate-900">
+                        الفاتورة الورقية الرسمية المعتمدة (A4)
+                      </h4>
+                    </div>
+                    {currentInvoice.invoiceImageUrl ? (
+                      <p className="text-xs text-emerald-700 flex items-center gap-1 font-medium">
+                        <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                        <span>صورة الفاتورة الأصلية محفوظة ومربوطة بباركود الفاتورة.</span>
+                      </p>
+                    ) : (
+                      <p className="text-xs text-amber-700 flex items-center gap-1 font-medium">
+                        <span className="material-symbols-outlined text-[16px]">info</span>
+                        <span>لم يتم حفظ صورة لهذه الفاتورة بعد (فاتورة سابقة). يمكنك حفظها الآن:</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {currentInvoice.invoiceImageUrl ? (
+                      <>
+                        <a
+                          href={currentInvoice.invoiceImageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-all shadow-xs"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                          <span>فتح الصورة الأصلية</span>
+                        </a>
+                        <button
+                          type="button"
+                          onClick={handleDownloadImage}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all border border-slate-200"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">download</span>
+                          <span>تنزيل الصورة</span>
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={isCapturing}
+                        onClick={handleSaveInvoiceImage}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white text-xs font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                      >
+                        {isCapturing ? (
+                          <>
+                            <span className="material-symbols-outlined text-[18px] animate-spin">
+                              progress_activity
+                            </span>
+                            <span>جارِ الحفظ...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+                            <span>حفظ صورة الفاتورة الآن 📸</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handlePrint}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#002855] hover:bg-[#001f42] text-white text-xs font-bold transition-all shadow-xs"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">print</span>
+                      <span>طباعة A4</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Printable Paper Render Wrapper */}
+                <div className="overflow-x-auto flex justify-center p-3 sm:p-5 bg-slate-200/60 rounded-2xl border border-slate-300/80">
+                  <div
+                    ref={paperRef}
+                    className="w-[794px] min-w-[700px] bg-white shadow-xl rounded-lg overflow-hidden shrink-0"
+                  >
+                    <PrintableInvoicePaper
+                      invoiceCode={currentInvoice.invoiceCode}
+                      createdAt={currentInvoice.createdAt}
+                      clientName={clientName}
+                      clientOrganization={clientOrg}
+                      clientPhone={clientPhone}
+                      clientAddress={clientAddress}
+                      warehouseName={currentInvoice.warehouse || 'المستودع الرئيسي'}
+                      sellerName={sellerName}
+                      items={paperItems}
+                      includeVat={(currentInvoice.taxAmount || 0) > 0}
+                      vatRate={14}
+                      discountAmount={0}
+                      notes={currentInvoice.notes || ''}
+                      invoiceImageUrl={currentInvoice.invoiceImageUrl || ''}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 3. Sticky Bottom Action Bar */}
@@ -351,7 +581,7 @@ export function SellerInvoiceDetailsModal({
                 type="button"
                 onClick={() => {
                   onOpenChange(false)
-                  onCollectPayment?.(invoice)
+                  onCollectPayment?.(currentInvoice)
                 }}
                 className="flex-1 h-12 rounded-xl bg-gradient-to-r from-orange-700 via-orange-600 to-orange-500 hover:from-orange-800 hover:to-orange-600 active:scale-[0.98] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all"
               >

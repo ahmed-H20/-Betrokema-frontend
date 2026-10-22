@@ -4,7 +4,7 @@ import type { Invoice } from '@/api/invoices.schema'
 
 interface InvoicesTableProps {
   invoices: Invoice[]
-  onViewDetails: (invoice: Invoice) => void
+  onViewDetails: (invoice: Invoice, initialTab?: 'details' | 'paper') => void
   onAddPayment: (invoice: Invoice) => void
   onApproveOrder?: (invoice: Invoice) => void
   isApproving?: boolean
@@ -232,11 +232,24 @@ export function InvoicesTable({
 
                       <button
                         type="button"
-                        onClick={() => onViewDetails(invoice)}
+                        onClick={() => onViewDetails(invoice, 'paper')}
+                        title="معاينة الفاتورة الورقية A4 والصورة المعتمدة"
+                        className="flex h-8 px-2.5 items-center gap-1 rounded-lg bg-[#002855]/10 hover:bg-[#002855]/20 text-[#002855] font-label-sm text-label-sm font-bold border border-[#002855]/20 transition-colors shadow-2xs"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">description</span>
+                        <span>فاتورة A4</span>
+                        {invoice.invoiceImageUrl && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="يوجد صورة معتمدة" />
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onViewDetails(invoice, 'details')}
                         title="عرض تفاصيل الفاتورة"
                         className="flex h-8 px-2.5 items-center gap-1 rounded-lg bg-surface-container-high text-primary hover:bg-surface-container-highest font-label-sm text-label-sm font-semibold transition-colors"
                       >
-                        <span>عرض</span>
+                        <span>التفاصيل</span>
                         <span className="material-symbols-outlined text-[14px]">
                           arrow_back
                         </span>

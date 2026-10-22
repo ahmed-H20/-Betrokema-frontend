@@ -43,8 +43,14 @@ export function InvoicesPage() {
 
   // Modals state
   const [detailsInvoice, setDetailsInvoice] = useState<Invoice | null>(null)
+  const [detailsInitialTab, setDetailsInitialTab] = useState<'details' | 'paper'>('details')
   const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+
+  const handleOpenDetails = (invoice: Invoice, tab: 'details' | 'paper' = 'details') => {
+    setDetailsInitialTab(tab)
+    setDetailsInvoice(invoice)
+  }
 
   // API Queries & Mutations
   const { data: stats, isLoading: isStatsLoading } = useInvoiceStats()
@@ -266,7 +272,7 @@ export function InvoicesPage() {
                   <InvoiceCard
                     key={inv._id}
                     invoice={inv}
-                    onViewDetails={setDetailsInvoice}
+                    onViewDetails={handleOpenDetails}
                     onAddPayment={setPaymentInvoice}
                     onApproveOrder={handleApproveOrder}
                     isApproving={updateStatus.isPending}
@@ -291,7 +297,7 @@ export function InvoicesPage() {
             <div className="hidden lg:block">
               <InvoicesTable
                 invoices={invoices}
-                onViewDetails={setDetailsInvoice}
+                onViewDetails={handleOpenDetails}
                 onAddPayment={setPaymentInvoice}
                 onApproveOrder={handleApproveOrder}
                 isApproving={updateStatus.isPending}
@@ -338,6 +344,7 @@ export function InvoicesPage() {
         invoice={detailsInvoice}
         isOpen={Boolean(detailsInvoice)}
         onClose={() => setDetailsInvoice(null)}
+        initialTab={detailsInitialTab}
         onAddPayment={(inv) => {
           setPaymentInvoice(inv)
         }}

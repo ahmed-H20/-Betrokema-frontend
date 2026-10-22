@@ -4,7 +4,7 @@ import type { Invoice } from '@/api/invoices.schema'
 
 interface InvoiceCardProps {
   invoice: Invoice
-  onViewDetails: (invoice: Invoice) => void
+  onViewDetails: (invoice: Invoice, initialTab?: 'details' | 'paper') => void
   onAddPayment: (invoice: Invoice) => void
   onApproveOrder?: (invoice: Invoice) => void
   isApproving?: boolean
@@ -196,10 +196,24 @@ export function InvoiceCard({
             </button>
           )}
 
+          {/* Printable A4 Paper CTA */}
+          <button
+            type="button"
+            onClick={() => onViewDetails(invoice, 'paper')}
+            className="flex-1 sm:flex-initial flex h-10 items-center justify-center gap-1.5 rounded-lg px-3 font-label-sm sm:font-label-md text-label-sm sm:text-label-md font-bold bg-[#002855]/10 hover:bg-[#002855]/20 text-[#002855] border border-[#002855]/20 transition-colors active:scale-95 whitespace-nowrap shadow-2xs"
+            title="معاينة الفاتورة الورقية A4 والصورة"
+          >
+            <span className="material-symbols-outlined text-[17px]">description</span>
+            <span>فاتورة A4</span>
+            {invoice.invoiceImageUrl && (
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="يوجد صورة معتمدة" />
+            )}
+          </button>
+
           {/* View Invoice Details CTA */}
           <button
             type="button"
-            onClick={() => onViewDetails(invoice)}
+            onClick={() => onViewDetails(invoice, 'details')}
             className={cn(
               'flex h-10 items-center justify-center gap-1 rounded-lg px-3 sm:px-4 font-label-sm sm:font-label-md text-label-sm sm:text-label-md font-semibold transition-colors active:scale-95 whitespace-nowrap',
               isPending && !isPaid
@@ -210,7 +224,7 @@ export function InvoiceCard({
                 : 'bg-surface-container-high text-primary hover:bg-surface-container-highest',
             )}
           >
-            <span>عرض الفاتورة</span>
+            <span>التفاصيل</span>
             <span className="material-symbols-outlined text-[16px]">
               arrow_back
             </span>

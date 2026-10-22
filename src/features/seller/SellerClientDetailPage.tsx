@@ -29,6 +29,7 @@ export function SellerClientDetailPage() {
     useState<Invoice | null>(null)
   const [isCollectModalOpen, setIsCollectModalOpen] = useState(false)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+  const [detailsInitialTab, setDetailsInitialTab] = useState<'items' | 'payments' | 'paper'>('items')
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false)
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
@@ -411,11 +412,29 @@ export function SellerClientDetailPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedInvoiceForDetails(inv)
+                            setDetailsInitialTab('paper')
+                            setIsDetailsModalOpen(true)
+                          }}
+                          className="py-1.5 px-2.5 rounded-xl bg-[#002855]/10 hover:bg-[#002855]/15 text-[#002855] text-xs font-bold flex items-center gap-1 border border-[#002855]/20 transition-colors shadow-2xs"
+                          title="عرض الفاتورة المطبوعة A4 والصورة الرسمية"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">description</span>
+                          <span>فاتورة A4</span>
+                          {inv.invoiceImageUrl && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedInvoiceForDetails(inv)
+                            setDetailsInitialTab('items')
                             setIsDetailsModalOpen(true)
                           }}
                           className="py-1.5 px-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1 border border-slate-200 transition-colors"
@@ -443,12 +462,13 @@ export function SellerClientDetailPage() {
                           type="button"
                           onClick={() => {
                             setSelectedInvoiceForDetails(inv)
+                            setDetailsInitialTab('payments')
                             setIsDetailsModalOpen(true)
                           }}
                           className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 flex items-center justify-center border border-slate-200 transition-colors"
-                          title="طباعة / تفاصيل"
+                          title="سندات التحصيل"
                         >
-                          <span className="material-symbols-outlined text-[16px]">print</span>
+                          <span className="material-symbols-outlined text-[17px]">receipt</span>
                         </button>
                       </div>
                     </div>
@@ -578,6 +598,7 @@ export function SellerClientDetailPage() {
         invoice={selectedInvoiceForDetails}
         open={isDetailsModalOpen}
         onOpenChange={setIsDetailsModalOpen}
+        initialTab={detailsInitialTab}
         onCollectPayment={(inv) => {
           setSelectedInvoiceForCollect(inv)
           setIsCollectModalOpen(true)

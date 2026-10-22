@@ -1,5 +1,10 @@
+import { useState, useRef, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
+import html2canvas from 'html2canvas'
 import { formatNumber } from '@/lib/format'
+import { toast } from 'sonner'
+import { uploadInvoiceImage, updateInvoice } from '@/api/invoices'
+import { PrintableInvoicePaper, type PrintableInvoicePaperItem } from '@/features/invoices/components/PrintableInvoicePaper'
 import type { Invoice, OrderStatus } from '@/api/invoices.schema'
 
 interface InvoiceDetailsModalProps {
@@ -9,6 +14,7 @@ interface InvoiceDetailsModalProps {
   onAddPayment: (invoice: Invoice) => void
   onUpdateStatus?: (invoice: Invoice, status: OrderStatus) => void
   isUpdatingStatus?: boolean
+  initialTab?: 'details' | 'paper'
 }
 
 export function InvoiceDetailsModal({
@@ -18,11 +24,25 @@ export function InvoiceDetailsModal({
   onAddPayment,
   onUpdateStatus,
   isUpdatingStatus,
+  initialTab = 'details',
 }: InvoiceDetailsModalProps) {
-  if (!isOpen || !invoice) return null
+  const [activeTab, setActiveTab] = useState<'details' | 'paper'>(initialTab)
+  const [localInvoice, setLocalInvoice] = useState<Invoice | null>(invoice)
+  const [isCapturing, setIsCapturing] = useState(false)
+  const paperRef = useRef<HTMLDivElement>(null)
 
-  const clientObj = typeof invoice.client === 'object' ? invoice.client : null
-  const sellerObj = typeof invoice.seller === 'object' ? invoice.seller : null
+  useEffect(() => {
+    setLocalInvoice(invoice)
+    if (initialTab) {
+      setActiveTab(initialTab)
+    }
+  }, [invoice, initialTab])
+
+  if (!isOpen || !invoice) return null
+  const currentInvoice = localInvoice || invoice
+
+  const clientObj = typeof currentInvoice.client === 'object' ? currentInvoice.client : null
+  const sellerObj = typeof currentInvoice.seller === 'object' ? currentInvoice.seller : null
 
   const clientName = clientObj?.organizeName || clientObj?.name || 'عميل نقدي'
   const clientCode = clientObj?.clientCode || 'CUST-—'
@@ -32,26 +52,85 @@ export function InvoiceDetailsModal({
   const sellerName = sellerObj?.name || 'الإدارة المركزية'
   const sellerPhone = sellerObj?.phone || '—'
 
-  const total = invoice.totalPrice || 0
-  const paid = invoice.totalPaid || 0
+  const total = currentInvoice.totalPrice || 0
+  const paid = currentInvoice.totalPaid || 0
   const remaining = Math.max(0, total - paid)
   const percentPaid = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0
   const isFullyPaid = remaining <= 0
 
-  const isPending = invoice.orderStatus === 'pending' || invoice.orderStatus === 'processing'
-  const isCompleted = invoice.orderStatus === 'completed'
-  const isCancelled = invoice.orderStatus === 'cancelled'
+  const isPending = currentInvoice.orderStatus === 'pending' || currentInvoice.orderStatus === 'processing'
+  const isCompleted = currentInvoice.orderStatus === 'completed'
+  const isCancelled = currentInvoice.orderStatus === 'cancelled'
+
+  // Map products to printable paper items
+  const paperItems: PrintableInvoicePaperItem[] = (currentInvoice.products || []).map((p) => {
+    const prodObj = typeof p.productId === 'object' && p.productId !== null ? (p.productId as Record<string, any>) : null
+    return {
+      code: prodObj?.productCode || prodObj?.code || '',
+      name: prodObj?.name || 'صنف دهانات وبويات',
+      unit: p.unit || prodObj?.unit || 'عبوة',
+      quantity: p.quantity,
+      price: p.price,
+      totalPrice: p.totalPrice || p.price * p.quantity,
+    }
+  })
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handleSaveInvoiceImage = async () => {
+    if (!paperRef.current || !currentInvoice?._id) return
+    setIsCapturing(true)
+    try {
+      const canvas = await html2canvas(paperRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      })
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((b) => resolve(b), 'image/png', 0.95)
+      })
+      if (!blob) throw new Error('فشل إنشاء ملف الصورة')
+      const uploadedUrl = await uploadInvoiceImage(blob)
+      const updated = await updateInvoice(currentInvoice._id, { invoiceImageUrl: uploadedUrl })
+      setLocalInvoice(updated)
+      toast.success('تم توليد وحفظ صورة الفاتورة بنجاح على السيرفر وربط الباركود بها! 🎉')
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err?.message || 'حدث خطأ أثناء حفظ صورة الفاتورة')
+    } finally {
+      setIsCapturing(false)
+    }
+  }
+
+  const handleDownloadImage = async () => {
+    if (!currentInvoice?.invoiceImageUrl) return
+    try {
+      const response = await fetch(currentInvoice.invoiceImageUrl)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `فاتورة-بتروكيما-${currentInvoice.invoiceCode}.png`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      toast.success('بدأ تنزيل صورة الفاتورة بنجاح')
+    } catch {
+      window.open(currentInvoice.invoiceImageUrl, '_blank')
+    }
   }
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[70] bg-primary/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed inset-0 z-[70] flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-surface-container-lowest shadow-2xl md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[90vh] md:max-w-3xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl">
-          <Dialog.Title className="sr-only">تفاصيل الفاتورة {invoice.invoiceCode}</Dialog.Title>
+        <Dialog.Content className={`fixed inset-0 z-[70] flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-surface-container-lowest shadow-2xl md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[92vh] ${activeTab === 'paper' ? 'md:max-w-4xl' : 'md:max-w-3xl'} md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl`}>
+          <Dialog.Title className="sr-only">تفاصيل الفاتورة {currentInvoice.invoiceCode}</Dialog.Title>
           <Dialog.Description className="sr-only">عرض بنود وتفاصيل الفاتورة وحالة التحصيل</Dialog.Description>
           {/* Header */}
         <div className="shrink-0 flex items-center justify-between border-b border-surface-container-high bg-surface-container-lowest px-4 sm:px-6 py-3.5 sm:py-4">
@@ -64,7 +143,7 @@ export function InvoiceDetailsModal({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-headline-sm text-headline-sm font-bold text-primary font-mono">
-                  {invoice.invoiceCode}
+                  {currentInvoice.invoiceCode}
                 </h2>
                 {isPending && (
                   <span className="rounded-full bg-tertiary-fixed px-2.5 py-0.5 font-label-sm text-label-sm font-semibold text-on-tertiary-fixed">
@@ -83,12 +162,41 @@ export function InvoiceDetailsModal({
                 )}
               </div>
               <p className="font-body-sm text-body-sm text-on-surface-variant">
-                تاريخ الإصدار: {new Date(invoice.createdAt).toLocaleDateString('ar-EG', { dateStyle: 'full' })}
+                تاريخ الإصدار: {new Date(currentInvoice.createdAt).toLocaleDateString('ar-EG', { dateStyle: 'full' })}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Prominent Image Button */}
+            {currentInvoice.invoiceImageUrl && (
+              <a
+                href={currentInvoice.invoiceImageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-9 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 font-label-sm text-label-sm font-bold text-blue-700 hover:bg-blue-100 transition-colors shadow-2xs"
+                title="عرض صورة الفاتورة المعتمدة الأصلية"
+              >
+                <span className="material-symbols-outlined text-[18px]">image</span>
+                <span className="hidden sm:inline">صورة الفاتورة</span>
+              </a>
+            )}
+
+            {/* Switch Tab to Paper */}
+            <button
+              type="button"
+              onClick={() => setActiveTab(activeTab === 'paper' ? 'details' : 'paper')}
+              className={`flex h-9 items-center gap-1.5 rounded-lg border px-3 font-label-sm text-label-sm font-bold transition-colors shadow-2xs ${
+                activeTab === 'paper'
+                  ? 'bg-[#002855] text-white border-[#002855]'
+                  : 'bg-primary-container/20 text-primary border-primary/20 hover:bg-primary-container/30'
+              }`}
+              title="معاينة الفاتورة المطبوعة A4"
+            >
+              <span className="material-symbols-outlined text-[18px]">description</span>
+              <span className="hidden sm:inline">{activeTab === 'paper' ? 'تفاصيل الحساب' : 'فاتورة A4'}</span>
+            </button>
+
             <button
               type="button"
               onClick={handlePrint}
@@ -110,10 +218,151 @@ export function InvoiceDetailsModal({
           </div>
         </div>
 
+        {/* Subheader Navigation Tabs */}
+        <div className="flex border-b border-surface-container-high bg-surface-container-low/40 px-4 sm:px-6 pt-2 gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab('details')}
+            className={`flex items-center gap-2 pb-2.5 px-3 border-b-2 font-label-md text-label-md font-bold transition-all ${
+              activeTab === 'details'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">list_alt</span>
+            <span>تفاصيل وبنود الفاتورة</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('paper')}
+            className={`flex items-center gap-2 pb-2.5 px-3 border-b-2 font-label-md text-label-md font-bold transition-all ${
+              activeTab === 'paper'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">description</span>
+            <span>📄 الفاتورة المطبوعة A4 والباركود</span>
+            {currentInvoice.invoiceImageUrl && (
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="يوجد صورة معتمدة" />
+            )}
+          </button>
+        </div>
+
         {/* Content Body */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 flex flex-col gap-6">
-          {/* Settlement Progress Card matching petrokema_web_admin */}
-          <div className="rounded-2xl border border-surface-container-high bg-surface-container-low/50 p-5">
+          {activeTab === 'paper' && (
+            <div className="space-y-4">
+              {/* Top Action Bar for Paper View */}
+              <div className="p-4 rounded-2xl bg-surface-container-low/70 border border-surface-container-high shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-primary">
+                      verified
+                    </span>
+                    <h4 className="font-headline-sm text-sm font-bold text-primary">
+                      الفاتورة الورقية الرسمية المعتمدة (A4)
+                    </h4>
+                  </div>
+                  {currentInvoice.invoiceImageUrl ? (
+                    <p className="text-body-sm text-xs text-[#15803d] flex items-center gap-1 font-semibold">
+                      <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                      <span>صورة الفاتورة المعتمدة محفوظة على السيرفر ومربوطة بباركود الفاتورة.</span>
+                    </p>
+                  ) : (
+                    <p className="text-body-sm text-xs text-amber-700 flex items-center gap-1 font-semibold">
+                      <span className="material-symbols-outlined text-[16px]">info</span>
+                      <span>لم يتم حفظ صورة لهذه الفاتورة بعد. يمكنك توليدها وحفظها بضغطة زر:</span>
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {currentInvoice.invoiceImageUrl ? (
+                    <>
+                      <a
+                        href={currentInvoice.invoiceImageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex h-9 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 font-label-sm text-label-sm font-bold text-blue-700 hover:bg-blue-100 transition-colors shadow-2xs"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                        <span>فتح الصورة الأصلية</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={handleDownloadImage}
+                        className="flex h-9 items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 font-label-sm text-label-sm font-bold text-on-surface hover:bg-surface-container-low transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">download</span>
+                        <span>تنزيل الصورة</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isCapturing}
+                      onClick={handleSaveInvoiceImage}
+                      className="flex h-9 items-center gap-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary px-4 font-label-sm text-label-sm font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                    >
+                      {isCapturing ? (
+                        <>
+                          <span className="material-symbols-outlined text-[18px] animate-spin">
+                            progress_activity
+                          </span>
+                          <span>جارِ الحفظ...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+                          <span>حفظ صورة الفاتورة الآن 📸</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handlePrint}
+                    className="flex h-9 items-center gap-1.5 rounded-lg bg-[#002855] text-white px-4 font-label-sm text-label-sm font-bold hover:bg-[#001f42] transition-colors shadow-2xs"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">print</span>
+                    <span>طباعة A4</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Printable Paper Render Wrapper */}
+              <div className="overflow-x-auto flex justify-center p-3 sm:p-5 bg-surface-container-low/60 rounded-2xl border border-surface-container-high">
+                <div
+                  ref={paperRef}
+                  className="w-[794px] min-w-[700px] bg-white shadow-xl rounded-lg overflow-hidden shrink-0"
+                >
+                  <PrintableInvoicePaper
+                    invoiceCode={currentInvoice.invoiceCode}
+                    createdAt={currentInvoice.createdAt}
+                    clientName={clientName}
+                    clientOrganization={clientObj?.organizeName || ''}
+                    clientPhone={clientPhone}
+                    clientAddress={clientAddress}
+                    warehouseName={currentInvoice.warehouse || 'المستودع الرئيسي'}
+                    sellerName={sellerName}
+                    items={paperItems}
+                    includeVat={(currentInvoice.taxAmount || 0) > 0}
+                    vatRate={14}
+                    discountAmount={0}
+                    notes={currentInvoice.notes || ''}
+                    invoiceImageUrl={currentInvoice.invoiceImageUrl || ''}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'details' && (
+            <>
+              {/* Settlement Progress Card matching petrokema_web_admin */}
+              <div className="rounded-2xl border border-surface-container-high bg-surface-container-low/50 p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px] text-secondary">
@@ -381,6 +630,8 @@ export function InvoiceDetailsModal({
               </p>
             )}
           </div>
+          </>
+          )}
         </div>
 
         {/* Modal Footer Actions */}

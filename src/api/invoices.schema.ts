@@ -115,6 +115,7 @@ export const invoiceSchema = z
     dueDate: z.any().optional().default(null),
     payments: z.array(invoicePaymentSchema).optional().default([]),
     notes: z.string().optional().default(''),
+    invoiceImageUrl: z.string().optional().default(''),
     createdAt: z.string(),
     updatedAt: z.string().optional(),
   })

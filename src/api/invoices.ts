@@ -1,4 +1,5 @@
 import { request } from '@/api/client'
+import { uploadSingleImage } from '@/api/upload'
 import {
   type AddPaymentInput,
   type Invoice,
@@ -84,6 +85,8 @@ export interface CreateInvoicePayload {
   client: string
   seller?: string
   warehouse?: string
+  invoiceCode?: string
+  invoiceImageUrl?: string
   products: {
     productId: string
     price: number
@@ -93,6 +96,15 @@ export interface CreateInvoicePayload {
   taxAmount?: number
   notes?: string
   dueDate?: string | null
+}
+
+export async function uploadInvoiceImage(file: Blob | File): Promise<string> {
+  const actualFile =
+    file instanceof File
+      ? file
+      : new File([file], `invoice-${Date.now()}.png`, { type: 'image/png' })
+  const res = await uploadSingleImage(actualFile, 'invoices')
+  return res.url || res.path
 }
 
 export async function createInvoice(
@@ -113,5 +125,16 @@ export async function getForSeller(sellerId: string): Promise<Invoice[]> {
 export async function getForClient(clientId: string): Promise<Invoice[]> {
   const raw = await request<unknown>(`/invoices/client/${clientId}`)
   return invoicesForSellerResponseSchema.parse(raw).data
+}
+
+export async function updateInvoice(
+  id: string,
+  payload: Record<string, unknown>,
+): Promise<Invoice> {
+  const raw = await request<{ status: string; data: unknown }>(`/invoices/${id}`, {
+    method: 'PUT',
+    body: payload,
+  })
+  return invoiceSchema.parse(raw.data)
 }
 
