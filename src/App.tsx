@@ -23,6 +23,7 @@ import { ClientInvoicesPage } from '@/features/client/ClientInvoicesPage'
 import { ClientProfilePage } from '@/features/client/ClientProfilePage'
 import { queryClient } from '@/lib/queryClient'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { InvoicePrintPage } from '@/pages/InvoicePrintPage'
 import { PageTitleManager } from '@/components/layout/PageTitleManager'
 
 function RoleHomeRedirect() {
@@ -62,6 +63,10 @@ function App() {
             <Routes>
               {/* Public Route */}
               <Route path="/login" element={<LoginPage />} />
+
+              {/* Dedicated Standalone Invoice Print Route */}
+              <Route path="/invoices/print/:id" element={<InvoicePrintPage />} />
+              <Route path="/print/invoice/:id" element={<InvoicePrintPage />} />
 
               {/* Dynamic Root Redirection based on Authenticated Role */}
               <Route path="/" element={<RoleHomeRedirect />} />

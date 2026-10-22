@@ -6,6 +6,7 @@ import { uploadInvoiceImage, updateInvoice } from '@/api/invoices'
 import { captureInvoicePaperToBlob, downloadBlob } from '@/lib/invoiceCapture'
 import { PrintableInvoicePaper, type PrintableInvoicePaperItem } from '@/features/invoices/components/PrintableInvoicePaper'
 import { PrintablePaperFitWrapper } from '@/features/invoices/components/PrintablePaperFitWrapper'
+import { openInvoicePrintWindow } from '@/lib/invoicePrint'
 import type { Invoice, OrderStatus } from '@/api/invoices.schema'
 
 interface InvoiceDetailsModalProps {
@@ -79,7 +80,11 @@ export function InvoiceDetailsModal({
   })
 
   const handlePrint = () => {
-    window.print()
+    if (currentInvoice?._id) {
+      openInvoicePrintWindow(currentInvoice._id)
+    } else {
+      window.print()
+    }
   }
 
   const handleSaveInvoiceImage = async () => {
@@ -375,7 +380,8 @@ export function InvoiceDetailsModal({
                     <button
                       type="button"
                       onClick={handlePrint}
-                      className="hidden sm:flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 px-3 font-label-sm text-xs font-bold hover:bg-slate-50 transition-colors shadow-2xs"
+                      className="flex-1 sm:flex-initial h-8 sm:h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white text-slate-800 px-3 text-xs font-bold hover:bg-slate-50 transition-all shadow-xs flex active:scale-95"
+                      title="فتح الفاتورة في صفحة مستقلة للطباعة A4 الرسمية"
                     >
                       <span className="material-symbols-outlined text-[17px]">print</span>
                       <span>طباعة A4</span>

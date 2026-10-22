@@ -4,6 +4,7 @@ import { formatNumber } from '@/lib/format'
 import { captureAndDownloadInvoicePaper } from '@/lib/invoiceCapture'
 import { PrintableInvoicePaper, type PrintableInvoicePaperItem } from '@/features/invoices/components/PrintableInvoicePaper'
 import { PrintablePaperFitWrapper } from '@/features/invoices/components/PrintablePaperFitWrapper'
+import { openInvoicePrintWindow } from '@/lib/invoicePrint'
 import type { Invoice } from '@/api/invoices.schema'
 
 interface ClientInvoiceDetailsModalProps {
@@ -67,7 +68,11 @@ export function ClientInvoiceDetailsModal({
   })
 
   const handlePrint = () => {
-    window.print()
+    if (invoice?._id) {
+      openInvoicePrintWindow(invoice._id)
+    } else {
+      window.print()
+    }
   }
 
   const handleShareWhatsApp = () => {
@@ -580,7 +585,8 @@ export function ClientInvoiceDetailsModal({
                     <button
                       type="button"
                       onClick={handlePrint}
-                      className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all shadow-xs"
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all shadow-xs active:scale-95"
+                      title="فتح الفاتورة في صفحة مستقلة للطباعة A4 الرسمية"
                     >
                       <span className="material-symbols-outlined text-[18px]">print</span>
                       <span>طباعة A4</span>

@@ -14,6 +14,7 @@ import {
   type PrintableInvoicePaperItem,
 } from '@/features/invoices/components/PrintableInvoicePaper'
 import { PrintablePaperFitWrapper } from '@/features/invoices/components/PrintablePaperFitWrapper'
+import { openInvoiceDraftPrintWindow } from '@/lib/invoicePrint'
 
 interface CreateInvoiceModalProps {
   isOpen: boolean
@@ -286,7 +287,20 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
   }
 
   const handlePrint = () => {
-    window.print()
+    openInvoiceDraftPrintWindow({
+      invoiceCode: draftInvoiceCode,
+      createdAt: new Date(),
+      clientName: selectedClient?.name || 'عميل نقدي',
+      clientOrganization: selectedClient?.organizeName || '',
+      clientPhone: selectedClient?.phone || '',
+      clientAddress: selectedClient?.address || selectedClient?.city || '',
+      warehouseName: warehouse,
+      sellerName: selectedSeller?.name || 'المندوب المعتمد',
+      items: paperItems,
+      includeVat,
+      vatRate: 14,
+      notes,
+    })
   }
 
   return (
@@ -378,8 +392,8 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
             <button
               type="button"
               onClick={handlePrint}
-              className="hidden sm:flex h-9 items-center gap-1.5 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors shadow-2xs"
-              title="طباعة الفاتورة"
+              className="flex h-8 sm:h-9 items-center gap-1.5 px-2.5 sm:px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-2xs active:scale-95"
+              title="فتح الفاتورة في صفحة مستقلة للطباعة A4 الرسمية"
             >
               <span className="material-symbols-outlined text-[17px] text-[#002855]">
                 print

@@ -6,6 +6,7 @@ import { useSellerContext } from '../SellerContext'
 import { useCreateInvoice } from '@/features/invoices/hooks'
 import { useProducts } from '@/features/products/hooks'
 import { uploadInvoiceImage, updateInvoice } from '@/api/invoices'
+import { openInvoiceDraftPrintWindow } from '@/lib/invoicePrint'
 import { formatCurrency, formatNumber } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import {
@@ -320,7 +321,20 @@ export function SellerCreateInvoiceModal({
   }
 
   const handlePrint = () => {
-    window.print()
+    openInvoiceDraftPrintWindow({
+      invoiceCode: draftInvoiceCode,
+      createdAt: new Date(),
+      clientName: selectedClient?.name || 'عميل نقدي',
+      clientOrganization: selectedClient?.organizeName || '',
+      clientPhone: selectedClient?.phone || '',
+      clientAddress: selectedClient?.address || selectedClient?.city || '',
+      warehouseName: warehouse,
+      sellerName: currentSeller?.name || 'مندوب المبيعات الميداني',
+      items: paperItems,
+      includeVat,
+      vatRate: 14,
+      notes,
+    })
   }
 
   return (
@@ -391,8 +405,8 @@ export function SellerCreateInvoiceModal({
               <button
                 type="button"
                 onClick={handlePrint}
-                className="hidden sm:flex h-9 items-center gap-1.5 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors shadow-2xs"
-                title="طباعة الفاتورة"
+                className="flex h-8 sm:h-9 items-center gap-1.5 px-2.5 sm:px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-2xs active:scale-95"
+                title="فتح الفاتورة في صفحة مستقلة للطباعة A4 الرسمية"
               >
                 <span className="material-symbols-outlined text-[17px] text-[#002855]">
                   print

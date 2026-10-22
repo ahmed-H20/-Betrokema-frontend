@@ -71,11 +71,18 @@ body {
   animation: nav-drawer-overlay-out 180ms ease-in;
 }
 
-/* Print optimizations for invoices and modals */
+/* Standard A4 Paper Page Definition */
+@page {
+  size: A4 portrait;
+  margin: 6mm 8mm;
+}
+
+/* Print optimizations for invoices and standalone print page */
 @media print {
   nav,
   header,
   aside,
+  .no-print,
   .print\:hidden {
     display: none !important;
   }
@@ -85,7 +92,29 @@ body {
     background: #ffffff !important;
     color: #000000 !important;
     height: auto !important;
+    min-height: auto !important;
     overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Make sure Printable Paper Sheet scales and formats perfectly on A4 */
+  .printable-paper-sheet {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 2mm 4mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure colors and gradients print with 100% fidelity */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Make open dialog printable full-page without scroll clipping */

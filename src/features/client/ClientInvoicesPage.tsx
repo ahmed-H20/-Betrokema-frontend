@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useInvoices } from '@/features/invoices/hooks'
 import { formatNumber } from '@/lib/format'
 import { ClientInvoiceDetailsModal } from './components/ClientInvoiceDetailsModal'
+import { openInvoicePrintWindow } from '@/lib/invoicePrint'
 import type { Invoice } from '@/api/invoices.schema'
 
 export function ClientInvoicesPage() {
@@ -328,11 +329,12 @@ export function ClientInvoicesPage() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation()
-                        setSelectedInvoice(inv)
-                        window.print()
+                        if (inv._id) {
+                          openInvoicePrintWindow(inv._id)
+                        }
                       }}
-                      title="طباعة"
-                      className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors"
+                      title="طباعة الفاتورة في صفحة مستقلة"
+                      className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors active:scale-95"
                     >
                       <span className="material-symbols-outlined text-[16px]">print</span>
                     </button>
