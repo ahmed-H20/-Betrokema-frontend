@@ -44,7 +44,12 @@ export function detectRoleFromCode(rawCode: string): RoleDescriptor | null {
     }
   }
 
-  if (code === 'ADMIN' || code.startsWith('ADM')) {
+  if (
+    code === 'ADMIN' ||
+    code.startsWith('ADM') ||
+    code === 'PETRO-KEMA' ||
+    code.startsWith('PETRO')
+  ) {
     return {
       role: 'admin',
       label: 'مسؤول النظام',
