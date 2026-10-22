@@ -23,6 +23,7 @@ import { ClientInvoicesPage } from '@/features/client/ClientInvoicesPage'
 import { ClientProfilePage } from '@/features/client/ClientProfilePage'
 import { queryClient } from '@/lib/queryClient'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { PageTitleManager } from '@/components/layout/PageTitleManager'
 
 function RoleHomeRedirect() {
   const { isAuthenticated, isLoading, role } = useAuth()
@@ -57,6 +58,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <BrowserRouter>
+            <PageTitleManager />
             <Routes>
               {/* Public Route */}
               <Route path="/login" element={<LoginPage />} />
