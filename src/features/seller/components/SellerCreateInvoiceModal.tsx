@@ -5,7 +5,7 @@ import { captureInvoicePaperToBlob } from '@/lib/invoiceCapture'
 import { useSellerContext } from '../SellerContext'
 import { useCreateInvoice } from '@/features/invoices/hooks'
 import { useProducts } from '@/features/products/hooks'
-import { uploadInvoiceImage } from '@/api/invoices'
+import { uploadInvoiceImage, updateInvoice } from '@/api/invoices'
 import { formatCurrency, formatNumber } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import {
@@ -270,18 +270,19 @@ export function SellerCreateInvoiceModal({
     let uploadedImageUrl = ''
 
     try {
-      // 1. Capture snapshot and upload to server
-      const blob = await capturePaperAsBlob()
-      if (blob) {
-        try {
+      // 1. Capture lightweight snapshot (~250KB WebP)
+      let blob: Blob | null = null
+      try {
+        blob = await capturePaperAsBlob()
+        if (blob) {
           uploadedImageUrl = await uploadInvoiceImage(blob)
-        } catch (uploadErr) {
-          console.warn('Snapshot upload warning:', uploadErr)
         }
+      } catch (snapshotErr) {
+        console.warn('Snapshot upload warning:', snapshotErr)
       }
 
-      // 2. Create invoice record
-      await createInvoiceMutation.mutateAsync({
+      // 2. Create invoice record immediately
+      const created = await createInvoiceMutation.mutateAsync({
         client: clientId,
         seller: activeSellerId,
         warehouse,
@@ -300,7 +301,14 @@ export function SellerCreateInvoiceModal({
         dueDate: dueDate ? new Date(dueDate).toISOString() : null,
       })
 
-      toast.success('تم إصدار الفاتورة وحفظ صورتها الرسمية بنجاح!')
+      // If snapshot was delayed, attach it in the background to avoid blocking the user
+      if (!uploadedImageUrl && blob && created?._id) {
+        uploadInvoiceImage(blob)
+          .then((url) => updateInvoice(created._id, { invoiceImageUrl: url }))
+          .catch((e) => console.warn('Background image attachment warning:', e))
+      }
+
+      toast.success('تم إصدار الفاتورة بنجاح!')
       refetchAll()
       onSuccess?.()
       onOpenChange(false)

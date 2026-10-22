@@ -7,12 +7,13 @@ import { getAllClients } from '@/api/clients'
 import * as sellersApi from '@/api/sellers'
 import * as productsApi from '@/api/products'
 import { useCreateInvoice } from '@/features/invoices/hooks'
-import { uploadInvoiceImage } from '@/api/invoices'
+import { uploadInvoiceImage, updateInvoice } from '@/api/invoices'
 import { cn } from '@/lib/cn'
 import {
   PrintableInvoicePaper,
   type PrintableInvoicePaperItem,
 } from '@/features/invoices/components/PrintableInvoicePaper'
+import { PrintablePaperFitWrapper } from '@/features/invoices/components/PrintablePaperFitWrapper'
 
 interface CreateInvoiceModalProps {
   isOpen: boolean
@@ -242,16 +243,17 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
     let uploadedImageUrl = ''
 
     try {
-      const blob = await capturePaperAsBlob()
-      if (blob) {
-        try {
+      let blob: Blob | null = null
+      try {
+        blob = await capturePaperAsBlob()
+        if (blob) {
           uploadedImageUrl = await uploadInvoiceImage(blob)
-        } catch (uploadErr) {
-          console.warn('Snapshot upload warning:', uploadErr)
         }
+      } catch (uploadErr) {
+        console.warn('Snapshot upload warning:', uploadErr)
       }
 
-      await createInvoice.mutateAsync({
+      const created = await createInvoice.mutateAsync({
         client: clientId,
         seller: sellerId,
         warehouse,
@@ -267,7 +269,14 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
         dueDate: dueDate ? dueDate : null,
         notes: notes.trim() || undefined,
       })
-      toast.success('تم إصدار أمر التوريد وحفظ صورة الفاتورة الرسمية بنجاح')
+
+      if (!uploadedImageUrl && blob && created?._id) {
+        uploadInvoiceImage(blob)
+          .then((url) => updateInvoice(created._id, { invoiceImageUrl: url }))
+          .catch((e) => console.warn('Background image attachment warning:', e))
+      }
+
+      toast.success('تم إصدار أمر التوريد بنجاح!')
       onClose()
     } catch (err) {
       toast.error((err as Error)?.message || 'تعذر إصدار الفاتورة')
@@ -658,19 +667,8 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
               </span>
             </div>
 
-            <div className="flex justify-center pb-6 overflow-x-auto">
-              <div
-                ref={paperRef}
-                className="w-[794px] min-w-[794px] bg-white shadow-xl rounded-lg overflow-hidden origin-top transition-transform"
-                style={
-                  typeof window !== 'undefined' && window.innerWidth < 820
-                    ? {
-                        transform: `scale(${Math.min(1, Math.max(0.38, (window.innerWidth - 48) / 810))})`,
-                        marginBottom: `calc((1 - ${Math.min(1, Math.max(0.38, (window.innerWidth - 48) / 810))}) * -100%)`,
-                      }
-                    : {}
-                }
-              >
+            <div className="flex justify-center pb-6 overflow-hidden">
+              <PrintablePaperFitWrapper innerRef={paperRef}>
                 <PrintableInvoicePaper
                   invoiceCode={draftInvoiceCode}
                   createdAt={new Date()}
@@ -685,7 +683,7 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
                   vatRate={14}
                   notes={notes}
                 />
-              </div>
+              </PrintablePaperFitWrapper>
             </div>
           </div>
         </div>

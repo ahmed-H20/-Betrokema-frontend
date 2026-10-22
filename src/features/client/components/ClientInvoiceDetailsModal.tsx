@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { formatNumber } from '@/lib/format'
 import { captureAndDownloadInvoicePaper } from '@/lib/invoiceCapture'
 import { PrintableInvoicePaper, type PrintableInvoicePaperItem } from '@/features/invoices/components/PrintableInvoicePaper'
+import { PrintablePaperFitWrapper } from '@/features/invoices/components/PrintablePaperFitWrapper'
 import type { Invoice } from '@/api/invoices.schema'
 
 interface ClientInvoiceDetailsModalProps {
@@ -588,44 +589,25 @@ export function ClientInvoiceDetailsModal({
                 </div>
 
                 {/* Printable Paper Render Wrapper */}
-                <div className="overflow-x-auto flex justify-center p-2 sm:p-5 bg-slate-200/60 rounded-2xl border border-slate-300/80">
-                  <div
-                    className={
-                      paperZoomMode === 'fit'
-                        ? 'w-full flex justify-center overflow-hidden py-1'
-                        : 'shrink-0 overflow-x-auto'
-                    }
-                  >
-                    <div
-                      ref={paperRef}
-                      className="w-[794px] min-w-[794px] bg-white shadow-xl rounded-lg overflow-hidden origin-top transition-transform"
-                      style={
-                        paperZoomMode === 'fit' && typeof window !== 'undefined' && window.innerWidth < 820
-                          ? {
-                              transform: `scale(${Math.min(1, Math.max(0.38, (window.innerWidth - 48) / 810))})`,
-                              marginBottom: `calc((1 - ${Math.min(1, Math.max(0.38, (window.innerWidth - 48) / 810))}) * -100%)`,
-                            }
-                          : {}
-                      }
-                    >
-                      <PrintableInvoicePaper
-                        invoiceCode={invoice.invoiceCode}
-                        createdAt={invoice.createdAt}
-                        clientName={clientName}
-                        clientOrganization={clientOrg}
-                        clientPhone={clientPhone}
-                        clientAddress={clientAddress}
-                        warehouseName={invoice.warehouse || 'المستودع الرئيسي'}
-                        sellerName={sellerName}
-                        items={paperItems}
-                        includeVat={(invoice.taxAmount || 0) > 0}
-                        vatRate={14}
-                        discountAmount={0}
-                        notes={invoice.notes || ''}
-                        invoiceImageUrl={invoice.invoiceImageUrl || ''}
-                      />
-                    </div>
-                  </div>
+                <div className="flex justify-center p-2 sm:p-5 bg-slate-200/60 rounded-2xl border border-slate-300/80 overflow-hidden">
+                  <PrintablePaperFitWrapper paperZoomMode={paperZoomMode} innerRef={paperRef}>
+                    <PrintableInvoicePaper
+                      invoiceCode={invoice.invoiceCode}
+                      createdAt={invoice.createdAt}
+                      clientName={clientName}
+                      clientOrganization={clientOrg}
+                      clientPhone={clientPhone}
+                      clientAddress={clientAddress}
+                      warehouseName={invoice.warehouse || 'المستودع الرئيسي'}
+                      sellerName={sellerName}
+                      items={paperItems}
+                      includeVat={(invoice.taxAmount || 0) > 0}
+                      vatRate={14}
+                      discountAmount={0}
+                      notes={invoice.notes || ''}
+                      invoiceImageUrl={invoice.invoiceImageUrl || ''}
+                    />
+                  </PrintablePaperFitWrapper>
                 </div>
               </div>
             )}
