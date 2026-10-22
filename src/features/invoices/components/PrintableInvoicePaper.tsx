@@ -51,49 +51,49 @@ export function PrintableInvoicePaper({
   invoiceImageUrl = '',
   className,
 }: PrintableInvoicePaperProps) {
-  // Format formatted date
-  const dateObj = typeof createdAt === 'string' ? new Date(createdAt) : createdAt
-  const formattedDate = !isNaN(dateObj.getTime())
-    ? new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }).format(dateObj)
-    : new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }).format(new Date())
+  // Format formatted date safely (handles null, undefined, timestamps, Date objects, or invalid date strings)
+  const validDate = (() => {
+    if (!createdAt) return new Date()
+    const d = createdAt instanceof Date ? createdAt : new Date(createdAt)
+    return isNaN(d.getTime()) ? new Date() : d
+  })()
 
-  // Calculate financials and discounts
-  const itemsDiscountSum = items.reduce((acc, item) => {
-    if (item.oldPrice && item.oldPrice > item.price) {
+  const formattedDate = new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(validDate)
+
+  // Calculate financials and discounts safely
+  const safeItems = Array.isArray(items) ? items : []
+  const itemsDiscountSum = safeItems.reduce((acc, item) => {
+    if (item && typeof item.oldPrice === 'number' && typeof item.price === 'number' && item.oldPrice > item.price) {
       return acc + (item.oldPrice - item.price) * (item.quantity || 1)
     }
     return acc
   }, 0)
 
-  const subtotal = items.reduce((acc, item) => {
+  const subtotal = safeItems.reduce((acc, item) => {
+    if (!item) return acc
     const itemTotal =
       typeof item.totalPrice === 'number' && item.totalPrice > 0
         ? item.totalPrice
-        : (item.price || 0) * (item.quantity || 1)
+        : ((item.price || 0) * (item.quantity || 1))
     return acc + itemTotal
   }, 0)
 
   const grossBeforeDiscount = itemsDiscountSum > 0 ? subtotal + itemsDiscountSum : subtotal
   const effectiveDiscount = discountAmount > 0 ? discountAmount : itemsDiscountSum
-  const netSubtotal = grossBeforeDiscount - effectiveDiscount
+  const netSubtotal = Math.max(0, grossBeforeDiscount - effectiveDiscount)
 
-  const vatAmount = includeVat ? Math.round((netSubtotal * vatRate) / 100) : 0
+  const vatAmount = includeVat ? Math.round((netSubtotal * (vatRate || 14)) / 100) : 0
   const grandTotal = Math.max(0, netSubtotal + vatAmount)
 
-  // Determine QR code target URL
-  // If invoiceImageUrl is set, use it. Otherwise, point to the planned deterministic invoice image on the server.
+  // Determine QR code target URL safely
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8400'
-  const safeCode = (invoiceCode || 'DRAFT').replace(/[^a-zA-Z0-9_-]/g, '')
+  const safeCode = String(invoiceCode || 'DRAFT').replace(/[^a-zA-Z0-9_-]/g, '')
   const qrTargetUrl =
-    invoiceImageUrl || `${origin}/uploads/invoices/invoice-${safeCode}.png`
+    invoiceImageUrl || `${origin}/uploads/invoices/invoice-${safeCode || 'DRAFT'}.png`
 
   // Minimum 5 rows to give the invoice an authentic, balanced look
   const minRows = Math.max(items.length, 5)

@@ -42,11 +42,13 @@ export function SellerInvoiceDetailsModal({
   if (!currentInvoice) return null
 
   const isPaid = currentInvoice.paymentStatus === 'paid'
-  const isPartial = currentInvoice.paymentStatus === 'partially_paid' || (currentInvoice.totalPaid > 0 && !isPaid)
-  const remaining = Math.max(0, currentInvoice.totalPrice - currentInvoice.totalPaid)
+  const totalPaid = currentInvoice.totalPaid || 0
+  const totalPrice = currentInvoice.totalPrice || 0
+  const isPartial = currentInvoice.paymentStatus === 'partially_paid' || (totalPaid > 0 && !isPaid)
+  const remaining = Math.max(0, totalPrice - totalPaid)
   const paidPercent =
-    currentInvoice.totalPrice > 0
-      ? Math.min(100, Math.round((currentInvoice.totalPaid / currentInvoice.totalPrice) * 100))
+    totalPrice > 0
+      ? Math.min(100, Math.round((totalPaid / totalPrice) * 100))
       : 0
 
   const clientObj = typeof currentInvoice.client === 'object' && currentInvoice.client !== null ? currentInvoice.client : null
@@ -59,18 +61,20 @@ export function SellerInvoiceDetailsModal({
 
   // Subtotal before tax
   const taxAmount = currentInvoice.taxAmount || 0
-  const subtotal = currentInvoice.totalPrice - taxAmount
+  const subtotal = Math.max(0, totalPrice - taxAmount)
 
   // Map products to printable paper items
   const paperItems: PrintableInvoicePaperItem[] = (currentInvoice.products || []).map((p) => {
     const prodObj = typeof p.productId === 'object' && p.productId !== null ? (p.productId as Record<string, any>) : null
+    const qty = p.quantity || 1
+    const unitPrice = p.price || 0
     return {
       code: prodObj?.productCode || prodObj?.code || '',
       name: prodObj?.name || 'صنف دهانات وبويات',
       unit: p.unit || prodObj?.unit || 'عبوة',
-      quantity: p.quantity,
-      price: p.price,
-      totalPrice: p.totalPrice || p.price * p.quantity,
+      quantity: qty,
+      price: unitPrice,
+      totalPrice: typeof p.totalPrice === 'number' && p.totalPrice > 0 ? p.totalPrice : unitPrice * qty,
     }
   })
 

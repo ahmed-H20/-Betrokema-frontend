@@ -25,6 +25,7 @@ import { queryClient } from '@/lib/queryClient'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { InvoicePrintPage } from '@/pages/InvoicePrintPage'
 import { PageTitleManager } from '@/components/layout/PageTitleManager'
+import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 
 function RoleHomeRedirect() {
   const { isAuthenticated, isLoading, role } = useAuth()
@@ -49,17 +50,12 @@ function RoleHomeRedirect() {
 
 function App() {
   return (
-    // Radix primitives (Tabs, Select, DropdownMenu, ...) default their own
-    // internal `dir` to "ltr" unless told otherwise — they don't inherit
-    // <html dir="rtl">. Without this provider, Radix renders a stray
-    // dir="ltr" on its own DOM output, which silently reverses column order
-    // on any <table> nested inside (e.g. Tabs.Content), among other things.
-    // This app is RTL-only (CLAUDE.md), so set it globally, once.
-    <DirectionProvider dir="rtl">
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <BrowserRouter>
-            <PageTitleManager />
+    <ErrorBoundary>
+      <DirectionProvider dir="rtl">
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <BrowserRouter>
+              <PageTitleManager />
             <Routes>
               {/* Public Route */}
               <Route path="/login" element={<LoginPage />} />
@@ -131,6 +127,7 @@ function App() {
       </AuthProvider>
     </QueryClientProvider>
     </DirectionProvider>
+    </ErrorBoundary>
   )
 }
 

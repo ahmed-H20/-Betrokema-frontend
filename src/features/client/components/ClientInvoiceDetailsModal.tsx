@@ -57,13 +57,15 @@ export function ClientInvoiceDetailsModal({
   // Map products to printable paper items
   const paperItems: PrintableInvoicePaperItem[] = (invoice.products || []).map((p) => {
     const prodObj = typeof p.productId === 'object' && p.productId !== null ? (p.productId as Record<string, any>) : null
+    const qty = p.quantity || 1
+    const unitPrice = p.price || 0
     return {
       code: prodObj?.productCode || prodObj?.code || '',
       name: prodObj?.name || 'صنف دهانات وبويات',
       unit: p.unit || prodObj?.unit || 'عبوة',
-      quantity: p.quantity,
-      price: p.price,
-      totalPrice: p.totalPrice || p.price * p.quantity,
+      quantity: qty,
+      price: unitPrice,
+      totalPrice: typeof p.totalPrice === 'number' && p.totalPrice > 0 ? p.totalPrice : unitPrice * qty,
     }
   })
 
