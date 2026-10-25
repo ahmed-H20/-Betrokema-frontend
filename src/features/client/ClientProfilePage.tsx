@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
+import { useClientDetail, useSellers } from '@/features/sellers/hooks'
 import { formatNumber } from '@/lib/format'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 
@@ -14,6 +15,42 @@ export function ClientProfilePage() {
   const commercialType = (user as any)?.clientProfile?.commercialType || 'مقاولو التشطيبات والدهانات'
   const creditLimit = (user as any)?.clientProfile?.creditLimit || 250000
   const currentDebt = (user as any)?.clientProfile?.currentDebt || 64200
+
+  // Resolve assigned seller with robust lookup pipeline
+  const clientId =
+    typeof (user as any)?.clientProfile === 'object' && (user as any)?.clientProfile?._id
+      ? (user as any).clientProfile._id
+      : typeof (user as any)?.clientProfile === 'string'
+        ? (user as any).clientProfile
+        : undefined
+
+  const { data: clientDetail } = useClientDetail(clientId)
+  const { data: sellersData } = useSellers({})
+  const allSellers = sellersData || []
+
+  const rawSeller = clientDetail?.seller || (user as any)?.clientProfile?.seller
+  const sellerId =
+    typeof rawSeller === 'object' && rawSeller !== null
+      ? rawSeller._id || rawSeller.id
+      : rawSeller
+  const matchedSeller = allSellers.find((s) => s._id === sellerId)
+
+  const sellerName =
+    (typeof rawSeller === 'object' && rawSeller?.name) ||
+    matchedSeller?.name ||
+    'احمد محمد الشرقاوي'
+  const sellerPhone =
+    (typeof rawSeller === 'object' && rawSeller?.phone) ||
+    matchedSeller?.phone ||
+    '01000071767'
+  const sellerCode =
+    (typeof rawSeller === 'object' && rawSeller?.code) ||
+    matchedSeller?.code ||
+    'PK-131241'
+  const sellerTitle =
+    (typeof rawSeller === 'object' && rawSeller?.title) ||
+    matchedSeller?.title ||
+    'مندوب المبيعات الميداني المسؤول'
 
   return (
     <div className="flex flex-col gap-4 pb-8">
@@ -69,6 +106,50 @@ export function ClientProfilePage() {
         </div>
       </div>
 
+      {/* Assigned Seller Spotlight Card */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/5 rounded-2xl p-4 border border-amber-300/80 shadow-2xs space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[20px] text-amber-600">
+              support_agent
+            </span>
+            <span className="text-xs font-bold text-amber-950">المندوب الميداني المسؤول عن حسابك</span>
+          </div>
+          {sellerCode && (
+            <span className="text-[10px] bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full font-mono font-semibold">
+              {sellerCode}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-bold text-slate-900 truncate">{sellerName}</h3>
+            <p className="text-xs text-slate-500">{sellerTitle}</p>
+            {sellerPhone ? (
+              <span className="text-xs font-mono font-bold text-orange-700 block mt-1" dir="ltr">
+                {sellerPhone}
+              </span>
+            ) : (
+              <span className="text-xs text-slate-400 block mt-1">
+                جاري تعيين رقم التواصل المباشر
+              </span>
+            )}
+          </div>
+
+          {sellerPhone && (
+            <a
+              href={`tel:${sellerPhone}`}
+              className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all shrink-0"
+              title="اتصال فوري بالمندوب"
+            >
+              <span className="material-symbols-outlined text-[16px]">call</span>
+              <span>اتصال مباشر</span>
+            </a>
+          )}
+        </div>
+      </div>
+
       {/* Credit & Financial Health Card */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-4 text-white shadow-sm space-y-3">
         <div className="flex items-center justify-between">
@@ -116,13 +197,7 @@ export function ClientProfilePage() {
 
       {/* Support & Logout Actions */}
       <div className="space-y-2">
-        <a
-          href="tel:01004569920"
-          className="w-full h-11 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-colors"
-        >
-          <span className="material-symbols-outlined text-[18px] text-orange-600">call</span>
-          <span>الاتصال بمندوب بتروكيما الميداني</span>
-        </a>
+
 
         <button
           type="button"

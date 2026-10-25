@@ -71,6 +71,7 @@ export const invoiceProductItemSchema = z
     discountPercent: z.number().optional().default(0),
     quantity: z.number().default(1),
     unit: z.string().optional().default('وحدة'),
+    color: z.string().optional().default(''),
     totalPrice: z.number().default(0),
   })
   .passthrough()
@@ -114,6 +115,7 @@ export const invoiceSchema = z
     totalPrice: z.number().default(0),
     totalPaid: z.number().optional().default(0),
     taxAmount: z.number().optional().default(0),
+    discountAmount: z.number().optional().default(0),
     dueDate: z.any().optional().default(null),
     payments: z.array(invoicePaymentSchema).optional().default([]),
     notes: z.string().optional().default(''),

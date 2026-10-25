@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
 import { SellerProvider } from './SellerContext'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { NotificationBell } from '@/features/notifications'
 
 const SELLER_NAV_TABS = [
   { path: '/seller/dashboard', label: 'نظرة عامة', icon: 'dashboard' },
@@ -80,16 +81,7 @@ function SellerLayoutContent() {
 
           <div className="flex items-center gap-2">
             {/* Notification Bell */}
-            <button
-              type="button"
-              aria-label="التنبيهات"
-              className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 hover:text-orange-600 hover:bg-orange-50 flex items-center justify-center transition-colors relative border border-slate-100"
-            >
-              <span className="material-symbols-outlined text-[20px]">
-                notifications
-              </span>
-              <span className="absolute top-1.5 left-1.5 w-2 h-2 rounded-full bg-orange-500 ring-2 ring-white" />
-            </button>
+            <NotificationBell buttonClassName="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 hover:text-orange-600 hover:bg-orange-50 flex items-center justify-center transition-colors relative border border-slate-100 cursor-pointer" />
 
             {/* Rep Avatar & Logout */}
             <div className="flex items-center gap-1.5">

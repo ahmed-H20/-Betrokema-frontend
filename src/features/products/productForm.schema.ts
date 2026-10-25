@@ -3,10 +3,6 @@ import { z } from 'zod'
 import { isHttpUrl } from '@/lib/url'
 import {
   PRODUCT_IMAGE_URL_ERROR,
-  VALIDATION_BESTELA_PRICE_REQUIRED,
-  VALIDATION_DISCOUNT_MAX,
-  VALIDATION_DISCOUNT_NEGATIVE,
-  VALIDATION_GALON_PRICE_REQUIRED,
   VALIDATION_MIN_STOCK_NEGATIVE,
   VALIDATION_PRODUCT_CATEGORY_REQUIRED,
   VALIDATION_PRODUCT_NAME_REQUIRED,
@@ -31,25 +27,47 @@ const imageFieldSchema = z
     },
   )
 
+export const packageItemFormSchema = z.object({
+  unitName: z
+    .string()
+    .trim()
+    .min(1, 'اسم أو نوع العبوة مطلوب (مثل: شكارة، بستلة، جالون، كيلو)'),
+  weight: z.string().trim(),
+  price: z.number().min(0.01, 'السعر يجب أن يكون أكبر من صفر'),
+  oldPrice: z.number().min(0).optional(),
+  discountPercent: z.number().min(0).max(100).optional(),
+  note: z.string().trim().optional(),
+})
+export type PackageItemFormValues = z.infer<typeof packageItemFormSchema>
+
 export const pricingFieldsSchema = z.object({
-  galonPrice: z
-    .number({ error: VALIDATION_GALON_PRICE_REQUIRED })
-    .min(0.01, VALIDATION_GALON_PRICE_REQUIRED),
-  galonDiscount: z
-    .number()
-    .min(0, VALIDATION_DISCOUNT_NEGATIVE)
-    .max(100, VALIDATION_DISCOUNT_MAX),
-  galonWeight: z.string().trim(),
-  bestelaPrice: z
-    .number({ error: VALIDATION_BESTELA_PRICE_REQUIRED })
-    .min(0.01, VALIDATION_BESTELA_PRICE_REQUIRED),
-  bestelaDiscount: z
-    .number()
-    .min(0, VALIDATION_DISCOUNT_NEGATIVE)
-    .max(100, VALIDATION_DISCOUNT_MAX),
-  bestelaWeight: z.string().trim(),
+  packages: z
+    .array(packageItemFormSchema)
+    .min(1, 'يجب إضافة وحدة وعبوة واحدة على الأقل للمنتج'),
+  // Optional backward-compatibility fields
+  galonPrice: z.number().optional(),
+  galonDiscount: z.number().optional(),
+  galonWeight: z.string().optional(),
+  bestelaPrice: z.number().optional(),
+  bestelaDiscount: z.number().optional(),
+  bestelaWeight: z.string().optional(),
 })
 export type PricingFieldValues = z.infer<typeof pricingFieldsSchema>
+
+export const colorItemFormSchema = z.object({
+  name: z.string().trim().min(1, 'اسم اللون مطلوب'),
+  code: z.string().trim().optional(),
+  hex: z.string().trim().optional(),
+  price: z.number().min(0, 'سعر اللون لا يمكن أن يكون سالباً').optional(),
+})
+export type ColorItemFormValues = z.infer<typeof colorItemFormSchema>
+
+export const defaultColorItem: ColorItemFormValues = {
+  name: '',
+  code: '',
+  hex: '#FFFFFF',
+  price: 0,
+}
 
 export const productFormSchema = pricingFieldsSchema.extend({
   name: z.string().trim().min(1, VALIDATION_PRODUCT_NAME_REQUIRED),
@@ -61,12 +79,25 @@ export const productFormSchema = pricingFieldsSchema.extend({
   image: imageFieldSchema,
   images: z.array(z.object({ url: imageFieldSchema })),
   features: z.array(z.string()),
+  colors: z.array(colorItemFormSchema),
+  giftProduct: z.string().optional(),
+  giftTitle: z.string().optional(),
+  giftName: z.string().trim().optional(),
+  giftDescription: z.string().trim().optional(),
+  giftImage: imageFieldSchema.optional(),
+  giftWeight: z.string().trim().optional(),
 })
 export type ProductFormValues = z.infer<typeof productFormSchema>
 
-// galon/bestelaPrice and discount are deliberately left undefined (not 0) so
-// the Stitch placeholders ("350.00"/"1250.00", "5"/"8") show instead of a
-// prefilled 0 — see context/ui-tokens.md deviations log.
+export const defaultPackageItem: PackageItemFormValues = {
+  unitName: 'بستلة',
+  weight: '9 لتر',
+  price: undefined as unknown as number,
+  oldPrice: 0,
+  discountPercent: 0,
+  note: '',
+}
+
 export const productFormDefaults: DefaultValues<ProductFormValues> = {
   name: '',
   category: '',
@@ -77,11 +108,36 @@ export const productFormDefaults: DefaultValues<ProductFormValues> = {
   image: '',
   images: [],
   features: [],
+  colors: [],
+  giftProduct: '',
+  giftTitle: '',
+  giftName: '',
+  giftDescription: '',
+  giftImage: '',
+  giftWeight: '',
+  packages: [
+    {
+      unitName: 'بستلة',
+      weight: '9 لتر',
+      price: undefined as unknown as number,
+      oldPrice: 0,
+      discountPercent: 0,
+      note: '',
+    },
+    {
+      unitName: 'جالون',
+      weight: '2.5 لتر',
+      price: undefined as unknown as number,
+      oldPrice: 0,
+      discountPercent: 0,
+      note: '',
+    },
+  ],
   galonPrice: undefined,
-  galonDiscount: undefined,
+  galonDiscount: 0,
   galonWeight: '',
   bestelaPrice: undefined,
-  bestelaDiscount: undefined,
+  bestelaDiscount: 0,
   bestelaWeight: '',
 }
 

@@ -7,6 +7,7 @@ export interface PrintableInvoicePaperItem {
   code?: string
   name: string
   unit?: string
+  color?: string
   quantity: number
   price: number
   oldPrice?: number
@@ -83,8 +84,9 @@ export function PrintableInvoicePaper({
   }, 0)
 
   const grossBeforeDiscount = itemsDiscountSum > 0 ? subtotal + itemsDiscountSum : subtotal
-  const effectiveDiscount = discountAmount > 0 ? discountAmount : itemsDiscountSum
-  const netSubtotal = Math.max(0, grossBeforeDiscount - effectiveDiscount)
+  const invoiceDiscount = discountAmount || 0
+  const totalDiscount = itemsDiscountSum + invoiceDiscount
+  const netSubtotal = Math.max(0, subtotal - invoiceDiscount)
 
   const vatAmount = includeVat ? Math.round((netSubtotal * (vatRate || 14)) / 100) : 0
   const grandTotal = Math.max(0, netSubtotal + vatAmount)
@@ -262,7 +264,18 @@ export function PrintableInvoicePaper({
                       {!isEmpty ? item.code || '—' : ' '}
                     </td>
                     <td className="px-3 py-2 font-semibold text-slate-900">
-                      {!isEmpty ? item.name : ' '}
+                      {!isEmpty ? (
+                        <div className="flex flex-col">
+                          <span>{item.name}</span>
+                          {Boolean(item.color) && (
+                            <span className="text-[10px] font-normal text-slate-500">
+                              اللون: {item.color}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        ' '
+                      )}
                     </td>
                     <td className="px-2.5 py-2 text-center text-slate-700 whitespace-nowrap">
                       {!isEmpty ? item.unit || '—' : ' '}
@@ -317,7 +330,7 @@ export function PrintableInvoicePaper({
 
             {/* Calculations Box */}
             <div className="w-72 shrink-0 overflow-hidden rounded-xl border border-slate-300 text-xs shadow-2xs">
-              {effectiveDiscount > 0 ? (
+              {totalDiscount > 0 ? (
                 <>
                   <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-1.5">
                     <span className="text-slate-600">الإجمالي قبل الخصم:</span>
@@ -328,7 +341,7 @@ export function PrintableInvoicePaper({
                   <div className="flex items-center justify-between border-b border-slate-200 bg-emerald-50/60 px-3 py-1.5 text-emerald-800">
                     <span className="font-bold">إجمالي الخصم المعتمد:</span>
                     <span className="font-mono font-bold">
-                      -{formatCurrency(effectiveDiscount)}
+                      -{formatCurrency(totalDiscount)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-1.5">

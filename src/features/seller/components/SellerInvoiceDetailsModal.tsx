@@ -72,6 +72,7 @@ export function SellerInvoiceDetailsModal({
       code: prodObj?.productCode || prodObj?.code || '',
       name: prodObj?.name || 'صنف دهانات وبويات',
       unit: p.unit || prodObj?.unit || 'عبوة',
+      color: p.color || '',
       quantity: qty,
       price: unitPrice,
       totalPrice: typeof p.totalPrice === 'number' && p.totalPrice > 0 ? p.totalPrice : unitPrice * qty,
@@ -189,7 +190,7 @@ export function SellerInvoiceDetailsModal({
                 items={paperItems}
                 includeVat={(currentInvoice.taxAmount || 0) > 0}
                 vatRate={14}
-                discountAmount={0}
+                discountAmount={currentInvoice.discountAmount || 0}
                 notes={currentInvoice.notes || ''}
                 invoiceImageUrl={currentInvoice.invoiceImageUrl || ''}
               />
@@ -284,7 +285,14 @@ export function SellerInvoiceDetailsModal({
             <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-4 text-white shadow-sm space-y-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <span className="text-xs text-slate-400 block font-medium">صافي القيمة المستحقة</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400 block font-medium">صافي القيمة المستحقة</span>
+                    {(currentInvoice.discountAmount || 0) > 0 && (
+                      <span className="text-[11px] font-bold text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                        خصم: -{formatNumber(currentInvoice.discountAmount || 0)} ج.م
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-baseline gap-1 mt-0.5">
                     <span className="text-2xl font-bold text-orange-400">
                       {formatNumber(currentInvoice.totalPrice)}
@@ -428,6 +436,11 @@ export function SellerInvoiceDetailsModal({
                               <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">
                                 {pCode}
                               </span>
+                              {p.color && (
+                                <span className="bg-blue-50 text-[#002855] px-1.5 py-0.5 rounded text-[10px] font-medium">
+                                  اللون: {p.color}
+                                </span>
+                              )}
                               <span>
                                 {p.quantity} {unit} × {formatNumber(p.price)} ج.م
                               </span>
@@ -619,7 +632,7 @@ export function SellerInvoiceDetailsModal({
                       items={paperItems}
                       includeVat={(currentInvoice.taxAmount || 0) > 0}
                       vatRate={14}
-                      discountAmount={0}
+                      discountAmount={currentInvoice.discountAmount || 0}
                       notes={currentInvoice.notes || ''}
                       invoiceImageUrl={currentInvoice.invoiceImageUrl || ''}
                     />

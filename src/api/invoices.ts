@@ -96,6 +96,7 @@ export interface CreateInvoicePayload {
     unit?: string
   }[]
   taxAmount?: number
+  discountAmount?: number
   notes?: string
   dueDate?: string | null
 }

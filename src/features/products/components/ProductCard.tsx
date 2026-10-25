@@ -18,6 +18,7 @@ import { resolveImageUrl } from '@/lib/image'
 import { useDeleteProduct } from '@/features/products/hooks'
 import { QuickEditStockDialog } from '@/features/products/components/QuickEditStockDialog'
 import { ProductFormDialog } from '@/features/products/components/ProductFormDialog'
+import { getUnitIcon } from '@/features/products/components/PricingFields'
 
 const CATEGORY_BADGE_STYLES = [
   'bg-secondary-fixed text-on-secondary-fixed-variant',
@@ -143,50 +144,131 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
           )
         })()}
 
-        {/* Dual / Multi-Packaging Pricing Grid matching petrokema_admin_1 */}
+        {/* Dynamic Multi-Packaging Pricing Grid */}
         {product.packages && product.packages.length > 0 ? (
-          <div className="mb-3 grid grid-cols-2 gap-2 rounded-xl bg-surface-container-low p-2">
-            {product.packages.map((pkg) => (
-              <div
-                className="flex flex-col rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-2"
-                key={pkg.unitName}
-              >
-                <div className="flex items-center justify-between border-b border-surface-container-high pb-1">
-                  <span className="font-label-md text-label-md font-semibold text-primary">
-                    {pkg.unitName}
-                  </span>
-                  {pkg.weight ? (
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">
-                      {pkg.weight}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="flex items-baseline justify-between pt-1.5">
-                  <div>
-                    <span className="font-headline-sm text-headline-sm font-bold text-primary">
-                      {formatNumber(pkg.price)}
-                    </span>
-                    <span className="font-label-sm mr-1 text-label-sm text-on-surface-variant">
-                      {CURRENCY_SUFFIX}
-                    </span>
-                  </div>
-                  {pkg.oldPrice > pkg.price ? (
-                    <div className="flex flex-col items-end">
-                      <span className="font-body-sm text-[11px] text-outline line-through">
-                        {formatNumber(pkg.oldPrice)} {CURRENCY_SUFFIX}
+          <div
+            className={`mb-3 grid gap-2 rounded-xl bg-surface-container-low p-2 ${
+              product.packages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
+            }`}
+          >
+            {product.packages.map((pkg, idx) => {
+              const icon = getUnitIcon(pkg.unitName, pkg.weight)
+              return (
+                <div
+                  className="flex flex-col rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-2"
+                  key={`${pkg.unitName}-${pkg.weight || ''}-${idx}`}
+                >
+                  <div className="flex items-center justify-between border-b border-surface-container-high pb-1 gap-1">
+                    <span className="font-label-md text-label-md font-semibold text-primary flex items-center gap-1 min-w-0 truncate">
+                      <span className="material-symbols-outlined text-[15px] text-secondary shrink-0">
+                        {icon}
                       </span>
-                      {pkg.discountPercent > 0 && (
-                        <span className="font-label-sm text-[10px] font-semibold text-error">
-                          خصم {pkg.discountPercent}%
-                        </span>
-                      )}
-                    </div>
+                      <span className="truncate">{pkg.unitName}</span>
+                    </span>
+                    {pkg.weight ? (
+                      <span className="font-label-sm text-[11px] font-mono text-on-surface-variant shrink-0 bg-surface-container px-1 py-0.2 rounded">
+                        {pkg.weight}
+                      </span>
+                    ) : null}
+                  </div>
+                  {pkg.note ? (
+                    <span className="text-[10px] text-on-surface-variant line-clamp-1 mt-0.5 font-medium">
+                      {pkg.note}
+                    </span>
                   ) : null}
+                  <div className="flex items-baseline justify-between pt-1.5 gap-1">
+                    <div>
+                      <span className="font-headline-sm text-headline-sm font-bold text-primary">
+                        {formatNumber(pkg.price)}
+                      </span>
+                      <span className="font-label-sm mr-1 text-label-sm text-on-surface-variant">
+                        {CURRENCY_SUFFIX}
+                      </span>
+                    </div>
+                    {pkg.oldPrice > pkg.price ? (
+                      <div className="flex flex-col items-end">
+                        <span className="font-body-sm text-[11px] text-outline line-through">
+                          {formatNumber(pkg.oldPrice)} {CURRENCY_SUFFIX}
+                        </span>
+                        {pkg.discountPercent > 0 && (
+                          <span className="font-label-sm text-[10px] font-semibold text-error">
+                            خصم {pkg.discountPercent}%
+                          </span>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : null}
+
+        {/* Colors Strip if configured */}
+        {product.colors && product.colors.length > 0 ? (
+          <div className="mb-3 rounded-lg border border-surface-container-high bg-surface-container-lowest/80 p-2 space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] text-on-surface-variant font-medium">
+              <span className="flex items-center gap-1 font-bold text-slate-700">
+                <span className="material-symbols-outlined text-[14px] text-indigo-600">
+                  palette
+                </span>
+                <span>الألوان المتاحة ({product.colors.length}):</span>
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {product.colors.map((c, cIdx) => (
+                <div
+                  key={cIdx}
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[11px] font-semibold text-slate-800 shadow-2xs"
+                >
+                  <span
+                    className="w-3 h-3 rounded-full border border-slate-300 shadow-2xs shrink-0"
+                    style={{ backgroundColor: c.hex || '#FFFFFF' }}
+                  />
+                  <span>{c.name}</span>
+                  {c.price > 0 && (
+                    <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-1 py-0.2 rounded font-mono">
+                      +{formatNumber(c.price)} ج.م
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Gift Product Badge if set */}
+        {(() => {
+          const pGift = (product as any).gift || {}
+          const name = pGift.name || product.giftTitle || (typeof product.giftProduct === 'object' && product.giftProduct?.name ? product.giftProduct.name : '')
+          const image = pGift.image || (typeof product.giftProduct === 'object' && product.giftProduct?.image ? product.giftProduct.image : '')
+          const weight = pGift.weight || ''
+
+          if (!name) return null
+
+          return (
+            <div className="mb-3 flex items-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/25 px-2.5 py-1.5 font-label-sm text-label-sm text-amber-900">
+              {image ? (
+                <img
+                  src={resolveImageUrl(image)}
+                  alt={name}
+                  className="w-6 h-6 rounded-md object-cover border border-amber-300 bg-white shrink-0"
+                />
+              ) : (
+                <span className="material-symbols-outlined text-[16px] text-amber-600">
+                  featured_seasonal_and_gifts
+                </span>
+              )}
+              <span className="font-semibold shrink-0">هدية مع المنتج:</span>
+              <span className="font-bold text-amber-950 truncate flex-1">{name}</span>
+              {weight && (
+                <span className="text-[10px] font-mono font-bold bg-amber-200/70 text-amber-900 px-1.5 py-0.5 rounded shrink-0">
+                  {weight}
+                </span>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Stock Status Strip matching petrokema_admin_1 */}
         <div className="mb-3 flex items-center justify-between rounded-lg bg-surface-container-low px-2.5 py-1.5 font-label-sm text-label-sm">

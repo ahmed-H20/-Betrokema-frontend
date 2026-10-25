@@ -68,6 +68,7 @@ export function InvoicePrintPage() {
         code: prodObj?.productCode || prodObj?.code || '',
         name: prodObj?.name || 'صنف دهانات وبويات',
         unit: p.unit || prodObj?.unit || 'عبوة',
+        color: p.color || '',
         quantity: p.quantity,
         price: p.price,
         oldPrice: p.oldPrice,
@@ -88,6 +89,7 @@ export function InvoicePrintPage() {
       items,
       includeVat: (invoice.taxAmount || 0) > 0,
       vatRate: 14,
+      discountAmount: invoice.discountAmount || 0,
       notes: invoice.notes || '',
       invoiceImageUrl: invoice.invoiceImageUrl || '',
     }

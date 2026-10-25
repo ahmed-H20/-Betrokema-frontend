@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
 import { formatNumber } from '@/lib/format'
@@ -35,9 +35,22 @@ export function AddPaymentModal({
       ? 'installment'
       : 'advance',
   )
+  const [receiverName, setReceiverName] = useState<string>('')
   const [referenceNumber, setReferenceNumber] = useState('')
   const [chequeDueDate, setChequeDueDate] = useState('')
   const [notes, setNotes] = useState('')
+
+  useEffect(() => {
+    if (invoice && isOpen) {
+      setAmount(String(remaining || 0))
+      setPaymentMethod('cash')
+      const coll =
+        typeof invoice.seller === 'object' && (invoice.seller as any)?.name
+          ? `${(invoice.seller as any).name} (المندوب المسؤول)`
+          : user?.name || 'الخزينة المركزية'
+      setReceiverName(coll)
+    }
+  }, [invoice, isOpen, remaining, user])
 
   if (!isOpen || !invoice) return null
 
@@ -45,8 +58,24 @@ export function AddPaymentModal({
   const clientName = clientObj?.organizeName || clientObj?.name || 'العميل'
 
   const handleQuickAmount = (val: number) => {
-    const capped = Math.min(val, remaining)
+    let capped = Math.min(val, remaining)
+    if (paymentMethod === 'wallet') {
+      capped = Math.round(capped * 1.01 * 100) / 100
+    }
     setAmount(String(capped))
+  }
+
+  const handleSelectPaymentMethod = (method: PaymentMethod) => {
+    const num = Number(amount)
+    if (method === 'wallet' && paymentMethod !== 'wallet' && num > 0) {
+      const newAmount = Math.round(num * 1.01 * 100) / 100
+      setAmount(String(newAmount))
+      toast.info('تمت إضافة 1% تلقائياً كرسوم تحصيل للمحفظة الإلكترونية')
+    } else if (method !== 'wallet' && paymentMethod === 'wallet' && num > 0) {
+      const newAmount = Math.round((num / 1.01) * 100) / 100
+      setAmount(String(newAmount))
+    }
+    setPaymentMethod(method)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +85,10 @@ export function AddPaymentModal({
       toast.error('يرجى إدخال مبلغ صحيح أكبر من صفر')
       return
     }
-    if (num > remaining) {
+    const maxAllowed = paymentMethod === 'wallet'
+      ? Math.ceil(remaining * 1.015 * 100) / 100
+      : remaining
+    if (num > maxAllowed) {
       toast.error(`المبلغ لا يمكن أن يتجاوز المتبقي (${formatNumber(remaining)} ج.م)`)
       return
     }
@@ -71,7 +103,7 @@ export function AddPaymentModal({
           referenceNumber: referenceNumber.trim() || undefined,
           chequeDueDate: paymentMethod === 'cheque' && chequeDueDate ? chequeDueDate : undefined,
           notes: notes.trim() || undefined,
-          receiverName: user?.name || 'الخزينة المركزية',
+          receiverName: receiverName.trim() || user?.name || 'الخزينة المركزية',
         },
       })
       toast.success('تم تسجيل سند التحصيل بنجاح وتحديث الحساب')
@@ -181,7 +213,7 @@ export function AddPaymentModal({
               {[
                 { id: 'cash', label: 'نقداً (Cash)', sub: 'تحصيل يدوي ميداني', icon: 'payments', color: 'text-[#15803d]' },
                 { id: 'instapay', label: 'إنستاباي (InstaPay)', sub: 'تحويل لحظي', icon: 'flash_on', color: 'text-secondary' },
-                { id: 'wallet', label: 'محفظة كاش', sub: 'فودافون / أورنج', icon: 'account_balance_wallet', color: 'text-on-tertiary-container' },
+                { id: 'wallet', label: 'محفظة كاش (+1%)', sub: 'فودافون / أورنج', icon: 'account_balance_wallet', color: 'text-on-tertiary-container' },
                 { id: 'bank_transfer', label: 'تحويل بنكي', sub: 'إيداع حساب بتروكيما', icon: 'account_balance', color: 'text-primary' },
                 { id: 'card', label: 'بطاقة (POS)', sub: 'فيزا / ماستركارد', icon: 'credit_card', color: 'text-secondary' },
                 { id: 'cheque', label: 'شيك بنكي', sub: 'مؤجل / تحت التحصيل', icon: 'description', color: 'text-outline' },
@@ -191,7 +223,7 @@ export function AddPaymentModal({
                   <button
                     key={m.id}
                     type="button"
-                    onClick={() => setPaymentMethod(m.id as PaymentMethod)}
+                    onClick={() => handleSelectPaymentMethod(m.id as PaymentMethod)}
                     className={cn(
                       'flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all',
                       isSelected
@@ -212,6 +244,20 @@ export function AddPaymentModal({
                 )
               })}
             </div>
+
+            {/* 1% Wallet Notice Banner */}
+            {paymentMethod === 'wallet' && (
+              <div className="mt-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2.5 text-xs text-amber-950 animate-in fade-in">
+                <span className="material-symbols-outlined text-[20px] text-amber-600 shrink-0">
+                  account_balance_wallet
+                </span>
+                <div>
+                  <span>
+                    تمت زيادة المبلغ بنسبة <strong>1%</strong> تلقائياً كرسوم تحصيل محفظة كاش. إجمالي المبلغ المحصل: <strong className="font-mono text-primary font-bold">{formatNumber(Number(amount))} ج.م</strong>
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Payment Type */}
@@ -246,8 +292,25 @@ export function AddPaymentModal({
             </div>
           </div>
 
-          {/* Conditional: Reference Number & Cheque Due Date */}
+          {/* Collector & Reference Number Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-label-sm text-label-sm font-semibold text-on-surface-variant block">
+                  مسؤول التحصيل والاستلام <span className="text-error">*</span>
+                </label>
+                <span className="text-[10px] text-on-surface-variant/70">المندوب المسؤول افتراضياً</span>
+              </div>
+              <input
+                type="text"
+                required
+                value={receiverName}
+                onChange={(e) => setReceiverName(e.target.value)}
+                placeholder="اسم المندوب أو مسؤول الخزينة"
+                className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 font-body-sm text-body-sm text-on-surface focus:border-secondary focus:outline-none"
+              />
+            </div>
+
             <div>
               <label className="font-label-sm text-label-sm font-semibold text-on-surface-variant block mb-1">
                 رقم العملية / المرجع / رقم الشيك

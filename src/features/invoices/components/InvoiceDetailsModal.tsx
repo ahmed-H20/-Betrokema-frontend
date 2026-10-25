@@ -75,6 +75,7 @@ export function InvoiceDetailsModal({
       code: prodObj?.productCode || prodObj?.code || '',
       name: prodObj?.name || 'صنف دهانات وبويات',
       unit: p.unit || prodObj?.unit || 'عبوة',
+      color: p.color || '',
       quantity: qty,
       price: unitPrice,
       totalPrice: typeof p.totalPrice === 'number' && p.totalPrice > 0 ? p.totalPrice : unitPrice * qty,
@@ -178,7 +179,7 @@ export function InvoiceDetailsModal({
                 items={paperItems}
                 includeVat={(currentInvoice.taxAmount || 0) > 0}
                 vatRate={14}
-                discountAmount={0}
+                discountAmount={currentInvoice.discountAmount || 0}
                 notes={currentInvoice.notes || ''}
                 invoiceImageUrl={currentInvoice.invoiceImageUrl || ''}
               />
@@ -406,7 +407,7 @@ export function InvoiceDetailsModal({
                       items={paperItems}
                       includeVat={(currentInvoice.taxAmount || 0) > 0}
                       vatRate={14}
-                      discountAmount={0}
+                      discountAmount={currentInvoice.discountAmount || 0}
                       notes={currentInvoice.notes || ''}
                       invoiceImageUrl={currentInvoice.invoiceImageUrl || ''}
                     />
@@ -445,7 +446,7 @@ export function InvoiceDetailsModal({
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-3 text-center">
+            <div className={`grid ${(currentInvoice.discountAmount || 0) > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} gap-3 text-center`}>
               <div className="rounded-xl border border-surface-container-high bg-surface-container-lowest p-2.5">
                 <span className="font-label-sm text-label-sm text-on-surface-variant block">
                   إجمالي الفاتورة
@@ -454,6 +455,16 @@ export function InvoiceDetailsModal({
                   {formatNumber(total)} ج.م
                 </span>
               </div>
+              {(currentInvoice.discountAmount || 0) > 0 && (
+                <div className="rounded-xl border border-surface-container-high bg-surface-container-lowest p-2.5">
+                  <span className="font-label-sm text-label-sm text-on-surface-variant block font-semibold">
+                    الخصم المعتمد
+                  </span>
+                  <span className="font-headline-sm text-headline-sm font-bold text-on-surface block mt-0.5">
+                    -{formatNumber(currentInvoice.discountAmount || 0)} ج.م
+                  </span>
+                </div>
+              )}
               <div className="rounded-xl border border-surface-container-high bg-surface-container-lowest p-2.5">
                 <span className="font-label-sm text-label-sm text-[#15803d] block font-semibold">
                   المبلغ المسدد
@@ -569,9 +580,16 @@ export function InvoiceDetailsModal({
                         <tr key={idx} className="hover:bg-surface-container-low/40">
                           <td className="px-4 py-3">
                             <span className="font-semibold text-primary block">{pName}</span>
-                            {pCode && (
-                              <span className="font-mono text-[10px] text-outline">{pCode}</span>
-                            )}
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {pCode && (
+                                <span className="font-mono text-[10px] text-outline">{pCode}</span>
+                              )}
+                              {item.color && (
+                                <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-medium">
+                                  اللون: {item.color}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             {item.quantity} {item.unit || 'وحدة'}

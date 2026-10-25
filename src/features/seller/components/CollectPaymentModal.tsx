@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { toast } from 'sonner'
+import { useAuth } from '@/features/auth/AuthContext'
 import { useAddPayment } from '@/features/invoices/hooks'
 import { useSellerContext } from '../SellerContext'
 import { formatNumber } from '@/lib/format'
@@ -19,7 +20,8 @@ export function CollectPaymentModal({
   onOpenChange,
   onSuccess,
 }: CollectPaymentModalProps) {
-  const { refetchAll } = useSellerContext()
+  const { currentSeller, refetchAll } = useSellerContext()
+  const { user } = useAuth()
   const addPaymentMutation = useAddPayment()
 
   const [step, setStep] = useState<1 | 2>(1)
@@ -30,7 +32,7 @@ export function CollectPaymentModal({
   const [paymentType, setPaymentType] = useState<
     'final_settlement' | 'installment' | 'advance'
   >('final_settlement')
-  const [receiverName, setReceiverName] = useState('محمود عبد الرحمن (المندوب الميداني)')
+  const [receiverName, setReceiverName] = useState('')
   const [referenceNumber, setReferenceNumber] = useState('TXN-' + Math.floor(100000 + Math.random() * 900000))
   const [notes, setNotes] = useState('')
   const [showHistory, setShowHistory] = useState(false)
@@ -42,15 +44,51 @@ export function CollectPaymentModal({
       ? Math.min(100, Math.round((invoice.totalPaid / invoice.totalPrice) * 100))
       : 0
 
+  const resolveDefaultCollector = () => {
+    if (invoice?.seller) {
+      if (typeof invoice.seller === 'object' && (invoice.seller as any).name) {
+        return `${(invoice.seller as any).name} (المندوب المسؤول)`
+      }
+      if (typeof invoice.seller === 'string' && invoice.seller) {
+        const found = currentSeller?._id === invoice.seller ? currentSeller?.name : null
+        if (found) return `${found} (المندوب المسؤول)`
+      }
+    }
+    if (currentSeller?.name) {
+      return `${currentSeller.name} (المندوب الميداني)`
+    }
+    if (user?.role === 'seller' && user.name) {
+      return `${user.name} (المندوب الميداني)`
+    }
+    return user?.name ? `${user.name} (مسؤول التحصيل)` : 'مندوب المبيعات الميداني'
+  }
+
   useEffect(() => {
     if (invoice) {
       const rem = Math.max(0, invoice.totalPrice - invoice.totalPaid)
       setAmount(rem)
       setStep(1)
+      setPaymentMethod('instapay')
       setErrorMsg(null)
       setReferenceNumber('TXN-' + Math.floor(100000 + Math.random() * 900000))
+      setReceiverName(resolveDefaultCollector())
     }
   }, [invoice, open])
+
+  // Automatically increase/adjust amount by 1% when selecting wallet
+  const handleSelectPaymentMethod = (
+    method: 'instapay' | 'cash' | 'wallet' | 'bank_transfer',
+  ) => {
+    if (method === 'wallet' && paymentMethod !== 'wallet') {
+      const newAmount = Math.round(amount * 1.01 * 100) / 100
+      setAmount(newAmount)
+      toast.info('تمت إضافة 1% تلقائياً كرسوم تحصيل للمحفظة الإلكترونية')
+    } else if (method !== 'wallet' && paymentMethod === 'wallet') {
+      const newAmount = Math.round((amount / 1.01) * 100) / 100
+      setAmount(newAmount)
+    }
+    setPaymentMethod(method)
+  }
 
   if (!invoice) return null
 
@@ -70,7 +108,10 @@ export function CollectPaymentModal({
       setErrorMsg('يرجى تحديد مبلغ صحيح للتحصيل')
       return
     }
-    if (amount > remaining) {
+    const maxAllowed = paymentMethod === 'wallet'
+      ? Math.ceil(remaining * 1.015 * 100) / 100
+      : remaining
+    if (amount > maxAllowed) {
       setErrorMsg(
         `المبلغ (${formatNumber(amount)} ج.م) يتجاوز المتبقي على الفاتورة (${formatNumber(remaining)} ج.م)`,
       )
@@ -285,7 +326,7 @@ export function CollectPaymentModal({
                       {/* InstaPay */}
                       <button
                         type="button"
-                        onClick={() => setPaymentMethod('instapay')}
+                        onClick={() => handleSelectPaymentMethod('instapay')}
                         className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-right transition-all ${
                           paymentMethod === 'instapay'
                             ? 'border-orange-500 bg-orange-50 text-orange-800 font-bold shadow-xs'
@@ -304,7 +345,7 @@ export function CollectPaymentModal({
                       {/* Cash */}
                       <button
                         type="button"
-                        onClick={() => setPaymentMethod('cash')}
+                        onClick={() => handleSelectPaymentMethod('cash')}
                         className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-right transition-all ${
                           paymentMethod === 'cash'
                             ? 'border-orange-500 bg-orange-50 text-orange-800 font-bold shadow-xs'
@@ -323,7 +364,7 @@ export function CollectPaymentModal({
                       {/* Wallet */}
                       <button
                         type="button"
-                        onClick={() => setPaymentMethod('wallet')}
+                        onClick={() => handleSelectPaymentMethod('wallet')}
                         className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-right transition-all ${
                           paymentMethod === 'wallet'
                             ? 'border-orange-500 bg-orange-50 text-orange-800 font-bold shadow-xs'
@@ -334,7 +375,10 @@ export function CollectPaymentModal({
                           <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-xs truncate">محفظة كاش</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs truncate">محفظة كاش</span>
+                            <span className="text-[9px] bg-rose-100 text-rose-700 font-bold px-1 rounded">+1%</span>
+                          </div>
                           <span className="text-[10px] text-slate-400 font-normal truncate">فودافون / اتصالات</span>
                         </div>
                       </button>
@@ -342,7 +386,7 @@ export function CollectPaymentModal({
                       {/* Bank Transfer */}
                       <button
                         type="button"
-                        onClick={() => setPaymentMethod('bank_transfer')}
+                        onClick={() => handleSelectPaymentMethod('bank_transfer')}
                         className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-right transition-all ${
                           paymentMethod === 'bank_transfer'
                             ? 'border-orange-500 bg-orange-50 text-orange-800 font-bold shadow-xs'
@@ -358,6 +402,20 @@ export function CollectPaymentModal({
                         </div>
                       </button>
                     </div>
+
+                    {/* 1% Wallet Notice Banner */}
+                    {paymentMethod === 'wallet' && (
+                      <div className="bg-amber-50/90 border border-amber-300 rounded-xl p-2.5 flex items-center gap-2 text-xs text-amber-950 animate-in fade-in">
+                        <span className="material-symbols-outlined text-[18px] text-amber-600 shrink-0">
+                          account_balance_wallet
+                        </span>
+                        <div>
+                          <span>
+                            تمت زيادة المبلغ بنسبة <strong>1%</strong> تلقائياً كرسوم تحصيل محفظة كاش. المبلغ بعد الزيادة: <strong className="font-mono text-orange-700">{formatNumber(amount)} ج.م</strong>
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -372,7 +430,7 @@ export function CollectPaymentModal({
                       <div>
                         <span className="text-[10px] text-slate-500 block">المبلغ المحدد للتحصيل</span>
                         <span className="text-orange-600 font-bold text-sm font-mono">
-                          {formatNumber(amount)} ج.م
+                          {formatNumber(amount)} ج.م {paymentMethod === 'wallet' && '(شامل 1% محفظة)'}
                         </span>
                       </div>
                     </div>
@@ -414,9 +472,12 @@ export function CollectPaymentModal({
 
                   {/* Collector / Safe */}
                   <div className="space-y-1">
-                    <label className="block text-slate-800 font-semibold text-xs">
-                      مسؤول التحصيل والاستلام *
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="block text-slate-800 font-semibold text-xs">
+                        مسؤول التحصيل والاستلام *
+                      </label>
+                      <span className="text-[10px] text-slate-400">افتراضياً المندوب المسؤول</span>
+                    </div>
                     <input
                       type="text"
                       value={receiverName}

@@ -21,10 +21,11 @@ export interface AuthUser {
     name: string
     organizeName?: string
     clientCode?: string
-    seller?: string | { _id: string; name: string }
+    seller?: string | { _id?: string; name?: string; phone?: string; code?: string; title?: string } | null
     creditLimit?: number
     currentDebt?: number
     paymentStatus?: string
+    commercialType?: string
   } | null
 }
 

@@ -24,6 +24,7 @@ export const productPackageInputSchema = z.object({
   oldPrice: z.number().min(0).optional(),
   discountPercent: z.number().min(0).max(100).optional(),
   weight: z.string().optional(),
+  note: z.string().optional(),
 })
 export type ProductPackageInput = z.infer<typeof productPackageInputSchema>
 
@@ -33,6 +34,41 @@ const categoryRefSchema = z.object({
   nameEn: z.string().optional().default(''),
   code: z.string().optional().default(''),
 })
+
+export const productGiftSchema = z.object({
+  name: z.string().optional().default(''),
+  description: z.string().optional().default(''),
+  image: z.string().optional().default(''),
+  weight: z.string().optional().default(''),
+})
+export type ProductGift = z.infer<typeof productGiftSchema>
+
+export const productColorSchema = z.object({
+  name: z.string(),
+  code: z.string().optional().default(''),
+  hex: z.string().optional().default('#FFFFFF'),
+  price: z.number().optional().default(0),
+})
+export type ProductColor = z.infer<typeof productColorSchema>
+
+export const productColorInputSchema = z.object({
+  name: z.string().trim().min(1),
+  code: z.string().trim().optional(),
+  hex: z.string().trim().optional(),
+  price: z.number().min(0).optional(),
+})
+export type ProductColorInput = z.infer<typeof productColorInputSchema>
+
+export const giftProductRefSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  code: z.string().optional().default(''),
+  description: z.string().optional().default(''),
+  image: z.string().optional().default(''),
+  images: z.array(z.string()).optional().default([]),
+  packages: z.array(productPackageSchema).optional().default([]),
+})
+export type GiftProductRef = z.infer<typeof giftProductRefSchema>
 
 export const productSchema = z.object({
   _id: z.string(),
@@ -53,6 +89,10 @@ export const productSchema = z.object({
     .optional()
     .default([]),
   packages: z.array(productPackageSchema).optional().default([]),
+  colors: z.array(productColorSchema).optional().default([]),
+  gift: productGiftSchema.optional().default({ name: '', description: '', image: '', weight: '' }),
+  giftProduct: z.union([giftProductRefSchema, z.string()]).nullable().optional(),
+  giftTitle: z.string().optional().default(''),
   isLowStock: z.boolean().optional().default(false),
 })
 export type Product = z.infer<typeof productSchema>
@@ -148,6 +188,10 @@ export const createProductInputSchema = z.object({
   images: z.array(z.string().trim()).optional(),
   fetures: z.array(z.object({ name: z.string() })).optional(),
   packages: z.array(productPackageInputSchema).min(1, VALIDATION_PACKAGES_MIN),
+  colors: z.array(productColorInputSchema).optional(),
+  gift: productGiftSchema.optional(),
+  giftProduct: z.string().nullable().optional(),
+  giftTitle: z.string().optional(),
 })
 export type CreateProductInput = z.infer<typeof createProductInputSchema>
 

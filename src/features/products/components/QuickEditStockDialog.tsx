@@ -43,10 +43,56 @@ function findPackagePrice(
 }
 
 function buildDefaults(product: Product): StockPriceFormValues {
+  let packagesList: any[] = []
+  if (Array.isArray(product.packages) && product.packages.length > 0) {
+    packagesList = product.packages.map((pkg) => ({
+      unitName: pkg.unitName,
+      weight: pkg.weight || '',
+      price: pkg.price,
+      oldPrice: pkg.oldPrice || 0,
+      discountPercent: pkg.discountPercent || 0,
+      note: pkg.note || '',
+    }))
+  } else {
+    const galon = findPackagePrice(product.packages, isGalonUnit)
+    const bestela = findPackagePrice(product.packages, isBestelaUnit)
+    if (bestela.price > 0) {
+      packagesList.push({
+        unitName: 'بستلة',
+        weight: bestela.weight || '',
+        price: bestela.price,
+        oldPrice: 0,
+        discountPercent: bestela.discount,
+        note: '',
+      })
+    }
+    if (galon.price > 0) {
+      packagesList.push({
+        unitName: 'جالون',
+        weight: galon.weight || '',
+        price: galon.price,
+        oldPrice: 0,
+        discountPercent: galon.discount,
+        note: '',
+      })
+    }
+    if (packagesList.length === 0) {
+      packagesList.push({
+        unitName: 'بستلة',
+        weight: '9 لتر',
+        price: 0,
+        oldPrice: 0,
+        discountPercent: 0,
+        note: '',
+      })
+    }
+  }
+
   const galon = findPackagePrice(product.packages, isGalonUnit)
   const bestela = findPackagePrice(product.packages, isBestelaUnit)
   return {
     quantity: product.quantity,
+    packages: packagesList,
     galonPrice: galon.price,
     galonDiscount: galon.discount,
     galonWeight: galon.weight,
@@ -68,9 +114,11 @@ export function QuickEditStockDialog({
     handleSubmit,
     reset,
     setValue,
+    control,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<StockPriceFormValues>({
-    resolver: zodResolver(stockPriceFormSchema),
+    resolver: zodResolver(stockPriceFormSchema) as any,
     defaultValues: buildDefaults(product),
   })
 
@@ -121,7 +169,13 @@ export function QuickEditStockDialog({
               </span>
             ) : null}
           </div>
-          <PricingFields errors={errors} register={register} setValue={setValue} />
+          <PricingFields
+            control={control}
+            errors={errors}
+            register={register}
+            setValue={setValue}
+            watch={watch}
+          />
         </div>
         <div className="shrink-0 flex items-center justify-end gap-3 bg-surface-container px-4 sm:px-6 py-3.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
           <button

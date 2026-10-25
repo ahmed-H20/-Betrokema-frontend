@@ -26,6 +26,12 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 import { InvoicePrintPage } from '@/pages/InvoicePrintPage'
 import { PageTitleManager } from '@/components/layout/PageTitleManager'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
+import { useNotificationSocket } from '@/features/notifications'
+
+function NotificationGlobalListener() {
+  useNotificationSocket()
+  return null
+}
 
 function RoleHomeRedirect() {
   const { isAuthenticated, isLoading, role } = useAuth()
@@ -56,6 +62,7 @@ function App() {
           <AuthProvider>
             <BrowserRouter>
               <PageTitleManager />
+              <NotificationGlobalListener />
             <Routes>
               {/* Public Route */}
               <Route path="/login" element={<LoginPage />} />

@@ -6,9 +6,9 @@ import { NavDrawer } from '@/components/layout/NavDrawer'
 import { SidebarNavContent } from '@/components/layout/SidebarNavContent'
 import { BrandMark } from '@/components/layout/BrandMark'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { NotificationBell } from '@/features/notifications'
 import {
   APP_BADGE,
-  NOTIFICATIONS_LABEL,
   OPEN_NAV_DRAWER_LABEL,
   SEARCH_ICON_LABEL,
   SEARCH_PLACEHOLDER,
@@ -103,15 +103,7 @@ export function AppLayout() {
                 </span>
               </div>
 
-              <button
-                aria-label={NOTIFICATIONS_LABEL}
-                className="relative rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
-                type="button"
-              >
-                <span className="material-symbols-outlined text-[22px]">
-                  notifications
-                </span>
-              </button>
+              <NotificationBell />
               <div className="hidden h-6 w-px bg-outline-variant sm:block" />
               <div className="flex items-center gap-space-md">
                 <div className="hidden flex-col text-left md:flex">

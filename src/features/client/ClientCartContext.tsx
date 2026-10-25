@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useCreateInvoice } from '@/features/invoices/hooks'
 import { useAuth } from '@/features/auth/AuthContext'
 import type { Product } from '@/api/products.schema'
+import { resolveImageUrl } from '@/lib/image'
 
 export interface CartItem {
   productId: string
@@ -14,15 +15,35 @@ export interface CartItem {
   packageIndex: number
   unitName: string
   weight?: string
+  colorName?: string
+  colorHex?: string
+  colorPrice?: number
   price: number
   quantity: number
+  giftText?: string
+  giftImage?: string
+  giftWeight?: string
 }
 
 interface ClientCartContextType {
   cart: CartItem[]
-  addToCart: (product: Product, packageIndex: number, quantity?: number) => void
-  updateQuantity: (productId: string, packageIndex: number, delta: number) => void
-  removeFromCart: (productId: string, packageIndex: number) => void
+  addToCart: (
+    product: Product,
+    packageIndex: number,
+    quantity?: number,
+    selectedColor?: { name: string; hex?: string; price?: number },
+  ) => void
+  updateQuantity: (
+    productId: string,
+    packageIndex: number,
+    delta: number,
+    colorName?: string,
+  ) => void
+  removeFromCart: (
+    productId: string,
+    packageIndex: number,
+    colorName?: string,
+  ) => void
   clearCart: () => void
   totalCount: number
   subtotal: number
@@ -58,15 +79,43 @@ export function ClientCartProvider({ children }: { children: React.ReactNode }) 
     }
   }, [cart])
 
-  const addToCart = (product: Product, packageIndex: number, quantity = 1) => {
+  const addToCart = (
+    product: Product,
+    packageIndex: number,
+    quantity = 1,
+    selectedColor?: { name: string; hex?: string; price?: number },
+  ) => {
     const pkg = product.packages[packageIndex]
     const unitName = pkg?.unitName || 'عبوة'
-    const price = pkg?.price || 0
+    const colorExtra = selectedColor?.price || 0
+    const price = (pkg?.price || 0) + colorExtra
     const weight = pkg?.weight || ''
+    const colorName = selectedColor?.name || ''
+    const colorHex = selectedColor?.hex || ''
+    const productGift = (product as any).gift || {}
+    const giftName =
+      productGift.name ||
+      product.giftTitle ||
+      (typeof product.giftProduct === 'object' && product.giftProduct !== null
+        ? product.giftProduct.name
+        : '')
+    const giftImage =
+      productGift.image ||
+      (typeof product.giftProduct === 'object' && product.giftProduct !== null
+        ? product.giftProduct.image
+        : '')
+    const giftWeight =
+      productGift.weight ||
+      (typeof product.giftProduct === 'object' && product.giftProduct !== null
+        ? (product.giftProduct as any).packages?.[0]?.weight || ''
+        : '')
 
     setCart((prev) => {
       const existingIndex = prev.findIndex(
-        (item) => item.productId === product._id && item.packageIndex === packageIndex
+        (item) =>
+          item.productId === product._id &&
+          item.packageIndex === packageIndex &&
+          (item.colorName || '') === colorName,
       )
 
       if (existingIndex > -1) {
@@ -85,20 +134,36 @@ export function ClientCartProvider({ children }: { children: React.ReactNode }) 
           packageIndex,
           unitName,
           weight,
+          colorName: colorName || undefined,
+          colorHex: colorHex || undefined,
+          colorPrice: colorExtra,
           price,
           quantity,
+          giftText: giftName || undefined,
+          giftImage: giftImage || undefined,
+          giftWeight: giftWeight || undefined,
         },
       ]
     })
 
-    toast.success(`تمت إضافة "${product.name} (${unitName})" إلى سلة الطلبات`)
+    const colorDesc = colorName ? ` - لون: ${colorName}` : ''
+    toast.success(`تمت إضافة "${product.name} (${unitName}${colorDesc})" إلى سلة الطلبات`)
   }
 
-  const updateQuantity = (productId: string, packageIndex: number, delta: number) => {
+  const updateQuantity = (
+    productId: string,
+    packageIndex: number,
+    delta: number,
+    colorName = '',
+  ) => {
     setCart((prev) => {
       return prev
         .map((item) => {
-          if (item.productId === productId && item.packageIndex === packageIndex) {
+          if (
+            item.productId === productId &&
+            item.packageIndex === packageIndex &&
+            (item.colorName || '') === colorName
+          ) {
             const newQty = item.quantity + delta
             return newQty > 0 ? { ...item, quantity: newQty } : null
           }
@@ -108,11 +173,20 @@ export function ClientCartProvider({ children }: { children: React.ReactNode }) 
     })
   }
 
-  const removeFromCart = (productId: string, packageIndex: number) => {
+  const removeFromCart = (
+    productId: string,
+    packageIndex: number,
+    colorName = '',
+  ) => {
     setCart((prev) =>
       prev.filter(
-        (item) => !(item.productId === productId && item.packageIndex === packageIndex)
-      )
+        (item) =>
+          !(
+            item.productId === productId &&
+            item.packageIndex === packageIndex &&
+            (item.colorName || '') === colorName
+          ),
+      ),
     )
   }
 
@@ -138,10 +212,16 @@ export function ClientCartProvider({ children }: { children: React.ReactNode }) 
       const items = cart.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
-        unit: item.unitName,
+        unit: item.weight ? `${item.unitName} (${item.weight})` : item.unitName,
+        color: item.colorName || '',
         price: item.price,
         totalPrice: item.price * item.quantity,
       }))
+
+      const giftsList = cart
+        .filter((c) => c.giftText)
+        .map((c) => `${c.productName}: (${c.giftText} × ${c.quantity})`)
+      const giftsNote = giftsList.length > 0 ? ` [هدايا معتمدة: ${giftsList.join(', ')}]` : ''
 
       await createInvoiceMutation.mutateAsync({
         client: clientId,
@@ -149,7 +229,9 @@ export function ClientCartProvider({ children }: { children: React.ReactNode }) 
         dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         products: items,
         taxAmount: 0,
-        notes: deliveryNotes ? `طلب عميل إلكتروني: ${deliveryNotes}` : 'طلب عميل من كتالوج بتروكيما الميداني',
+        notes: deliveryNotes
+          ? `طلب عميل إلكتروني: ${deliveryNotes}${giftsNote}`
+          : `طلب عميل من كتالوج بتروكيما الميداني${giftsNote}`,
       })
 
       toast.success('تم إرسال أمر التوريد والطلبية بنجاح! جاري التجهيز بالمستودع')
@@ -225,28 +307,63 @@ export function ClientCartProvider({ children }: { children: React.ReactNode }) 
                 <div className="space-y-2.5">
                   {cart.map((item) => (
                     <div
-                      key={`${item.productId}-${item.packageIndex}`}
+                      key={`${item.productId}-${item.packageIndex}-${item.colorName || 'def'}`}
                       className="bg-white p-3 rounded-2xl border border-slate-200 flex items-center justify-between gap-3 shadow-xs"
                     >
                       <div className="min-w-0 flex-1">
                         <h4 className="font-bold text-xs text-slate-900 truncate">
                           {item.productName}
                         </h4>
-                        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
+                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5 text-[11px] text-slate-500">
                           <span className="font-medium text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">
                             {item.unitName} {item.weight ? `(${item.weight})` : ''}
                           </span>
+                          {item.colorName && (
+                            <span className="inline-flex items-center gap-1 font-semibold text-slate-800 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[10px]">
+                              <span
+                                className="w-2.5 h-2.5 rounded-full border border-slate-300 shrink-0"
+                                style={{ backgroundColor: item.colorHex || '#FFFFFF' }}
+                              />
+                              <span>{item.colorName}</span>
+                              {item.colorPrice && item.colorPrice > 0 ? (
+                                <span className="text-[9px] text-orange-600 font-mono">
+                                  (+{formatNumber(item.colorPrice)})
+                                </span>
+                              ) : null}
+                            </span>
+                          )}
                           <span>{formatNumber(item.price)} ج.م / العبوة</span>
                         </div>
                         <span className="text-xs font-bold text-slate-900 font-mono mt-1 block">
                           الإجمالي: {formatNumber(item.price * item.quantity)} ج.م
                         </span>
+                        {item.giftText && (
+                          <div className="flex items-center gap-2 mt-2 text-[10px] font-bold text-amber-900 bg-amber-50/90 border border-amber-200/90 p-1.5 rounded-xl">
+                            {item.giftImage ? (
+                              <img
+                                src={resolveImageUrl(item.giftImage)}
+                                alt={item.giftText}
+                                className="w-8 h-8 rounded-lg object-cover border border-amber-200 shrink-0 bg-white"
+                              />
+                            ) : (
+                              <span className="material-symbols-outlined text-[17px] text-amber-600 shrink-0">
+                                featured_seasonal_and_gifts
+                              </span>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <span className="block truncate font-bold">🎁 هدية: {item.giftText}</span>
+                              {item.giftWeight && (
+                                <span className="text-[9px] text-amber-700 font-normal block">الوزن: {item.giftWeight}</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
-                          onClick={() => updateQuantity(item.productId, item.packageIndex, -1)}
+                          onClick={() => updateQuantity(item.productId, item.packageIndex, -1, item.colorName)}
                           className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm"
                         >
                           -
@@ -256,14 +373,14 @@ export function ClientCartProvider({ children }: { children: React.ReactNode }) 
                         </span>
                         <button
                           type="button"
-                          onClick={() => updateQuantity(item.productId, item.packageIndex, 1)}
+                          onClick={() => updateQuantity(item.productId, item.packageIndex, 1, item.colorName)}
                           className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm"
                         >
                           +
                         </button>
                         <button
                           type="button"
-                          onClick={() => removeFromCart(item.productId, item.packageIndex)}
+                          onClick={() => removeFromCart(item.productId, item.packageIndex, item.colorName)}
                           className="w-7 h-7 rounded-lg text-rose-500 hover:bg-rose-50 flex items-center justify-center mr-1"
                           title="حذف"
                         >

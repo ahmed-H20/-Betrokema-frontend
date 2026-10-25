@@ -54,30 +54,60 @@ function buildPackage(
   }
 }
 
-// Replaces only the جالون/بستلة entries; any other package the product
-// already had (entered outside this form) is passed through untouched.
+// Builds package payload from form.packages array, supporting any unitName and weight
 export function buildPackagesFromForm(
   form: PricingFieldValues,
   existingPackages: ProductPackage[] = [],
 ): ProductPackageInput[] {
+  if (Array.isArray(form.packages) && form.packages.length > 0) {
+    return form.packages.map((pkg) => {
+      const price = roundMoney(Number(pkg.price) || 0)
+      const oldPrice = Number(pkg.oldPrice) || 0
+      const discount = Number(pkg.discountPercent) || 0
+      return {
+        unitName: pkg.unitName.trim(),
+        price,
+        ...(oldPrice > 0 ? { oldPrice: roundMoney(oldPrice) } : {}),
+        discountPercent: discount,
+        weight: (pkg.weight || '').trim(),
+        note: pkg.note?.trim() || undefined,
+      }
+    })
+  }
+
+  // Fallback for legacy galon/bestela inputs
   const untouched = existingPackages.filter(
     (pkg) => !isGalonUnit(pkg.unitName) && !isBestelaUnit(pkg.unitName),
   )
-  return [
-    ...untouched,
-    buildPackage('جالون', form.galonPrice, form.galonDiscount, form.galonWeight),
-    buildPackage(
-      'بستلة',
-      form.bestelaPrice,
-      form.bestelaDiscount,
-      form.bestelaWeight,
-    ),
-  ]
+  const pkgs: ProductPackageInput[] = [...untouched]
+  if (form.galonPrice && form.galonPrice > 0) {
+    pkgs.push(buildPackage('جالون', form.galonPrice, form.galonDiscount || 0, form.galonWeight || ''))
+  }
+  if (form.bestelaPrice && form.bestelaPrice > 0) {
+    pkgs.push(
+      buildPackage('بستلة', form.bestelaPrice, form.bestelaDiscount || 0, form.bestelaWeight || ''),
+    )
+  }
+  return pkgs
 }
 
 export function buildCreateProductPayload(
   form: ProductFormValues,
 ): CreateProductInput {
+  const hasGift = Boolean(
+    form.giftName?.trim() ||
+      form.giftTitle?.trim() ||
+      form.giftImage?.trim() ||
+      form.giftDescription?.trim() ||
+      form.giftWeight?.trim() ||
+      (form.giftProduct && form.giftProduct !== ''),
+  )
+
+  const finalGiftName =
+    form.giftName?.trim() ||
+    form.giftTitle?.trim() ||
+    (hasGift ? 'هدية مميزة' : '')
+
   return {
     name: form.name,
     category: form.category,
@@ -91,6 +121,23 @@ export function buildCreateProductPayload(
       .filter((url) => url !== ''),
     fetures: form.features.map((name) => ({ name })),
     packages: buildPackagesFromForm(form),
+    colors: (form.colors || [])
+      .map((c) => ({
+        name: c.name?.trim() || '',
+        code: c.code?.trim() || '',
+        hex: c.hex?.trim() || '#FFFFFF',
+        price: Math.max(0, Number(c.price) || 0),
+      }))
+      .filter((c) => c.name !== ''),
+    gift: {
+      name: finalGiftName,
+      description: form.giftDescription?.trim() || '',
+      image: form.giftImage?.trim() || '',
+      weight: form.giftWeight?.trim() || '',
+    },
+    giftProduct:
+      form.giftProduct && form.giftProduct !== '' ? form.giftProduct : null,
+    giftTitle: finalGiftName,
   }
 }
 
@@ -118,12 +165,83 @@ export function buildProductFormDefaults(product?: Product | null): ProductFormV
       image: '',
       images: [],
       features: [],
+      colors: [],
+      giftProduct: '',
+      giftTitle: '',
+      giftName: '',
+      giftDescription: '',
+      giftImage: '',
+      giftWeight: '',
+      packages: [
+        {
+          unitName: 'بستلة',
+          weight: '9 لتر',
+          price: undefined as unknown as number,
+          oldPrice: 0,
+          discountPercent: 0,
+          note: '',
+        },
+        {
+          unitName: 'جالون',
+          weight: '2.5 لتر',
+          price: undefined as unknown as number,
+          oldPrice: 0,
+          discountPercent: 0,
+          note: '',
+        },
+      ],
       galonPrice: undefined as unknown as number,
-      galonDiscount: undefined as unknown as number,
+      galonDiscount: 0,
       galonWeight: '',
       bestelaPrice: undefined as unknown as number,
-      bestelaDiscount: undefined as unknown as number,
+      bestelaDiscount: 0,
       bestelaWeight: '',
+    }
+  }
+
+  // Extract all packages for this product
+  let packagesList = []
+  if (Array.isArray(product.packages) && product.packages.length > 0) {
+    packagesList = product.packages.map((pkg) => ({
+      unitName: pkg.unitName,
+      weight: pkg.weight || '',
+      price: pkg.price,
+      oldPrice: pkg.oldPrice || 0,
+      discountPercent: pkg.discountPercent || 0,
+      note: pkg.note || '',
+    }))
+  } else {
+    const galon = findPackagePrice(product.packages || [], isGalonUnit)
+    const bestela = findPackagePrice(product.packages || [], isBestelaUnit)
+    if (bestela.price > 0) {
+      packagesList.push({
+        unitName: 'بستلة',
+        weight: bestela.weight || '9 لتر',
+        price: bestela.price,
+        oldPrice: (bestela as any).oldPrice || 0,
+        discountPercent: bestela.discount || 0,
+        note: '',
+      })
+    }
+    if (galon.price > 0) {
+      packagesList.push({
+        unitName: 'جالون',
+        weight: galon.weight || '2.5 لتر',
+        price: galon.price,
+        oldPrice: (galon as any).oldPrice || 0,
+        discountPercent: galon.discount || 0,
+        note: '',
+      })
+    }
+    if (packagesList.length === 0) {
+      packagesList.push({
+        unitName: 'بستلة',
+        weight: '9 لتر',
+        price: 0,
+        oldPrice: 0,
+        discountPercent: 0,
+        note: '',
+      })
     }
   }
 
@@ -145,6 +263,23 @@ export function buildProductFormDefaults(product?: Product | null): ProductFormV
         ? product.category
         : ''
 
+  const giftProductId =
+    typeof product.giftProduct === 'object' && product.giftProduct?._id
+      ? product.giftProduct._id
+      : typeof product.giftProduct === 'string'
+        ? product.giftProduct
+        : ''
+
+  const productGift = (product as any).gift || {}
+  const giftName = productGift.name || product.giftTitle || ''
+  const giftDescription = productGift.description || ''
+  const giftImage =
+    productGift.image ||
+    (typeof product.giftProduct === 'object' && product.giftProduct !== null
+      ? product.giftProduct.image || ''
+      : '')
+  const giftWeight = productGift.weight || ''
+
   return {
     name: product.name || '',
     category: categoryId,
@@ -155,11 +290,24 @@ export function buildProductFormDefaults(product?: Product | null): ProductFormV
     image: product.image || '',
     images: (product.images || []).map((url) => ({ url })),
     features: featuresList,
+    colors: (product.colors || []).map((c) => ({
+      name: c.name || '',
+      code: c.code || '',
+      hex: c.hex || '#FFFFFF',
+      price: c.price || 0,
+    })),
+    giftProduct: giftProductId,
+    giftTitle: giftName,
+    giftName: giftName,
+    giftDescription: giftDescription,
+    giftImage: giftImage,
+    giftWeight: giftWeight,
+    packages: packagesList,
     galonPrice: (galon.price > 0 ? galon.price : undefined) as unknown as number,
-    galonDiscount: (galon.discount > 0 ? galon.discount : undefined) as unknown as number,
+    galonDiscount: galon.discount || 0,
     galonWeight: galon.weight || '',
     bestelaPrice: (bestela.price > 0 ? bestela.price : undefined) as unknown as number,
-    bestelaDiscount: (bestela.discount > 0 ? bestela.discount : undefined) as unknown as number,
+    bestelaDiscount: bestela.discount || 0,
     bestelaWeight: bestela.weight || '',
   }
 }

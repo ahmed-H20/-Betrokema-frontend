@@ -19,6 +19,7 @@ interface LineItem {
   code?: string
   name: string
   unit: string
+  color?: string
   price: number
   oldPrice?: number
   discountPercent?: number
@@ -64,6 +65,8 @@ export function SellerCreateInvoiceModal({
 
   // Mobile view switcher ('form' vs 'preview')
   const [mobileView, setMobileView] = useState<'form' | 'preview'>('form')
+  const [discountType, setDiscountType] = useState<'amount' | 'percent'>('amount')
+  const [discountValue, setDiscountValue] = useState<number>(0)
 
   const [lineItems, setLineItems] = useState<LineItem[]>([
     { productId: '', code: '', name: '', unit: '', price: 0, oldPrice: 0, discountPercent: 0, quantity: 1 },
@@ -131,8 +134,13 @@ export function SellerCreateInvoiceModal({
     const newItems = [...lineItems]
     if (prod) {
       const firstPkg = prod.packages?.[0]
-      const unitName = firstPkg?.unitName || 'بستلة (14 لتر)'
-      const unitPrice = firstPkg?.price || 500
+      const unitName = firstPkg
+        ? (firstPkg.weight ? `${firstPkg.unitName} (${firstPkg.weight})` : firstPkg.unitName)
+        : 'بستلة'
+      const defaultColor = prod.colors?.[0]?.name || ''
+      const colorExtra = prod.colors?.[0]?.price || 0
+      const basePrice = firstPkg?.price || 500
+      const unitPrice = basePrice + colorExtra
       const oldPrice = firstPkg?.oldPrice || 0
       const discountPercent = firstPkg?.discountPercent || 0
 
@@ -141,6 +149,7 @@ export function SellerCreateInvoiceModal({
         code: prod.code || '',
         name: prod.name,
         unit: unitName,
+        color: defaultColor,
         price: unitPrice,
         oldPrice,
         discountPercent,
@@ -152,6 +161,7 @@ export function SellerCreateInvoiceModal({
         code: '',
         name: '',
         unit: '',
+        color: '',
         price: 0,
         oldPrice: 0,
         discountPercent: 0,
@@ -162,23 +172,53 @@ export function SellerCreateInvoiceModal({
   }
 
   // Handle unit package change
-  const handleUnitChange = (index: number, unitName: string) => {
+  const handleUnitChange = (index: number, unitValue: string) => {
     const item = lineItems[index]
     const prod = products.find((p) => p._id === item.productId)
     if (!prod) return
 
-    const matchedPkg = prod.packages?.find((pkg) => pkg.unitName === unitName)
-    const newPrice = matchedPkg ? matchedPkg.price : item.price
+    const matchedPkg = prod.packages?.find((pkg) => {
+      const displayName = pkg.weight ? `${pkg.unitName} (${pkg.weight})` : pkg.unitName
+      return displayName === unitValue || pkg.unitName === unitValue
+    })
+    const selectedColor = prod.colors?.find((c) => c.name === item.color)
+    const colorExtra = selectedColor?.price || 0
+
+    const basePrice = matchedPkg ? matchedPkg.price : item.price
+    const newPrice = basePrice + colorExtra
     const oldPrice = matchedPkg ? (matchedPkg.oldPrice || 0) : 0
     const discountPercent = matchedPkg ? (matchedPkg.discountPercent || 0) : 0
 
     const newItems = [...lineItems]
     newItems[index] = {
       ...item,
-      unit: unitName,
+      unit: unitValue,
       price: newPrice,
       oldPrice,
       discountPercent,
+    }
+    setLineItems(newItems)
+  }
+
+  const handleColorChange = (index: number, colorName: string) => {
+    const item = lineItems[index]
+    const prod = products.find((p) => p._id === item.productId)
+    if (!prod) return
+
+    const selectedColor = prod.colors?.find((c) => c.name === colorName)
+    const colorExtra = selectedColor?.price || 0
+
+    const matchedPkg = prod.packages?.find((pkg) => {
+      const displayName = pkg.weight ? `${pkg.unitName} (${pkg.weight})` : pkg.unitName
+      return displayName === item.unit || pkg.unitName === item.unit
+    })
+    const basePrice = matchedPkg ? matchedPkg.price : (prod.packages?.[0]?.price || 500)
+
+    const newItems = [...lineItems]
+    newItems[index] = {
+      ...item,
+      color: colorName,
+      price: basePrice + colorExtra,
     }
     setLineItems(newItems)
   }
@@ -205,7 +245,6 @@ export function SellerCreateInvoiceModal({
     setLineItems(lineItems.filter((_, i) => i !== index))
   }
 
-  // Calculations
   const subtotal = useMemo(() => {
     return lineItems.reduce((acc, item) => {
       if (!item.productId) return acc
@@ -213,8 +252,18 @@ export function SellerCreateInvoiceModal({
     }, 0)
   }, [lineItems])
 
-  const vatAmount = includeVat ? Math.round(subtotal * 0.14) : 0
-  const grandTotal = subtotal + vatAmount
+  const calculatedDiscount = useMemo(() => {
+    if (!discountValue || discountValue <= 0) return 0
+    if (discountType === 'percent') {
+      const pct = Math.min(100, Math.max(0, discountValue))
+      return Math.round((subtotal * pct) / 100)
+    }
+    return Math.min(subtotal, Math.max(0, discountValue))
+  }, [subtotal, discountType, discountValue])
+
+  const netSubtotal = Math.max(0, subtotal - calculatedDiscount)
+  const vatAmount = includeVat ? Math.round(netSubtotal * 0.14) : 0
+  const grandTotal = netSubtotal + vatAmount
 
   // Find selected client details
   const selectedClient = clients.find((c) => c._id === clientId)
@@ -227,6 +276,7 @@ export function SellerCreateInvoiceModal({
         code: i.code || '',
         name: i.name,
         unit: i.unit,
+        color: i.color,
         quantity: i.quantity,
         price: i.price,
         oldPrice: i.oldPrice,
@@ -296,8 +346,10 @@ export function SellerCreateInvoiceModal({
           discountPercent: Number(item.discountPercent || 0),
           quantity: Number(item.quantity),
           unit: item.unit,
+          color: item.color || undefined,
         })),
         taxAmount: vatAmount,
+        discountAmount: calculatedDiscount,
         notes: notes.trim() || undefined,
         dueDate: dueDate ? new Date(dueDate).toISOString() : null,
       })
@@ -333,6 +385,7 @@ export function SellerCreateInvoiceModal({
       items: paperItems,
       includeVat,
       vatRate: 14,
+      discountAmount: calculatedDiscount,
       notes,
     })
   }
@@ -370,6 +423,7 @@ export function SellerCreateInvoiceModal({
                 items={paperItems}
                 includeVat={includeVat}
                 vatRate={14}
+                discountAmount={calculatedDiscount}
                 notes={notes}
               />
             </div>
@@ -540,6 +594,7 @@ export function SellerCreateInvoiceModal({
                   {lineItems.map((item, idx) => {
                     const selectedProd = products.find((p) => p._id === item.productId)
                     const availablePackages = selectedProd?.packages || []
+                    const availableColors = selectedProd?.colors || []
 
                     return (
                       <div
@@ -580,10 +635,17 @@ export function SellerCreateInvoiceModal({
                           </select>
                         </div>
 
-                        {/* Package, Quantity & Price */}
+                        {/* Package, Color, Quantity & Price */}
                         {item.productId && (
                           <div className="space-y-2 pt-1 border-t border-slate-100">
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div
+                              className={cn(
+                                'grid gap-2',
+                                availableColors.length > 0
+                                  ? 'grid-cols-1 sm:grid-cols-4'
+                                  : 'grid-cols-1 sm:grid-cols-3'
+                              )}
+                            >
                               {/* Package Unit */}
                               <div className="space-y-0.5">
                                 <label className="text-[10px] text-slate-500 font-semibold block">
@@ -595,11 +657,16 @@ export function SellerCreateInvoiceModal({
                                   className="w-full h-8 px-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 font-medium"
                                 >
                                   {availablePackages.length > 0 ? (
-                                    availablePackages.map((pkg, pIdx) => (
-                                      <option key={pIdx} value={pkg.unitName}>
-                                        {pkg.unitName}
-                                      </option>
-                                    ))
+                                    availablePackages.map((pkg, pIdx) => {
+                                      const displayName = pkg.weight
+                                        ? `${pkg.unitName} (${pkg.weight})`
+                                        : pkg.unitName
+                                      return (
+                                        <option key={pIdx} value={displayName}>
+                                          {displayName} - {formatNumber(pkg.price)} ج.م
+                                        </option>
+                                      )
+                                    })
                                   ) : (
                                     <option value={item.unit || 'بستلة'}>
                                       {item.unit || 'بستلة'}
@@ -607,6 +674,27 @@ export function SellerCreateInvoiceModal({
                                   )}
                                 </select>
                               </div>
+
+                              {/* Color Dropdown if available */}
+                              {availableColors.length > 0 && (
+                                <div className="space-y-0.5">
+                                  <label className="text-[10px] text-slate-500 font-semibold block">
+                                    اللون / الدرجة
+                                  </label>
+                                  <select
+                                    value={item.color || ''}
+                                    onChange={(e) => handleColorChange(idx, e.target.value)}
+                                    className="w-full h-8 px-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 font-medium"
+                                  >
+                                    <option value="">بدون لون محدد</option>
+                                    {availableColors.map((c, cIdx) => (
+                                      <option key={cIdx} value={c.name}>
+                                        {c.name} {c.price > 0 ? `(+${formatNumber(c.price)} ج.م)` : ''}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
 
                               {/* Quantity */}
                               <div className="space-y-0.5">
@@ -672,6 +760,79 @@ export function SellerCreateInvoiceModal({
                   <span className="material-symbols-outlined text-[18px]">add_circle</span>
                   <span>+ إضافة صنف طلاء آخر للفاتورة</span>
                 </button>
+              </div>
+
+              {/* 2.5 Discount Section */}
+              <div className="bg-slate-50/70 rounded-2xl p-4 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                    <span className="material-symbols-outlined text-[18px] text-[#002855]">
+                      percent
+                    </span>
+                    <span>خصم إضافي على الفاتورة</span>
+                  </div>
+                  {/* Toggle Type: Amount or Percentage */}
+                  <div className="inline-flex rounded-lg bg-slate-200/80 p-0.5 text-[11px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setDiscountType('amount')}
+                      className={cn(
+                        'px-2.5 py-1 rounded-md transition-all',
+                        discountType === 'amount'
+                          ? 'bg-white text-[#002855] shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      )}
+                    >
+                      مبلغ ثابت (ج.م)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDiscountType('percent')}
+                      className={cn(
+                        'px-2.5 py-1 rounded-md transition-all',
+                        discountType === 'percent'
+                          ? 'bg-white text-[#002855] shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      )}
+                    >
+                      نسبة مئوية (%)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-center">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      max={discountType === 'percent' ? 100 : subtotal}
+                      step={discountType === 'percent' ? '0.5' : '1'}
+                      value={discountValue || ''}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0
+                        setDiscountValue(Math.max(0, val))
+                      }}
+                      placeholder={discountType === 'percent' ? 'مثال: 5%' : 'مثال: 500 ج.م'}
+                      className="w-full h-9 px-3 pe-12 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-800 focus:outline-none focus:border-[#002855]"
+                    />
+                    <span className="absolute end-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-500 pointer-events-none">
+                      {discountType === 'percent' ? '%' : 'ج.م'}
+                    </span>
+                  </div>
+
+                  {calculatedDiscount > 0 ? (
+                    <div className="flex items-center justify-between sm:justify-end gap-2 text-xs text-slate-800 bg-white px-3 py-1.5 rounded-xl border border-slate-200">
+                      <span className="text-[11px] text-slate-500">قيمة الخصم المعتمد:</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        -{formatCurrency(calculatedDiscount)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-[11px] text-slate-400">
+                      لا يوجد خصم إضافي مطبق
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* 3. Taxes, Due Date & Notes */}
@@ -837,6 +998,7 @@ export function SellerCreateInvoiceModal({
                           items={paperItems}
                           includeVat={includeVat}
                           vatRate={14}
+                          discountAmount={calculatedDiscount}
                           notes={notes}
                         />
                       </div>
@@ -850,13 +1012,18 @@ export function SellerCreateInvoiceModal({
           {/* 3. Sticky Bottom Action Bar */}
           <div className="p-3 sm:px-6 sm:py-3.5 border-t border-slate-200 bg-white shrink-0 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] flex flex-col sm:flex-row items-center justify-between gap-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             {/* Grand Total Indicator */}
-            <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-2 text-xs">
+            <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-2 text-xs flex-wrap">
               <div className="flex items-center gap-2">
                 <span className="text-slate-500 font-semibold">إجمالي الفاتورة:</span>
                 <span className="text-base sm:text-lg font-black font-mono text-[#E85D04]">
                   {formatCurrency(grandTotal)}
                 </span>
               </div>
+              {calculatedDiscount > 0 && (
+                <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                  (خصم: -{formatCurrency(calculatedDiscount)})
+                </span>
+              )}
               {includeVat && (
                 <span className="text-[10px] text-slate-400">
                   (ضريبة: {formatCurrency(vatAmount)})

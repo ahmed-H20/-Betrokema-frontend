@@ -32,6 +32,7 @@ import {
 import { useCategories } from '@/features/categories/hooks'
 import {
   useCreateProduct,
+  useProducts,
   useUpdateProduct,
   useWarehouseNames,
 } from '@/features/products/hooks'
@@ -46,8 +47,10 @@ import {
 } from '@/features/products/productForm.schema'
 import { FeatureCheckboxGroup } from '@/features/products/components/FeatureCheckboxGroup'
 import { PricingFields } from '@/features/products/components/PricingFields'
+import { ProductColorsField } from '@/features/products/components/ProductColorsField'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import { MultiImageUpload } from '@/components/ui/MultiImageUpload'
+import { resolveImageUrl } from '@/lib/image'
 
 type ProductFormDialogProps = {
   open: boolean
@@ -78,8 +81,13 @@ export function ProductFormDialog({
   const isEditMode = Boolean(productToEdit)
   const categoriesQuery = useCategories()
   const warehousesQuery = useWarehouseNames()
+  const productsQuery = useProducts({ limit: 100 })
   const createProduct = useCreateProduct()
   const updateProduct = useUpdateProduct()
+
+  const availableGiftProducts = (productsQuery.data?.data || []).filter(
+    (p) => !productToEdit || p._id !== productToEdit._id,
+  )
 
   const {
     register,
@@ -87,6 +95,7 @@ export function ProductFormDialog({
     reset,
     watch,
     setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -141,7 +150,10 @@ export function ProductFormDialog({
       />
       <form
         className="flex flex-1 min-h-0 flex-col overflow-hidden"
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleSubmit(onSubmit, (errs) => {
+          console.error('ProductForm validation errors:', errs)
+          toast.error('يرجى مراجعة وتعبئة الحقول الإلزامية')
+        })}
       >
         <div className="flex flex-1 min-h-0 flex-col gap-6 overflow-y-auto overscroll-contain p-4 sm:p-6">
           <div>
@@ -214,9 +226,21 @@ export function ProductFormDialog({
               {PRODUCT_MODAL_SECTION_PRICING}
             </h4>
             <PricingFields
+              control={control}
               errors={errors}
               register={register}
               setValue={setValue}
+              watch={watch}
+            />
+          </div>
+
+          <div>
+            <ProductColorsField
+              control={control}
+              register={register}
+              errors={errors}
+              setValue={setValue}
+              watch={watch}
             />
           </div>
 
@@ -345,6 +369,176 @@ export function ProductFormDialog({
                 }
                 type="products"
               />
+            </div>
+          </div>
+
+          {/* Section: Gift Product & Promotions (صورة، اسم، وصف، وزن) */}
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="font-headline-sm flex items-center gap-2 text-headline-sm text-primary">
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                <span>إضافة منتج هدية على الصنف (Gift Product)</span>
+              </h4>
+              {(watch('giftName') ||
+                watch('giftTitle') ||
+                watch('giftImage') ||
+                watch('giftProduct') ||
+                watch('giftWeight')) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue('giftProduct', '', { shouldDirty: true })
+                    setValue('giftTitle', '', { shouldDirty: true })
+                    setValue('giftName', '', { shouldDirty: true })
+                    setValue('giftDescription', '', { shouldDirty: true })
+                    setValue('giftImage', '', { shouldDirty: true })
+                    setValue('giftWeight', '', { shouldDirty: true })
+                  }}
+                  className="text-xs text-error hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                >
+                  <span className="material-symbols-outlined text-[15px]">
+                    delete_sweep
+                  </span>
+                  إلغاء / مسح الهدية
+                </button>
+              )}
+            </div>
+            <div className="rounded-xl border border-surface-container-high bg-surface-container-low p-4 sm:p-5 space-y-4">
+              {/* Optional Quick-fill from catalog */}
+              <div>
+                <label className={labelClassName}>
+                  تعبئة تلقائية من الكتالوج الحالي (اختياري)
+                </label>
+                <select
+                  className={inputClassName}
+                  value={watch('giftProduct') || ''}
+                  onChange={(e) => {
+                    const selectedId = e.target.value
+                    setValue('giftProduct', selectedId, { shouldDirty: true })
+                    if (selectedId) {
+                      const selectedProd = availableGiftProducts.find((p) => p._id === selectedId)
+                      if (selectedProd) {
+                        setValue('giftName', selectedProd.name, { shouldDirty: true })
+                        setValue('giftDescription', selectedProd.description || '', { shouldDirty: true })
+                        const img = selectedProd.image || (selectedProd.images && selectedProd.images[0]) || ''
+                        setValue('giftImage', img, { shouldDirty: true })
+                        const defaultWeight = selectedProd.packages?.[0]?.weight || ''
+                        setValue('giftWeight', defaultWeight, { shouldDirty: true })
+                      }
+                    }
+                  }}
+                >
+                  <option value="">-- إدخال يدوي مخصص أو اختر من منتجات الشركة --</option>
+                  {availableGiftProducts.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name} {p.code ? `(${p.code})` : ''}
+                    </option>
+                  ))}
+                </select>
+                <span className="font-label-sm mt-1 block text-label-sm text-on-surface-variant">
+                  يمكنك اختيار صنف من الكتالوج لنسخ بياناته تلقائياً أو تعبئة حقول الهدية يدوياً بالأسفل
+                </span>
+              </div>
+
+              {/* Grid: Name & Weight */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClassName}>
+                    اسم المنتج الهدية
+                  </label>
+                  <input
+                    type="text"
+                    className={inputClassName}
+                    placeholder="مثال: علبة بوند بلس / فرشاة دهان 4 بوصة / جالون سيلر"
+                    {...register('giftName')}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClassName}>
+                    وزن / سعة المنتج الهدية
+                  </label>
+                  <input
+                    type="text"
+                    className={inputClassName}
+                    placeholder="مثال: 3.75 لتر / 1 كجم / 1 قطعة"
+                    {...register('giftWeight')}
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className={labelClassName}>
+                  وصف المنتج الهدية
+                </label>
+                <textarea
+                  className={textareaClassName}
+                  placeholder="وصف مواصفات الهدية، نوعها، أو شروط استحقاقها للعميل..."
+                  rows={2}
+                  {...register('giftDescription')}
+                />
+              </div>
+
+              {/* Gift Image Upload */}
+              <div>
+                <ImageUpload
+                  aspectRatio="video"
+                  label="صورة المنتج الهدية"
+                  onChange={(url) =>
+                    setValue('giftImage', url, {
+                      shouldDirty: true,
+                    })
+                  }
+                  onClear={() =>
+                    setValue('giftImage', '', {
+                      shouldDirty: true,
+                    })
+                  }
+                  type="products"
+                  value={watch('giftImage')}
+                />
+              </div>
+
+              {/* Live Preview if gift has name or image */}
+              {(watch('giftName') || watch('giftTitle') || watch('giftImage')) && (
+                <div className="mt-2 p-3.5 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/5 border border-amber-300/80 rounded-2xl flex items-center gap-3.5 shadow-2xs">
+                  {watch('giftImage') ? (
+                    <img
+                      src={resolveImageUrl(watch('giftImage'))}
+                      alt="معاينة الهدية"
+                      className="w-14 h-14 rounded-xl object-cover border border-amber-200 shadow-xs shrink-0 bg-white"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <span className="material-symbols-outlined text-[24px]">
+                        featured_seasonal_and_gifts
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-black uppercase text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-full">
+                        معاينة كارت الهدية كما يظهر للعميل
+                      </span>
+                      {watch('giftWeight') && (
+                        <span className="text-[10px] font-bold text-orange-800 bg-orange-100/90 px-2 py-0.5 rounded-full font-mono">
+                          الوزن: {watch('giftWeight')}
+                        </span>
+                      )}
+                    </div>
+                    <h5 className="font-bold text-xs sm:text-sm text-slate-900 mt-1 truncate">
+                      🎁 هدية مجانية: {watch('giftName') || watch('giftTitle')}
+                    </h5>
+                    {watch('giftDescription') && (
+                      <p className="text-[11px] text-slate-600 line-clamp-1 mt-0.5">
+                        {watch('giftDescription')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
