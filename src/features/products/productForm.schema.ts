@@ -27,6 +27,21 @@ const imageFieldSchema = z
     },
   )
 
+export const colorItemFormSchema = z.object({
+  name: z.string().trim().min(1, 'اسم اللون مطلوب'),
+  code: z.string().trim().optional(),
+  hex: z.string().trim().optional(),
+  price: z.number().min(0, 'سعر اللون لا يمكن أن يكون سالباً').optional(),
+})
+export type ColorItemFormValues = z.infer<typeof colorItemFormSchema>
+
+export const defaultColorItem: ColorItemFormValues = {
+  name: '',
+  code: '',
+  hex: '#000000',
+  price: 0,
+}
+
 export const packageItemFormSchema = z.object({
   unitName: z
     .string()
@@ -37,6 +52,7 @@ export const packageItemFormSchema = z.object({
   oldPrice: z.number().min(0).optional(),
   discountPercent: z.number().min(0).max(100).optional(),
   note: z.string().trim().optional(),
+  colors: z.array(colorItemFormSchema),
 })
 export type PackageItemFormValues = z.infer<typeof packageItemFormSchema>
 
@@ -53,21 +69,6 @@ export const pricingFieldsSchema = z.object({
   bestelaWeight: z.string().optional(),
 })
 export type PricingFieldValues = z.infer<typeof pricingFieldsSchema>
-
-export const colorItemFormSchema = z.object({
-  name: z.string().trim().min(1, 'اسم اللون مطلوب'),
-  code: z.string().trim().optional(),
-  hex: z.string().trim().optional(),
-  price: z.number().min(0, 'سعر اللون لا يمكن أن يكون سالباً').optional(),
-})
-export type ColorItemFormValues = z.infer<typeof colorItemFormSchema>
-
-export const defaultColorItem: ColorItemFormValues = {
-  name: '',
-  code: '',
-  hex: '#FFFFFF',
-  price: 0,
-}
 
 export const productFormSchema = pricingFieldsSchema.extend({
   name: z.string().trim().min(1, VALIDATION_PRODUCT_NAME_REQUIRED),
@@ -96,6 +97,7 @@ export const defaultPackageItem: PackageItemFormValues = {
   oldPrice: 0,
   discountPercent: 0,
   note: '',
+  colors: [],
 }
 
 export const productFormDefaults: DefaultValues<ProductFormValues> = {
@@ -123,6 +125,7 @@ export const productFormDefaults: DefaultValues<ProductFormValues> = {
       oldPrice: 0,
       discountPercent: 0,
       note: '',
+      colors: [],
     },
     {
       unitName: 'جالون',
@@ -131,6 +134,7 @@ export const productFormDefaults: DefaultValues<ProductFormValues> = {
       oldPrice: 0,
       discountPercent: 0,
       note: '',
+      colors: [],
     },
   ],
   galonPrice: undefined,

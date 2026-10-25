@@ -47,7 +47,6 @@ import {
 } from '@/features/products/productForm.schema'
 import { FeatureCheckboxGroup } from '@/features/products/components/FeatureCheckboxGroup'
 import { PricingFields } from '@/features/products/components/PricingFields'
-import { ProductColorsField } from '@/features/products/components/ProductColorsField'
 import { ImageUpload } from '@/components/ui/ImageUpload'
 import { MultiImageUpload } from '@/components/ui/MultiImageUpload'
 import { resolveImageUrl } from '@/lib/image'
@@ -234,15 +233,7 @@ export function ProductFormDialog({
             />
           </div>
 
-          <div>
-            <ProductColorsField
-              control={control}
-              register={register}
-              errors={errors}
-              setValue={setValue}
-              watch={watch}
-            />
-          </div>
+
 
           <div>
             <h4 className="font-headline-sm mb-3 flex items-center gap-2 text-headline-sm text-primary">

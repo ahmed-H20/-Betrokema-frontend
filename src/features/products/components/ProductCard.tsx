@@ -18,7 +18,7 @@ import { resolveImageUrl } from '@/lib/image'
 import { useDeleteProduct } from '@/features/products/hooks'
 import { QuickEditStockDialog } from '@/features/products/components/QuickEditStockDialog'
 import { ProductFormDialog } from '@/features/products/components/ProductFormDialog'
-import { getUnitIcon } from '@/features/products/components/PricingFields'
+import { getUnitIcon, getContrastColor } from '@/features/products/components/PricingFields'
 
 const CATEGORY_BADGE_STYLES = [
   'bg-secondary-fixed text-on-secondary-fixed-variant',
@@ -198,6 +198,39 @@ export function ProductCard({ product, categoryColorIndex }: ProductCardProps) {
                       </div>
                     ) : null}
                   </div>
+                  {pkg.colors && pkg.colors.length > 0 && (
+                    <div className="flex items-center gap-1 flex-wrap pt-1.5 border-t border-surface-container-high/60 mt-1.5">
+                      <div className="flex items-center -space-x-1 space-x-reverse">
+                        {pkg.colors.slice(0, 4).map((c, cIdx) => (
+                          <span
+                            key={cIdx}
+                            className="w-3.5 h-3.5 rounded-full border border-white shadow-2xs"
+                            style={{ backgroundColor: c.hex || '#000000' }}
+                            title={c.name}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {pkg.colors.slice(0, 3).map((c, cIdx) => (
+                          <span
+                            key={cIdx}
+                            style={{
+                              backgroundColor: c.hex || '#000000',
+                              color: getContrastColor(c.hex),
+                            }}
+                            className="px-1.5 py-0.2 rounded text-[9px] font-bold shadow-2xs"
+                          >
+                            {c.name}
+                          </span>
+                        ))}
+                        {pkg.colors.length > 3 && (
+                          <span className="text-[9px] text-slate-500 font-bold">
+                            +{pkg.colors.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             })}

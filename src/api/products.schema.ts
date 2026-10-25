@@ -8,6 +8,22 @@ import {
   VALIDATION_QUANTITY_NEGATIVE,
 } from '@/constants/strings'
 
+export const productColorSchema = z.object({
+  name: z.string(),
+  code: z.string().optional().default(''),
+  hex: z.string().optional().default('#000000'),
+  price: z.number().optional().default(0),
+})
+export type ProductColor = z.infer<typeof productColorSchema>
+
+export const productColorInputSchema = z.object({
+  name: z.string().trim().min(1),
+  code: z.string().trim().optional(),
+  hex: z.string().trim().optional(),
+  price: z.number().min(0).optional(),
+})
+export type ProductColorInput = z.infer<typeof productColorInputSchema>
+
 export const productPackageSchema = z.object({
   unitName: z.string(),
   price: z.number(),
@@ -15,6 +31,7 @@ export const productPackageSchema = z.object({
   discountPercent: z.number().optional().default(0),
   weight: z.string().optional().default(''),
   note: z.string().optional().default(''),
+  colors: z.array(productColorSchema).optional().default([]),
 })
 export type ProductPackage = z.infer<typeof productPackageSchema>
 
@@ -25,6 +42,7 @@ export const productPackageInputSchema = z.object({
   discountPercent: z.number().min(0).max(100).optional(),
   weight: z.string().optional(),
   note: z.string().optional(),
+  colors: z.array(productColorInputSchema).optional(),
 })
 export type ProductPackageInput = z.infer<typeof productPackageInputSchema>
 
@@ -42,22 +60,6 @@ export const productGiftSchema = z.object({
   weight: z.string().optional().default(''),
 })
 export type ProductGift = z.infer<typeof productGiftSchema>
-
-export const productColorSchema = z.object({
-  name: z.string(),
-  code: z.string().optional().default(''),
-  hex: z.string().optional().default('#FFFFFF'),
-  price: z.number().optional().default(0),
-})
-export type ProductColor = z.infer<typeof productColorSchema>
-
-export const productColorInputSchema = z.object({
-  name: z.string().trim().min(1),
-  code: z.string().trim().optional(),
-  hex: z.string().trim().optional(),
-  price: z.number().min(0).optional(),
-})
-export type ProductColorInput = z.infer<typeof productColorInputSchema>
 
 export const giftProductRefSchema = z.object({
   _id: z.string(),

@@ -197,8 +197,6 @@ export function ClientProfilePage() {
 
       {/* Support & Logout Actions */}
       <div className="space-y-2">
-
-
         <button
           type="button"
           onClick={logout}

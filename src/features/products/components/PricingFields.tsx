@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useFieldArray } from 'react-hook-form'
 import { formatNumber } from '@/lib/format'
 
@@ -9,27 +10,79 @@ export type PricingFieldsProps = {
   watch?: any
 }
 
-interface UnitPreset {
+export interface UnitPreset {
   label: string
   icon: string
   defaultWeight: string
+  defaultColors?: { name: string; hex: string }[]
 }
 
-const UNIT_PRESETS: UnitPreset[] = [
+export interface ColorOption {
+  name: string
+  code?: string
+  hex: string
+  price?: number
+}
+
+export const COMMON_COLOR_PRESETS: ColorOption[] = [
+  { name: 'نبيتي', hex: '#780016' },
+  { name: 'أسود', hex: '#000000' },
+  { name: 'رمادي', hex: '#64748B' },
+  { name: 'كحلي', hex: '#1E3A8A' },
+  { name: 'بترولي', hex: '#0C5966' },
+  { name: 'زيتي', hex: '#4D7C0F' },
+  { name: 'بيج', hex: '#E7D8C9' },
+  { name: 'أوف وايت', hex: '#F8FAFC' },
+  { name: 'طوبي', hex: '#B91C1C' },
+  { name: 'أصفر خردلي', hex: '#D97706' },
+  { name: 'بني شوكولاتة', hex: '#451A03' },
+  { name: 'أبيض ناصع', hex: '#FFFFFF' },
+]
+
+export function getContrastColor(hexColor = '#000000'): string {
+  const hex = hexColor.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16) || 0
+  const g = parseInt(hex.substring(2, 4), 16) || 0
+  const b = parseInt(hex.substring(4, 6), 16) || 0
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000
+  return yiq >= 150 ? '#0F172A' : '#FFFFFF'
+}
+
+export const UNIT_PRESETS: UnitPreset[] = [
   { label: 'شكارة', icon: 'shopping_bag', defaultWeight: '15 كجم' },
   { label: 'بستلة', icon: 'nest_heat_link_e', defaultWeight: '9 لتر' },
   { label: 'جالون', icon: 'water_bottle', defaultWeight: '2.5 لتر' },
+  {
+    label: 'جالون ألوان',
+    icon: 'palette',
+    defaultWeight: '2.25 لتر',
+    defaultColors: [
+      { name: 'نبيتي', hex: '#780016' },
+      { name: 'أسود', hex: '#000000' },
+    ],
+  },
+  {
+    label: 'بستلة ألوان',
+    icon: 'palette',
+    defaultWeight: '8 لتر',
+    defaultColors: [
+      { name: 'نبيتي', hex: '#780016' },
+      { name: 'أسود', hex: '#000000' },
+    ],
+  },
   { label: 'كيلو', icon: 'scale', defaultWeight: '1 لتر' },
   { label: 'نصف كيلو', icon: 'scale', defaultWeight: '0.350 لتر' },
   { label: 'برميل', icon: 'oil_barrel', defaultWeight: '200 كجم' },
   { label: 'عبوة', icon: 'package_2', defaultWeight: '1 لتر' },
 ]
 
-const WEIGHT_SUGGESTIONS = [
+export const WEIGHT_SUGGESTIONS = [
   '15 كجم',
   '3 كجم',
   '9 لتر',
+  '8 لتر',
   '2.5 لتر',
+  '2.25 لتر',
   '20 كجم',
   '25 كجم',
   '1 لتر',
@@ -39,6 +92,8 @@ const WEIGHT_SUGGESTIONS = [
 
 export function getUnitIcon(unitName = '', weight = ''): string {
   const text = `${unitName} ${weight}`.toLowerCase()
+  if (text.includes('لون') || text.includes('ألوان') || text.includes('تلوين'))
+    return 'palette'
   if (text.includes('شكارة') || text.includes('كيس') || text.includes('شوال'))
     return 'shopping_bag'
   if (text.includes('بستلة') || text.includes('جردل')) return 'nest_heat_link_e'
@@ -53,6 +108,208 @@ export function getUnitIcon(unitName = '', weight = ''): string {
   if (text.includes('برميل')) return 'oil_barrel'
   if (text.includes('علبة') || text.includes('عبوة')) return 'package_2'
   return 'format_paint'
+}
+
+/**
+ * Subcomponent to manage package-specific colors
+ * (سعر الوحدة الألوان مع إضافة الألوان)
+ */
+function PackageColorsManager({
+  control,
+  index,
+  watch,
+}: {
+  control: any
+  index: number
+  watch?: any
+}) {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `packages.${index}.colors` as any,
+  })
+
+  const [customName, setCustomName] = useState('')
+  const [customHex, setCustomHex] = useState('#780016')
+  const [isAddingCustom, setIsAddingCustom] = useState(false)
+
+  const watchedColors = watch ? watch(`packages.${index}.colors`) : undefined
+  const colorsList: any[] = Array.isArray(watchedColors)
+    ? watchedColors
+    : fields
+
+  const handleAddPreset = (preset: ColorOption) => {
+    const exists = colorsList.some(
+      (c) =>
+        (c?.name || '').trim().toLowerCase() === preset.name.trim().toLowerCase(),
+    )
+    if (exists) return
+
+    append({
+      name: preset.name,
+      hex: preset.hex,
+      code: preset.code || '',
+      price: 0,
+    })
+  }
+
+  const handleAddCustomColor = () => {
+    const trimmed = customName.trim()
+    if (!trimmed) return
+    const exists = colorsList.some(
+      (c) => (c?.name || '').trim().toLowerCase() === trimmed.toLowerCase(),
+    )
+    if (exists) return
+
+    append({
+      name: trimmed,
+      hex: customHex,
+      code: '',
+      price: 0,
+    })
+    setCustomName('')
+    setIsAddingCustom(false)
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-slate-100/90 rounded-xl bg-slate-50/60 p-3 space-y-2.5">
+      {/* Section Header */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-1.5">
+          <span className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-[14px]">palette</span>
+          </span>
+          <span className="text-xs font-bold text-slate-800">
+            ألوان هذه العبوة (الوحدة الألوان):
+          </span>
+          {colorsList.length > 0 ? (
+            <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.2 rounded-full">
+              {colorsList.length} ألوان مضافة
+            </span>
+          ) : (
+            <span className="text-[10px] text-slate-400">
+              (عبوة قياسية / بيضاء - أضف ألوان لجعلها عبوة ألوان مثل البروشور)
+            </span>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsAddingCustom(!isAddingCustom)}
+          className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1 cursor-pointer bg-white border border-indigo-200/80 px-2 py-0.5 rounded-lg shadow-2xs hover:bg-indigo-50/60 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[13px]">
+            {isAddingCustom ? 'close' : 'add'}
+          </span>
+          <span>{isAddingCustom ? 'إلغاء' : '+ لون مخصص'}</span>
+        </button>
+      </div>
+
+      {/* Quick Color Presets */}
+      <div className="flex items-center gap-1 flex-wrap">
+        <span className="text-[10px] text-slate-400 font-semibold">
+          إضافة سريعة:
+        </span>
+        {COMMON_COLOR_PRESETS.map((preset) => {
+          const isAdded = colorsList.some(
+            (c) =>
+              (c?.name || '').trim().toLowerCase() ===
+              preset.name.trim().toLowerCase(),
+          )
+          return (
+            <button
+              key={preset.name}
+              type="button"
+              disabled={isAdded}
+              onClick={() => handleAddPreset(preset)}
+              className={`text-[10px] px-2 py-0.5 rounded-md font-bold flex items-center gap-1 transition-all border cursor-pointer ${
+                isAdded
+                  ? 'opacity-40 bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                  : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/40 shadow-2xs'
+              }`}
+              title={isAdded ? 'مضاف بالفعل' : `إضافة لون ${preset.name}`}
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-full border border-slate-300 shadow-2xs shrink-0"
+                style={{ backgroundColor: preset.hex }}
+              />
+              <span>{preset.name}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Custom Color Input Form (if toggled) */}
+      {isAddingCustom && (
+        <div className="flex items-center gap-2 p-2 bg-white rounded-xl border border-indigo-200 shadow-2xs">
+          <input
+            type="text"
+            value={customName}
+            onChange={(e) => setCustomName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleAddCustomColor()
+              }
+            }}
+            placeholder="اسم اللون (مثال: نبيتي، زيتي، كحلي...)"
+            className="flex-1 h-8 px-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 outline-none focus:border-indigo-600 focus:bg-white"
+          />
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[10px] text-slate-500 font-semibold">الدرجة:</span>
+            <input
+              type="color"
+              value={customHex}
+              onChange={(e) => setCustomHex(e.target.value)}
+              className="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 p-0.5 bg-white"
+              title="اختر درجة اللون"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleAddCustomColor}
+            disabled={!customName.trim()}
+            className="h-8 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+          >
+            إضافة
+          </button>
+        </div>
+      )}
+
+      {/* Added Colors List (renders exactly like the brochure badges!) */}
+      {colorsList.length > 0 && (
+        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+          {colorsList.map((c, cIdx) => {
+            const hex = c.hex || '#000000'
+            const textColor = getContrastColor(hex)
+            return (
+              <span
+                key={cIdx}
+                style={{
+                  backgroundColor: hex,
+                  color: textColor,
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold shadow-xs border border-black/10 select-none animate-in fade-in"
+              >
+                <span
+                  className="w-2 h-2 rounded-full border border-white/40 shrink-0"
+                  style={{ backgroundColor: textColor }}
+                />
+                <span>{c.name}</span>
+                <button
+                  type="button"
+                  onClick={() => remove(cIdx)}
+                  className="text-sm font-black hover:scale-125 transition-transform cursor-pointer opacity-75 hover:opacity-100 ml-0.5"
+                  title={`حذف لون ${c.name}`}
+                >
+                  ×
+                </button>
+              </span>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function PricingFields({
@@ -81,6 +338,14 @@ export function PricingFields({
       oldPrice: 0,
       discountPercent: 0,
       note: '',
+      colors: preset.defaultColors
+        ? preset.defaultColors.map((c) => ({
+            name: c.name,
+            hex: c.hex,
+            code: '',
+            price: 0,
+          }))
+        : [],
     })
   }
 
@@ -93,6 +358,14 @@ export function PricingFields({
       oldPrice: current.oldPrice || 0,
       discountPercent: current.discountPercent || 0,
       note: current.note || '',
+      colors: Array.isArray(current.colors)
+        ? current.colors.map((c: any) => ({
+            name: c.name || '',
+            hex: c.hex || '#000000',
+            code: c.code || '',
+            price: c.price || 0,
+          }))
+        : [],
     })
   }
 
@@ -108,6 +381,21 @@ export function PricingFields({
           shouldDirty: true,
           shouldValidate: true,
         })
+      }
+      if (preset.defaultColors && preset.defaultColors.length > 0) {
+        const currentColors = (packagesList as any)?.[index]?.colors
+        if (!currentColors || currentColors.length === 0) {
+          setValue(
+            `packages.${index}.colors` as any,
+            preset.defaultColors.map((c) => ({
+              name: c.name,
+              hex: c.hex,
+              code: '',
+              price: 0,
+            })) as any,
+            { shouldDirty: true },
+          )
+        }
       }
     }
   }
@@ -137,15 +425,15 @@ export function PricingFields({
             <div>
               <div className="flex items-center gap-2">
                 <h5 className="text-xs sm:text-sm font-bold text-slate-900">
-                  وحدات وعبوات البيع والأسعار
+                  وحدات وعبوات البيع والأسعار والألوان
                 </h5>
                 <span className="text-[10px] font-bold text-blue-700 bg-blue-100/90 px-2 py-0.5 rounded-full font-mono">
                   {packagesList.length} عبوة مسجلة
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                يمكنك تسجيل أي وحدة (شكارة، بستلة، جالون، كيلو...) وبأوزان وأسعار
-                مختلفة لنفس المنتج
+                يمكنك تسجيل أي وحدة (شكارة، بستلة، جالون، جالون ألوان...) مع
+                تحديد السعر والوزن والألوان الخاصة بكل عبوة كما بالبروشور
               </p>
             </div>
           </div>
@@ -155,7 +443,7 @@ export function PricingFields({
             <span className="text-[10px] text-slate-400 font-semibold hidden lg:inline">
               إضافة سريعة:
             </span>
-            {UNIT_PRESETS.slice(0, 4).map((preset) => (
+            {UNIT_PRESETS.slice(0, 5).map((preset) => (
               <button
                 key={preset.label}
                 type="button"
@@ -219,6 +507,13 @@ export function PricingFields({
                           {formatNumber(price)} ج.م
                         </span>
                       )}
+                      {Array.isArray(currentPkg.colors) &&
+                        currentPkg.colors.length > 0 && (
+                          <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                            <span>{currentPkg.colors.length} ألوان مخصصة</span>
+                          </span>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -234,7 +529,7 @@ export function PricingFields({
                     <span className="material-symbols-outlined text-[14px]">
                       content_copy
                     </span>
-                    <span>نسخ وزن آخر</span>
+                    <span>نسخ عبوة أخرى</span>
                   </button>
 
                   <button
@@ -271,7 +566,7 @@ export function PricingFields({
                   </div>
                   <input
                     type="text"
-                    placeholder="مثال: شكارة، بستلة، جالون..."
+                    placeholder="مثال: شكارة، بستلة، جالون، جالون ألوان..."
                     className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#002855] focus:bg-white text-xs font-bold text-slate-800 transition-all outline-none"
                     {...register(`packages.${index}.unitName` as any)}
                   />
@@ -306,13 +601,13 @@ export function PricingFields({
                   </label>
                   <input
                     type="text"
-                    placeholder="مثال: 15 كجم، 9 لتر، 2.5 لتر..."
+                    placeholder="مثال: 15 كجم، 9 لتر، 2.5 لتر، 2.25 لتر..."
                     className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#002855] focus:bg-white text-xs font-bold text-slate-800 transition-all outline-none font-mono"
                     {...register(`packages.${index}.weight` as any)}
                   />
                   {/* Weight Quick suggestions */}
                   <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                    {WEIGHT_SUGGESTIONS.slice(0, 5).map((w) => (
+                    {WEIGHT_SUGGESTIONS.slice(0, 6).map((w) => (
                       <button
                         key={w}
                         type="button"
@@ -400,6 +695,13 @@ export function PricingFields({
                   />
                 </div>
               </div>
+
+              {/* 5. Colors Management for this unit (سعر الوحدة الألوان مع إضافة الألوان) */}
+              <PackageColorsManager
+                control={control}
+                index={index}
+                watch={watch}
+              />
             </div>
           )
         })}
@@ -469,6 +771,27 @@ export function PricingFields({
           <button
             type="button"
             onClick={() =>
+              handleAddPreset({
+                label: 'جالون ألوان',
+                icon: 'palette',
+                defaultWeight: '2.25 لتر',
+                defaultColors: [
+                  { name: 'نبيتي', hex: '#780016' },
+                  { name: 'أسود', hex: '#000000' },
+                ],
+              })
+            }
+            className="h-8 px-3 rounded-xl bg-white border border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50/50 text-indigo-700 hover:text-indigo-800 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[15px] text-indigo-600">
+              palette
+            </span>
+            <span>+ جالون ألوان (2.25 لتر)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
               fieldArray.append({
                 unitName: '',
                 weight: '',
@@ -476,6 +799,7 @@ export function PricingFields({
                 oldPrice: 0,
                 discountPercent: 0,
                 note: '',
+                colors: [],
               })
             }
             className="h-8 px-3 rounded-xl bg-[#002855] hover:bg-[#001d3d] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
