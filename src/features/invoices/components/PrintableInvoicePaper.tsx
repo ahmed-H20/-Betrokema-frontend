@@ -1,7 +1,36 @@
+import { Component, type ReactNode } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { formatCurrency, formatNumber } from '@/lib/format'
 import { tafqeet } from '@/lib/tafqeet'
 import { cn } from '@/lib/cn'
+
+class SafeQRCodeBoundary extends Component<
+  { children: ReactNode; fallback?: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  componentDidCatch(err: unknown) {
+    console.warn('QR Code generation failed safely caught:', err)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        this.props.fallback || (
+          <div className="flex h-[78px] w-[78px] items-center justify-center rounded bg-slate-100 text-slate-400">
+            <span className="material-symbols-outlined text-[32px]">qr_code_2</span>
+          </div>
+        )
+      )
+    }
+    return this.props.children
+  }
+}
 
 export interface PrintableInvoicePaperItem {
   code?: string
@@ -92,10 +121,24 @@ export function PrintableInvoicePaper({
   const grandTotal = Math.max(0, netSubtotal + vatAmount)
 
   // Determine QR code target URL safely
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8400'
+  // QR codes have a strict byte capacity (~2,953 bytes in v40). Passing base64 Data URLs (which can exceed 100KB-500KB)
+  // throws a hard RangeError("Data too long") and crashes the entire application.
+  const origin =
+    typeof window !== 'undefined' && window.location.origin
+      ? window.location.origin
+      : 'https://betrokema-frontend.vercel.app'
   const safeCode = String(invoiceCode || 'DRAFT').replace(/[^a-zA-Z0-9_-]/g, '')
-  const qrTargetUrl =
-    invoiceImageUrl || `${origin}/uploads/invoices/invoice-${safeCode || 'DRAFT'}.png`
+
+  // Only use invoiceImageUrl directly if it is a real HTTP/HTTPS web URL of reasonable length (< 500 chars)
+  const isCompactHttpUrl =
+    typeof invoiceImageUrl === 'string' &&
+    (invoiceImageUrl.startsWith('http://') || invoiceImageUrl.startsWith('https://')) &&
+    !invoiceImageUrl.startsWith('data:') &&
+    invoiceImageUrl.length < 500
+
+  const qrTargetUrl = isCompactHttpUrl
+    ? invoiceImageUrl
+    : `${origin}/invoices/${safeCode || 'DRAFT'}`
 
   // Minimum 5 rows to give the invoice an authentic, balanced look
   const minRows = Math.max(items.length, 5)
@@ -404,12 +447,14 @@ export function PrintableInvoicePaper({
           {/* Dynamic Scannable QR Code */}
           <div className="flex flex-col items-center justify-center text-center">
             <div className="rounded-lg border border-slate-300 bg-white p-1.5 shadow-sm">
-              <QRCodeSVG
-                fgColor="#002855"
-                level="M"
-                size={78}
-                value={qrTargetUrl}
-              />
+              <SafeQRCodeBoundary>
+                <QRCodeSVG
+                  fgColor="#002855"
+                  level="M"
+                  size={78}
+                  value={qrTargetUrl}
+                />
+              </SafeQRCodeBoundary>
             </div>
             <span className="mt-1.5 text-[10px] font-bold text-[#002855]">
               امسح بالكاميرا لفتح الصورة الأصلية 📱
