@@ -78,7 +78,6 @@ export function PrintableInvoicePaper({
   vatRate = 14,
   discountAmount = 0,
   notes = '',
-  invoiceImageUrl = '',
   className,
 }: PrintableInvoicePaperProps) {
   // Format formatted date safely (handles null, undefined, timestamps, Date objects, or invalid date strings)
@@ -120,25 +119,8 @@ export function PrintableInvoicePaper({
   const vatAmount = includeVat ? Math.round((netSubtotal * (vatRate || 14)) / 100) : 0
   const grandTotal = Math.max(0, netSubtotal + vatAmount)
 
-  // Determine QR code target URL safely
-  // QR codes have a strict byte capacity (~2,953 bytes in v40). Passing base64 Data URLs (which can exceed 100KB-500KB)
-  // throws a hard RangeError("Data too long") and crashes the entire application.
-  const origin =
-    typeof window !== 'undefined' && window.location.origin
-      ? window.location.origin
-      : 'https://betrokema-frontend.vercel.app'
-  const safeCode = String(invoiceCode || 'DRAFT').replace(/[^a-zA-Z0-9_-]/g, '')
-
-  // Only use invoiceImageUrl directly if it is a real HTTP/HTTPS web URL of reasonable length (< 500 chars)
-  const isCompactHttpUrl =
-    typeof invoiceImageUrl === 'string' &&
-    (invoiceImageUrl.startsWith('http://') || invoiceImageUrl.startsWith('https://')) &&
-    !invoiceImageUrl.startsWith('data:') &&
-    invoiceImageUrl.length < 500
-
-  const qrTargetUrl = isCompactHttpUrl
-    ? invoiceImageUrl
-    : `${origin}/invoices/${safeCode || 'DRAFT'}`
+  // Official Linktree link for all Petrokema invoices QR codes
+  const qrTargetUrl = 'https://linktr.ee/ptrokema'
 
   // Minimum 5 rows to give the invoice an authentic, balanced look
   const minRows = Math.max(items.length, 5)
@@ -457,10 +439,10 @@ export function PrintableInvoicePaper({
               </SafeQRCodeBoundary>
             </div>
             <span className="mt-1.5 text-[10px] font-bold text-[#002855]">
-              امسح بالكاميرا لفتح الصورة الأصلية 📱
+              امسح بالكاميرا لزيارة روابط وصفحات الشركة 📱
             </span>
             <span className="text-[9px] text-slate-500">
-              رمز تحقق وتوثيق معتمد
+              دليل وتوثيق شركة بتروكيما المعتمد
             </span>
           </div>
 
