@@ -82,16 +82,30 @@ export function ProductsPage() {
             {PRODUCTS_PAGE_TITLE}
           </h1>
         </div>
-        <button
-          className="font-label-lg flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-label-lg text-on-primary shadow-md transition-all hover:bg-primary-container hover:shadow-lg"
-          onClick={() => setCreateOpen(true)}
-          type="button"
-        >
-          <span className="material-symbols-outlined text-[20px]">
-            add_box
-          </span>
-          {PRODUCTS_ADD_BUTTON}
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <a
+            href="/petrokema_price_list_2026.pdf"
+            download="قائمة_أسعار_بتروكيما_2026.pdf"
+            className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary-container/20 px-4 py-2.5 font-label-md text-xs sm:text-label-md font-bold text-primary hover:bg-primary hover:text-white transition-all shadow-xs active:scale-95 cursor-pointer"
+            title="تحميل منيو وقائمة الأسعار الرسمية (PDF)"
+          >
+            <span className="material-symbols-outlined text-[20px]">
+              picture_as_pdf
+            </span>
+            <span>تحميل منيو الأسعار</span>
+          </a>
+
+          <button
+            className="font-label-lg flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-label-lg text-on-primary shadow-md transition-all hover:bg-primary-container hover:shadow-lg active:scale-95"
+            onClick={() => setCreateOpen(true)}
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[20px]">
+              add_box
+            </span>
+            {PRODUCTS_ADD_BUTTON}
+          </button>
+        </div>
       </div>
 
       <KpiBar />

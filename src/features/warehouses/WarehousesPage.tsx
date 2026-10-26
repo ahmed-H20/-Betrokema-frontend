@@ -15,7 +15,7 @@ import {
   WAREHOUSES_PAGE_SUBTITLE,
   WAREHOUSES_PAGE_TITLE,
 } from '@/constants/strings'
-import { buildCsv, downloadCsv } from '@/lib/csv'
+import { exportToExcel } from '@/lib/excel'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { DeleteWarehouseDialog } from '@/features/warehouses/components/DeleteWarehouseDialog'
 import { InventorySection } from '@/features/warehouses/components/InventorySection'
@@ -78,9 +78,11 @@ export function WarehousesPage() {
   async function onExportCsv() {
     try {
       const rows = await exportReport.mutateAsync()
-      const csv = buildCsv(
-        [...CSV_REPORT_HEADERS],
-        rows.map((row) => [
+      exportToExcel({
+        filename: `${CSV_REPORT_FILENAME_PREFIX}-${new Date().toISOString().slice(0, 10)}`,
+        sheetName: 'تقرير المخزون',
+        headers: [...CSV_REPORT_HEADERS],
+        rows: rows.map((row) => [
           row.warehouseName,
           row.warehouseCode,
           row.governorate,
@@ -92,10 +94,10 @@ export function WarehousesPage() {
           row.packagingUnit,
           row.currentStock,
           row.reorderLevel,
-          row.stockStatus,
+          row.stockStatus === 'in_stock' ? 'متوفر' : row.stockStatus === 'low_stock' ? 'منخفض' : 'حرج / نفد',
         ]),
-      )
-      downloadCsv(`${CSV_REPORT_FILENAME_PREFIX}-${new Date().toISOString().slice(0, 10)}.csv`, csv)
+      })
+      toast.success('تم تصدير تقرير المخزون بصيغة Excel بنجاح')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : GENERIC_ERROR)
     }

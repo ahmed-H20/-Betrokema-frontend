@@ -15,6 +15,7 @@ import {
   type AccountCredentials,
 } from '@/components/ui/AccountCredentialsModal'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { exportToExcel } from '@/lib/excel'
 
 export function SellerClientDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -75,6 +76,90 @@ export function SellerClientDetailPage() {
   const totalCumulativeSales = useMemo(() => {
     return clientInvoices.reduce((acc, inv) => acc + (inv.totalPrice || 0), 0)
   }, [clientInvoices])
+
+  const handleExportExcelLedger = () => {
+    if (clientInvoices.length === 0) {
+      toast.error('لا توجد فواتير لتصدير كشف الحساب')
+      return
+    }
+    const headers = [
+      'رقم الفاتورة',
+      'تاريخ الإصدار',
+      'المستودع',
+      'حالة التوريد',
+      'حالة السداد',
+      'إجمالي الفاتورة (ج.م)',
+      'المسدد (ج.م)',
+      'المتبقي (ج.م)',
+    ]
+
+    const getOrderStatusLabel = (status: string) => {
+      switch (status) {
+        case 'delivered':
+          return 'مكتمل ومسلّم'
+        case 'shipped':
+          return 'قيد التوصيل'
+        case 'confirmed':
+          return 'مؤكد'
+        case 'processing':
+          return 'قيد التجهيز'
+        case 'cancelled':
+          return 'ملغي'
+        default:
+          return status || 'جديد'
+      }
+    }
+
+    const getPaymentStatusLabel = (status: string) => {
+      switch (status) {
+        case 'paid':
+          return 'مدفوع بالكامل'
+        case 'partially_paid':
+          return 'سداد جزئي'
+        case 'overdue':
+          return 'متأخر عن السداد'
+        default:
+          return 'غير مسدد'
+      }
+    }
+
+    const rows: (string | number)[][] = clientInvoices.map((inv) => {
+      const remaining = Math.max(0, (Number(inv.totalPrice) || 0) - (Number(inv.totalPaid) || 0))
+      return [
+        inv.invoiceCode,
+        new Date(inv.createdAt).toISOString().split('T')[0],
+        inv.warehouse || '—',
+        getOrderStatusLabel(inv.orderStatus),
+        getPaymentStatusLabel(inv.paymentStatus),
+        Number(inv.totalPrice) || 0,
+        Number(inv.totalPaid) || 0,
+        remaining,
+      ]
+    })
+
+    const totalSales = clientInvoices.reduce((sum, inv) => sum + (Number(inv.totalPrice) || 0), 0)
+    const totalPaid = clientInvoices.reduce((sum, inv) => sum + (Number(inv.totalPaid) || 0), 0)
+    const totalRemaining = Math.max(0, totalSales - totalPaid)
+    rows.push([
+      'الإجمالي العام',
+      '',
+      '',
+      '',
+      '',
+      totalSales,
+      totalPaid,
+      totalRemaining,
+    ])
+
+    const safeName = (client?.organizeName || client?.name || 'عميل').replace(/[\/\\:*?"<>|]/g, '_')
+    exportToExcel({
+      filename: `كشف-حساب-${safeName}-${new Date().toISOString().split('T')[0]}`,
+      sheetName: 'كشف حساب العميل',
+      headers,
+      rows,
+    })
+    toast.success(`تم تصدير كشف حساب (${client?.organizeName || client?.name}) بصيغة Excel بنجاح`)
+  }
 
   const totalDebt = client?.currentDebt || 0
   const creditLimit = client?.creditLimit || 100000
@@ -537,18 +622,30 @@ export function SellerClientDetailPage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  toast.success('جاري إعداد وتحميل كشف الحساب المعتمد بصيغة PDF...')
-                }}
-                className="w-full py-2.5 px-4 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 text-xs font-bold flex items-center justify-center gap-2 transition-colors border border-orange-200"
-              >
-                <span className="material-symbols-outlined text-[18px] text-orange-600">
-                  download
-                </span>
-                <span>تحميل كشف الحساب المعتمد (PDF)</span>
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleExportExcelLedger}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2 transition-colors border border-emerald-200"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-emerald-600">
+                    table_view
+                  </span>
+                  <span>تصدير كشف الحساب (Excel)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.success('جاري إعداد وتحميل كشف الحساب المعتمد بصيغة PDF...')
+                  }}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 text-xs font-bold flex items-center justify-center gap-2 transition-colors border border-orange-200"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-orange-600">
+                    download
+                  </span>
+                  <span>تحميل كشف الحساب (PDF)</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

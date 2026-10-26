@@ -11,7 +11,7 @@ function neutralizeCell(value: string): string {
 
 function escapeCell(value: unknown): string {
   const text = neutralizeCell(String(value ?? ''))
-  if (/[",\r\n]/.test(text)) {
+  if (/[",\r\n;]/.test(text)) {
     return `"${text.replace(/"/g, '""')}"`
   }
   return text
@@ -24,7 +24,9 @@ export function buildCsv(
   const lines = [headers, ...rows].map((row) =>
     row.map(escapeCell).join(','),
   )
-  return UTF8_BOM + lines.join('\r\n')
+  // 'sep=,\r\n' immediately after BOM explicitly informs Microsoft Excel to treat comma as delimiter
+  // avoiding regional setting mismatches where Excel merges entire rows into a single cell.
+  return UTF8_BOM + 'sep=,\r\n' + lines.join('\r\n')
 }
 
 export function downloadCsv(filename: string, csv: string): void {

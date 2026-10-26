@@ -87,25 +87,6 @@ export function SellerInvoiceDetailsModal({
     }
   }
 
-  const handleSaveInvoiceImage = async () => {
-    const targetEl = hiddenCaptureRef.current || paperRef.current
-    if (!targetEl || !currentInvoice?._id) return
-    setIsCapturing(true)
-    try {
-      const blob = await captureInvoicePaperToBlob(targetEl)
-      if (!blob) throw new Error('فشل إنشاء ملف الصورة')
-      const uploadedUrl = await uploadInvoiceImage(blob)
-      const updated = await updateInvoice(currentInvoice._id, { invoiceImageUrl: uploadedUrl })
-      setLocalInvoice(updated)
-      toast.success('تم توليد وحفظ صورة الفاتورة المعتمدة بنجاح على السيرفر وربط الباركود بها! 🎉')
-    } catch (err: any) {
-      console.error(err)
-      toast.error(err?.message || 'حدث خطأ أثناء حفظ صورة الفاتورة')
-    } finally {
-      setIsCapturing(false)
-    }
-  }
-
   const handleDownloadImage = async () => {
     setIsCapturing(true)
     try {

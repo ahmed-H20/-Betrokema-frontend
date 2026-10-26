@@ -17,7 +17,7 @@ import {
   ANALYTICS_PRINT_REPORT,
   GENERIC_ERROR,
 } from '@/constants/strings'
-import { buildCsv, downloadCsv } from '@/lib/csv'
+import { exportToExcel } from '@/lib/excel'
 import { cn } from '@/lib/cn'
 import { ExecutiveKpiBento } from '@/features/analytics/components/ExecutiveKpiBento'
 import { PaymentMethodsCard } from '@/features/analytics/components/PaymentMethodsCard'
@@ -68,9 +68,13 @@ export function AnalyticsPage() {
         rows.push(['المناديب الميدانيين', s.name, s.sales, `${s.achievementRate}% المستهدف`])
       })
 
-      const csvContent = buildCsv(headers, rows)
-      downloadCsv(`petrokema-executive-report-${period}-${new Date().toISOString().slice(0, 10)}.csv`, csvContent)
-      toast.success('تم تصدير التقرير التنفيذي بنجاح')
+      exportToExcel({
+        filename: `تقرير-بتروكيما-التنفيذي-${period}-${new Date().toISOString().slice(0, 10)}`,
+        sheetName: 'التقرير التنفيذي',
+        headers,
+        rows,
+      })
+      toast.success('تم تصدير التقرير التنفيذي بصيغة Excel (.xlsx) بنجاح')
     } catch (e) {
       toast.error(e instanceof Error ? e.message : GENERIC_ERROR)
     }

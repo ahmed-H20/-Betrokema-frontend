@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { buildCsv, downloadCsv } from '@/lib/csv'
+import { exportToExcel } from '@/lib/excel'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import {
   useInvoiceStats,
@@ -97,8 +97,8 @@ export function InvoicesPage() {
     }
   }
 
-  // Export CSV
-  const handleExportCsv = () => {
+  // Export native Excel (.xlsx) statement
+  const handleExportExcel = () => {
     if (invoices.length === 0) {
       toast.error('لا توجد فواتير لتصديرها')
       return
@@ -107,36 +107,72 @@ export function InvoicesPage() {
       'رقم الفاتورة',
       'العميل',
       'كود العميل',
-      'المندوب',
-      'المستودع',
-      'حالة الطلب',
+      'المندوب المسؤول',
+      'مستودع الصرف',
+      'حالة التوريد',
       'حالة السداد',
-      'الإجمالي',
-      'المسدد',
-      'المتبقي',
+      'الإجمالي (ج.م)',
+      'المسدد (ج.م)',
+      'المتبقي (ج.م)',
       'تاريخ الإصدار',
     ]
+
+    const getOrderStatusLabel = (status: string) => {
+      switch (status) {
+        case 'delivered':
+          return 'مكتمل ومسلّم'
+        case 'shipped':
+          return 'قيد التوصيل'
+        case 'confirmed':
+          return 'مؤكد'
+        case 'processing':
+          return 'قيد التجهيز'
+        case 'cancelled':
+          return 'ملغي'
+        default:
+          return status || 'جديد'
+      }
+    }
+
+    const getPaymentStatusLabel = (status: string) => {
+      switch (status) {
+        case 'paid':
+          return 'مدفوع بالكامل'
+        case 'partially_paid':
+          return 'سداد جزئي'
+        case 'overdue':
+          return 'متأخر عن السداد'
+        default:
+          return 'معلق / غير مسدد'
+      }
+    }
+
     const rows = invoices.map((inv) => {
       const client = typeof inv.client === 'object' ? inv.client : null
       const seller = typeof inv.seller === 'object' ? inv.seller : null
-      const remaining = Math.max(0, inv.totalPrice - (inv.totalPaid || 0))
+      const remaining = Math.max(0, (Number(inv.totalPrice) || 0) - (Number(inv.totalPaid) || 0))
       return [
         inv.invoiceCode,
         client?.organizeName || client?.name || 'عميل نقدي',
         client?.clientCode || '',
         seller?.name || '',
         inv.warehouse || '',
-        inv.orderStatus,
-        inv.paymentStatus,
-        inv.totalPrice,
-        inv.totalPaid || 0,
+        getOrderStatusLabel(inv.orderStatus),
+        getPaymentStatusLabel(inv.paymentStatus),
+        Number(inv.totalPrice) || 0,
+        Number(inv.totalPaid) || 0,
         remaining,
         new Date(inv.createdAt).toISOString().split('T')[0],
       ]
     })
-    const csvContent = buildCsv(headers, rows)
-    downloadCsv(`invoices-report-${new Date().toISOString().split('T')[0]}.csv`, csvContent)
-    toast.success('تم تصدير كشف حسابات الفواتير بنجاح')
+
+    exportToExcel({
+      filename: `كشف-حسابات-الفواتير-${new Date().toISOString().split('T')[0]}`,
+      sheetName: 'كشف الحسابات',
+      headers,
+      rows,
+    })
+    toast.success('تم تصدير كشف حسابات الفواتير كملف Excel (.xlsx) بنجاح')
   }
 
   return (
@@ -161,13 +197,13 @@ export function InvoicesPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={handleExportCsv}
+            onClick={handleExportExcel}
             className="h-11 px-4 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-md text-label-md font-semibold flex items-center gap-2 shadow-xs transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px] text-secondary">
-              file_download
+            <span className="material-symbols-outlined text-[20px] text-emerald-600">
+              table_view
             </span>
-            <span>تصدير كشف حسابات (Excel/CSV)</span>
+            <span>تصدير كشف حسابات (Excel)</span>
           </button>
           <button
             type="button"
@@ -325,15 +361,15 @@ export function InvoicesPage() {
           {/* Export Report CTA */}
           <button
             type="button"
-            onClick={handleExportCsv}
-            title="تصدير تقرير الفواتير"
+            onClick={handleExportExcel}
+            title="تصدير كشف حسابات الفواتير (Excel)"
             className="h-11 px-3 bg-primary-fixed/20 text-inverse-primary rounded-lg font-label-md text-label-md flex items-center justify-center gap-1.5 active:bg-primary-fixed/30 transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">
-              file_download
+            <span className="material-symbols-outlined text-[20px] text-emerald-700">
+              table_view
             </span>
             <span className="font-label-sm text-label-sm bg-surface-container-lowest/15 px-1.5 py-0.5 rounded font-bold">
-              CSV
+              Excel
             </span>
           </button>
         </div>

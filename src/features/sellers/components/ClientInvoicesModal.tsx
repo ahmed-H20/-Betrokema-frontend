@@ -13,6 +13,8 @@ import {
   getInvoiceRowBadge,
   isOverdue,
 } from '@/features/sellers/invoiceAggregation'
+import { exportToExcel } from '@/lib/excel'
+import { toast } from 'sonner'
 
 type ClientInvoicesModalProps = {
   client: Client | null
@@ -72,6 +74,92 @@ export function ClientInvoicesModal({
       remaining,
     }
   }, [rawInvoices])
+
+  const handleExportClientLedger = () => {
+    if (rawInvoices.length === 0) {
+      toast.error('لا توجد فواتير لتصدير كشف الحساب')
+      return
+    }
+    const headers = [
+      'رقم الفاتورة',
+      'تاريخ الإصدار',
+      'المستودع',
+      'المندوب المسؤول',
+      'حالة التوريد',
+      'حالة السداد',
+      'إجمالي الفاتورة (ج.م)',
+      'المسدد (ج.م)',
+      'المتبقي (ج.م)',
+    ]
+
+    const getOrderStatusLabel = (status: string) => {
+      switch (status) {
+        case 'delivered':
+          return 'مكتمل ومسلّم'
+        case 'shipped':
+          return 'قيد التوصيل'
+        case 'confirmed':
+          return 'مؤكد'
+        case 'processing':
+          return 'قيد التجهيز'
+        case 'cancelled':
+          return 'ملغي'
+        default:
+          return status || 'جديد'
+      }
+    }
+
+    const getPaymentStatusLabel = (status: string) => {
+      switch (status) {
+        case 'paid':
+          return 'مدفوع بالكامل'
+        case 'partially_paid':
+          return 'سداد جزئي'
+        case 'overdue':
+          return 'متأخر عن السداد'
+        default:
+          return 'غير مسدد'
+      }
+    }
+
+    const rows: (string | number)[][] = rawInvoices.map((inv) => {
+      const seller = typeof inv.seller === 'object' ? inv.seller : null
+      const remaining = Math.max(0, (Number(inv.totalPrice) || 0) - (Number(inv.totalPaid) || 0))
+      return [
+        inv.invoiceCode,
+        new Date(inv.createdAt).toISOString().split('T')[0],
+        inv.warehouse || '—',
+        seller?.name || sellerName || '—',
+        getOrderStatusLabel(inv.orderStatus),
+        getPaymentStatusLabel(inv.paymentStatus),
+        Number(inv.totalPrice) || 0,
+        Number(inv.totalPaid) || 0,
+        remaining,
+      ]
+    })
+
+    // Summary totals row
+    rows.push([
+      'الإجمالي العام',
+      '',
+      '',
+      '',
+      '',
+      '',
+      kpis.totalSales,
+      kpis.totalPaid,
+      kpis.remaining,
+    ])
+
+    const safeName = (client?.organizeName || client?.name || 'عميل').replace(/[\/\\:*?"<>|]/g, '_')
+    exportToExcel({
+      filename: `كشف-حساب-${safeName}-${new Date().toISOString().split('T')[0]}`,
+      sheetName: 'كشف حساب العميل',
+      headers,
+      rows,
+    })
+    toast.success(`تم تصدير كشف حساب (${client?.organizeName || client?.name}) كملف Excel بنجاح`)
+  }
 
   if (!client) return null
 
@@ -157,19 +245,31 @@ export function ClientInvoicesModal({
               />
             </div>
 
-            {onSwitchToInvoicesTab && (
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  onOpenChange(false)
-                  onSwitchToInvoicesTab(client)
-                }}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-container px-3 py-1.5 rounded-lg border border-primary/20 hover:bg-primary/5 transition-all"
+                onClick={handleExportClientLedger}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200 transition-all shadow-2xs"
+                title="تصدير كشف حساب العميل بصيغة Excel"
               >
-                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                <span>فتح في تبويب الفواتير</span>
+                <span className="material-symbols-outlined text-[16px] text-emerald-700">table_view</span>
+                <span>تصدير كشف حساب (Excel)</span>
               </button>
-            )}
+
+              {onSwitchToInvoicesTab && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenChange(false)
+                    onSwitchToInvoicesTab(client)
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-container px-3 py-1.5 rounded-lg border border-primary/20 hover:bg-primary/5 transition-all"
+                >
+                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                  <span>فتح في تبويب الفواتير</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Invoices List / Table */}
