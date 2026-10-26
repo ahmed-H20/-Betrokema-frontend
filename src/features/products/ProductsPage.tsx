@@ -84,10 +84,11 @@ export function ProductsPage() {
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
           <a
-            href="/petrokema_price_list_2026.pdf"
-            download="قائمة_أسعار_بتروكيما_2026.pdf"
+            href="/products/price-menu"
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary-container/20 px-4 py-2.5 font-label-md text-xs sm:text-label-md font-bold text-primary hover:bg-primary hover:text-white transition-all shadow-xs active:scale-95 cursor-pointer"
-            title="تحميل منيو وقائمة الأسعار الرسمية (PDF)"
+            title="فتح وطباعة منيو وقائمة الأسعار الرسمية لمنتجات الشركة"
           >
             <span className="material-symbols-outlined text-[20px]">
               picture_as_pdf

@@ -24,6 +24,7 @@ import { ClientProfilePage } from '@/features/client/ClientProfilePage'
 import { queryClient } from '@/lib/queryClient'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { InvoicePrintPage } from '@/pages/InvoicePrintPage'
+import { PriceMenuPrintPage } from '@/pages/PriceMenuPrintPage'
 import { PageTitleManager } from '@/components/layout/PageTitleManager'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import { useNotificationSocket } from '@/features/notifications'
@@ -70,6 +71,10 @@ function App() {
               {/* Dedicated Standalone Invoice Print Route */}
               <Route path="/invoices/print/:id" element={<InvoicePrintPage />} />
               <Route path="/print/invoice/:id" element={<InvoicePrintPage />} />
+
+              {/* Dedicated Standalone Price Menu Print Route */}
+              <Route path="/products/price-menu" element={<PriceMenuPrintPage />} />
+              <Route path="/print/price-menu" element={<PriceMenuPrintPage />} />
 
               {/* Dynamic Root Redirection based on Authenticated Role */}
               <Route path="/" element={<RoleHomeRedirect />} />
