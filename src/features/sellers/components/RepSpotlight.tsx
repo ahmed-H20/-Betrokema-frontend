@@ -46,12 +46,14 @@ export function RepSpotlight({
   onEdit,
   onDelete,
   onResetPassword,
+  onManageStatus,
 }: {
   seller: Seller
   metrics: SellerPerformance['metrics']
   onEdit: () => void
   onDelete: () => void
   onResetPassword?: () => void
+  onManageStatus?: () => void
 }) {
   const collectionRateDisplay =
     metrics.currentMonthSales === 0
@@ -113,16 +115,25 @@ export function RepSpotlight({
                 </span>
               ) : null}
             </div>
-            {seller.status !== 'ACTIVE' ? (
-              <span className="font-label-sm mt-1 inline-block w-fit rounded-full bg-error-container px-2 py-0.5 text-label-sm text-on-error-container">
-                {SELLER_STATUS_LABELS[seller.status]}
+            {seller.status === 'SUSPENDED' && (
+              <span className="font-label-sm mt-1 inline-flex items-center gap-1 rounded-full bg-rose-100 text-rose-900 border border-rose-200 px-2.5 py-0.5 text-label-sm font-bold shadow-2xs">
+                <span className="material-symbols-outlined text-[14px] text-rose-700">block</span>
+                <span>{SELLER_STATUS_LABELS.SUSPENDED} (موقوف عن العمل)</span>
+                {seller.statusNote ? ` — ${seller.statusNote}` : ''}
               </span>
-            ) : null}
+            )}
+            {seller.status === 'VACATION' && (
+              <span className="font-label-sm mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 text-label-sm font-bold shadow-2xs">
+                <span className="material-symbols-outlined text-[14px] text-amber-700">flight_takeoff</span>
+                <span>{SELLER_STATUS_LABELS.VACATION} (إجازة رسمية)</span>
+                {seller.statusNote ? ` — ${seller.statusNote}` : ''}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-space-xs self-end sm:self-auto">
           <button
-            className="font-label-sm flex h-10 items-center gap-1 whitespace-nowrap rounded-lg bg-surface-container-high px-space-md text-label-sm text-on-surface transition-colors hover:bg-surface-container-highest xl:h-9"
+            className="font-label-sm flex h-10 items-center gap-1 whitespace-nowrap rounded-lg bg-surface-container-high px-space-md text-label-sm text-on-surface transition-colors hover:bg-surface-container-highest xl:h-9 cursor-pointer"
             onClick={onEdit}
             type="button"
           >
@@ -133,7 +144,7 @@ export function RepSpotlight({
             <DropdownMenu.Trigger asChild>
               <button
                 aria-label={REP_MORE_ACTIONS_LABEL}
-                className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-low text-on-surface transition-colors hover:bg-surface-container-high xl:h-9 xl:w-9"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-container-low text-on-surface transition-colors hover:bg-surface-container-high xl:h-9 xl:w-9 cursor-pointer"
                 type="button"
               >
                 <span className="material-symbols-outlined text-[18px]">
@@ -144,12 +155,23 @@ export function RepSpotlight({
             <DropdownMenu.Portal>
               <DropdownMenu.Content
                 align="end"
-                className="z-50 min-w-[190px] rounded-lg bg-surface-container-lowest p-1 shadow-lg border border-outline-variant/30"
+                className="z-50 min-w-[210px] rounded-xl bg-surface-container-lowest p-1.5 shadow-lg border border-outline-variant/30 text-right"
                 sideOffset={4}
               >
+                {onManageStatus && (
+                  <DropdownMenu.Item
+                    className="font-label-md flex items-center gap-2 cursor-pointer rounded-lg px-3 py-2 text-label-md text-slate-800 outline-none hover:bg-slate-100 data-[highlighted]:bg-slate-100"
+                    onSelect={onManageStatus}
+                  >
+                    <span className="material-symbols-outlined text-[18px] text-[#002855]">
+                      manage_accounts
+                    </span>
+                    <span>تغيير حالة المندوب (نشط / إجازة / تعليق)</span>
+                  </DropdownMenu.Item>
+                )}
                 {onResetPassword && (
                   <DropdownMenu.Item
-                    className="font-label-md flex items-center gap-2 cursor-pointer rounded-md px-3 py-2 text-label-md text-amber-800 outline-none hover:bg-amber-50 data-[highlighted]:bg-amber-50"
+                    className="font-label-md flex items-center gap-2 cursor-pointer rounded-lg px-3 py-2 text-label-md text-amber-800 outline-none hover:bg-amber-50 data-[highlighted]:bg-amber-50"
                     onSelect={onResetPassword}
                   >
                     <span className="material-symbols-outlined text-[18px] text-amber-600">
@@ -159,7 +181,7 @@ export function RepSpotlight({
                   </DropdownMenu.Item>
                 )}
                 <DropdownMenu.Item
-                  className="font-label-md flex items-center gap-2 cursor-pointer rounded-md px-3 py-2 text-label-md text-error outline-none data-[highlighted]:bg-error-container"
+                  className="font-label-md flex items-center gap-2 cursor-pointer rounded-lg px-3 py-2 text-label-md text-error outline-none data-[highlighted]:bg-error-container"
                   onSelect={onDelete}
                 >
                   <span className="material-symbols-outlined text-[18px]">

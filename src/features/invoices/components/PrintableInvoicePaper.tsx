@@ -160,22 +160,31 @@ export function PrintableInvoicePaper({
           {/* Company details in Arabic */}
           <div className="flex flex-col text-right">
             <h1 className="text-2xl font-black text-[#002855] leading-snug">
-              شركة بتروكيما للصناعات والدهانات الحديثة
+              مصنع بتروكيما للدهانات
             </h1>
             <span className="text-xs font-semibold text-[#00B4D8] font-sans">
-              Petrokema for Chemical Industries & Modern Paints
+              Petrokema Paints Factory
             </span>
-            <div className="mt-1 flex items-center gap-x-2 text-[10px] font-medium text-slate-500">
-              <span>س.ت: 78945</span>
-              <span>•</span>
-              <span>ب.ض: 789-456-321</span>
-              <span>•</span>
-              <span>المنطقة الصناعية - السادس من أكتوبر</span>
+            <div className="mt-1.5 flex items-center gap-x-1.5 text-xs font-semibold text-slate-700">
+              <span className="material-symbols-outlined text-[16px] text-[#E85D04] shrink-0">location_on</span>
+              <span>العنوان: طريق مصر اسماعيليه الصحراوي - مفارق ابوصوير</span>
             </div>
-            <div className="flex items-center gap-x-2 text-[10px] text-slate-500">
-              <span>هاتف: 02-38341234 / 01001234567</span>
-              <span>•</span>
-              <span>البريد: info@petrokema.eg</span>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[15px] text-[#002855]">call</span>
+                <bdi dir="ltr" className="font-mono font-bold text-slate-900">01023452349</bdi>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[15px] text-[#15803d]">chat</span>
+                <span className="text-[11px] font-bold text-[#15803d]">واتساب:</span>
+                <bdi dir="ltr" className="font-mono font-bold text-slate-900">+20 100 8654772</bdi>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="flex items-center gap-1 font-sans text-[11px] font-semibold text-primary">
+                <span className="material-symbols-outlined text-[14px]">link</span>
+                <span>linktr.ee/ptrokema</span>
+              </span>
             </div>
           </div>
 
@@ -460,15 +469,27 @@ export function PrintableInvoicePaper({
       </div>
 
       {/* 7. Bottom Brand Stripe & Footer Credentials */}
-      <div className="mt-6 flex flex-col gap-2 border-t border-slate-200 pt-3 text-center text-[10px] text-slate-500 print:mt-4">
-        <div className="flex items-center justify-center gap-x-4 font-medium">
-          <span>شركة بتروكيما للصناعات الكيماوية والدهانات</span>
+      <div className="mt-6 flex flex-col gap-2 border-t border-slate-200 pt-3 text-center text-[10px] text-slate-600 print:mt-4">
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-medium">
+          <span className="font-bold text-[#002855]">مصنع بتروكيما للدهانات</span>
           <span>•</span>
-          <span>قطاع المبيعات والتوزيع المركزي</span>
+          <span className="flex items-center gap-1">
+            <span className="material-symbols-outlined text-[13px] text-[#E85D04]">location_on</span>
+            <span>طريق مصر اسماعيليه الصحراوي - مفارق ابوصوير</span>
+          </span>
           <span>•</span>
-          <span>خدمة العملاء: 01001234567</span>
+          <span className="flex items-center gap-1">
+            <span className="material-symbols-outlined text-[13px] text-[#002855]">call</span>
+            <bdi dir="ltr" className="font-mono font-bold text-slate-800">01023452349</bdi>
+          </span>
           <span>•</span>
-          <span>الموقع الرسمي: www.petrokema.eg</span>
+          <span className="flex items-center gap-1">
+            <span className="material-symbols-outlined text-[13px] text-[#15803d]">chat</span>
+            <span className="text-[#15803d] font-bold">واتساب:</span>
+            <bdi dir="ltr" className="font-mono font-bold text-slate-800">+20 100 8654772</bdi>
+          </span>
+          <span>•</span>
+          <span className="font-sans text-[10px] font-bold text-primary">linktr.ee/ptrokema</span>
         </div>
         <div className="h-1 w-full rounded-full bg-gradient-to-r from-[#002855] via-[#00B4D8] to-[#E85D04]" />
       </div>

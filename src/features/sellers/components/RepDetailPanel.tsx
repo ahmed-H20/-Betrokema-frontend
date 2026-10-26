@@ -17,6 +17,7 @@ import { InvoicesTab } from '@/features/sellers/components/InvoicesTab'
 import { ProfileTab } from '@/features/sellers/components/ProfileTab'
 import { RepFormDialog } from '@/features/sellers/components/RepFormDialog'
 import { DeleteRepDialog } from '@/features/sellers/components/DeleteRepDialog'
+import { SuspendDialog } from '@/features/sellers/components/SuspendDialog'
 import { resetSellerPassword } from '@/api/sellers'
 import {
   AccountCredentialsModal,
@@ -38,6 +39,7 @@ export function RepDetailPanel({
 }) {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [statusOpen, setStatusOpen] = useState(false)
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const [credentialsModalData, setCredentialsModalData] =
@@ -90,6 +92,7 @@ export function RepDetailPanel({
         metrics={metrics}
         onDelete={() => setDeleteOpen(true)}
         onEdit={() => setEditOpen(true)}
+        onManageStatus={() => setStatusOpen(true)}
         onResetPassword={() => setResetConfirmOpen(true)}
         seller={seller}
       />
@@ -166,6 +169,16 @@ export function RepDetailPanel({
         open={Boolean(credentialsModalData)}
         onOpenChange={(open) => !open && setCredentialsModalData(null)}
         credentials={credentialsModalData}
+      />
+
+      {/* Change Status Dialog */}
+      <SuspendDialog
+        currentStatus={seller.status}
+        currentStatusNote={seller.statusNote}
+        onOpenChange={setStatusOpen}
+        open={statusOpen}
+        sellerId={seller._id}
+        sellerName={seller.name}
       />
     </div>
   )

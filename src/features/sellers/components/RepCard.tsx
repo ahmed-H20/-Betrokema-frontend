@@ -12,21 +12,15 @@ import { formatEgyptianPhoneLocal } from '@/lib/phone'
 import { UserAvatar } from '@/components/ui/UserAvatar'
 
 const STATUS_DOT_CLASSES: Record<EnrichedSeller['status'], string> = {
-  ACTIVE: 'bg-secondary',
-  SUSPENDED: 'bg-error',
-  VACATION: 'bg-outline',
+  ACTIVE: 'bg-emerald-600',
+  SUSPENDED: 'bg-rose-600',
+  VACATION: 'bg-amber-500',
 }
 
-// Selected-card corner badge, per `petrokema_web_admin_2`: ACTIVE is plain
-// colored text next to the dot (no background), but SUSPENDED is a full
-// pill (bg-error-container/text-on-error-container/rounded/font-mono) — a
-// structural difference per status, not just a color swap. No VACATION
-// sample exists in the export; kept as plain text (same shape as ACTIVE)
-// since a pill treatment was only ever confirmed for SUSPENDED.
 const STATUS_LABEL_CLASSES: Record<EnrichedSeller['status'], string> = {
-  ACTIVE: 'text-on-secondary-fixed-variant',
-  SUSPENDED: 'rounded bg-error-container px-1.5 py-0.5 font-mono text-on-error-container',
-  VACATION: 'text-outline',
+  ACTIVE: 'text-emerald-700 font-bold',
+  SUSPENDED: 'rounded-full bg-error-container px-2 py-0.5 font-mono text-on-error-container font-bold',
+  VACATION: 'rounded-full bg-amber-100 text-amber-900 border border-amber-200 px-2 py-0.5 font-bold',
 }
 
 // Bolds the digit only when one is actually shown (3+) — for 1/2 the noun
@@ -121,7 +115,7 @@ export function RepCard({
                       ? 'bg-[#dcfce7] text-[#15803d]'
                       : seller.status === 'SUSPENDED'
                         ? 'bg-error-container text-on-error-container'
-                        : 'bg-surface-container text-on-surface-variant',
+                        : 'bg-amber-100 text-amber-900 border border-amber-200 font-bold',
                   )}
                 >
                   {SELLER_STATUS_LABELS[seller.status]}

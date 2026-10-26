@@ -1,96 +1,249 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Dialog, DialogHeader } from '@/components/ui/Dialog'
 import {
   GENERIC_ERROR,
   MODAL_CANCEL,
-  REACTIVATE_CONFIRM_BUTTON,
-  REACTIVATE_DIALOG_DESCRIPTION,
-  REACTIVATE_DIALOG_TITLE,
-  SUSPEND_CONFIRM_BUTTON,
-  SUSPEND_DIALOG_DESCRIPTION,
-  SUSPEND_DIALOG_TITLE,
-  SUSPEND_REASON_LABEL,
-  TOAST_SELLER_STATUS_UPDATED,
 } from '@/constants/strings'
-import { cn } from '@/lib/cn'
+import type { SellerStatus } from '@/api/sellers.schema'
 import { useUpdateSeller } from '@/features/sellers/hooks'
+
+export interface SuspendDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  sellerId: string
+  sellerName?: string
+  currentStatus?: SellerStatus
+  currentStatusNote?: string
+  mode?: 'suspend' | 'reactivate' | 'vacation' | 'manage'
+  initialStatus?: SellerStatus
+}
 
 export function SuspendDialog({
   open,
   onOpenChange,
-  mode,
   sellerId,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  mode: 'suspend' | 'reactivate'
-  sellerId: string
-}) {
-  const [reason, setReason] = useState('')
+  sellerName,
+  currentStatus = 'ACTIVE',
+  currentStatusNote = '',
+  mode,
+  initialStatus,
+}: SuspendDialogProps) {
+  // Determine initial status based on props
+  const getInitialStatus = (): SellerStatus => {
+    if (initialStatus) return initialStatus
+    if (mode === 'suspend') return 'SUSPENDED'
+    if (mode === 'reactivate') return 'ACTIVE'
+    if (mode === 'vacation') return 'VACATION'
+    return currentStatus
+  }
+
+  const [selectedStatus, setSelectedStatus] = useState<SellerStatus>(getInitialStatus)
+  const [reason, setReason] = useState(currentStatusNote)
   const updateSeller = useUpdateSeller()
+
+  useEffect(() => {
+    if (open) {
+      setSelectedStatus(getInitialStatus())
+      setReason(currentStatusNote)
+    }
+  }, [open, mode, initialStatus, currentStatus, currentStatusNote])
 
   async function onConfirm() {
     try {
       await updateSeller.mutateAsync({
         id: sellerId,
-        input:
-          mode === 'suspend'
-            ? { status: 'SUSPENDED', statusNote: reason.trim() }
-            : { status: 'ACTIVE', statusNote: '' },
+        input: {
+          status: selectedStatus,
+          statusNote: reason.trim(),
+        },
       })
-      toast.success(TOAST_SELLER_STATUS_UPDATED)
-      setReason('')
+      toast.success(
+        selectedStatus === 'ACTIVE'
+          ? 'تم تفعيل حساب المندوب وإعادته للعمل بنجاح'
+          : selectedStatus === 'VACATION'
+            ? 'تم تسجيل المندوب في إجازة وتجميد عملياته مؤقتاً'
+            : 'تم تعليق حساب المندوب وإيقاف صلاحياته بنجاح',
+      )
       onOpenChange(false)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : GENERIC_ERROR)
     }
   }
 
+  const statusOptions: {
+    status: SellerStatus
+    title: string
+    badge: string
+    description: string
+    icon: string
+    borderActive: string
+    bgActive: string
+    textColor: string
+  }[] = [
+    {
+      status: 'ACTIVE',
+      title: 'نشط (على رأس العمل)',
+      badge: 'متاح للعمل',
+      description: 'المندوب متاح لإصدار الفواتير، متابعة العملاء، واستقبال الطلبيات كالمعتاد.',
+      icon: 'check_circle',
+      borderActive: 'border-emerald-600 ring-2 ring-emerald-500/20',
+      bgActive: 'bg-emerald-50/70',
+      textColor: 'text-emerald-700',
+    },
+    {
+      status: 'VACATION',
+      title: 'في إجازة (إجازة رسمية / مرضية)',
+      badge: 'يتوقف عن العمل مؤقتاً',
+      description: 'المندوب في فترة إجازة. يتوقف حسابه عن إصدار فواتير أو العمل حتى تاريخ عودته.',
+      icon: 'flight_takeoff',
+      borderActive: 'border-amber-500 ring-2 ring-amber-500/20',
+      bgActive: 'bg-amber-50/70',
+      textColor: 'text-amber-700',
+    },
+    {
+      status: 'SUSPENDED',
+      title: 'معلق (موقوف عن العمل)',
+      badge: 'تجميد الحساب والصلاحيات',
+      description: 'تجميد حساب المندوب ومنعه من تسجيل الدخول أو تنفيذ أي عمليات بيع أو فواتير.',
+      icon: 'block',
+      borderActive: 'border-rose-600 ring-2 ring-rose-500/20',
+      bgActive: 'bg-rose-50/70',
+      textColor: 'text-rose-700',
+    },
+  ]
+
   return (
-    <Dialog onOpenChange={onOpenChange} open={open} widthClassName="max-w-md">
+    <Dialog onOpenChange={onOpenChange} open={open} widthClassName="max-w-lg">
       <DialogHeader
+        icon="manage_accounts"
         onClose={() => onOpenChange(false)}
-        title={mode === 'suspend' ? SUSPEND_DIALOG_TITLE : REACTIVATE_DIALOG_TITLE}
+        subtitle={
+          sellerName
+            ? `المندوب: ${sellerName}`
+            : 'تحديد حالة النشاط وتجميد أو إجازة المندوب'
+        }
+        title="إدارة حالة المندوب وصلاحيات العمل"
       />
-      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 px-6 py-5">
-        <p className="font-body-md text-body-md text-on-surface">
-          {mode === 'suspend' ? SUSPEND_DIALOG_DESCRIPTION : REACTIVATE_DIALOG_DESCRIPTION}
-        </p>
-        {mode === 'suspend' ? (
-          <div>
-            <label className="font-label-md mb-1 block text-label-md text-on-surface">
-              {SUSPEND_REASON_LABEL}
-            </label>
-            <textarea
-              className="w-full rounded-lg bg-surface-container-low p-3 font-body-sm text-body-sm text-on-surface focus:outline-none focus:bg-surface-container-highest"
-              onChange={(event) => setReason(event.target.value)}
-              rows={3}
-              value={reason}
-            />
+
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 p-5 sm:p-6" dir="rtl">
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-slate-800 block">
+            اختر الحالة الجديدة للمندوب:
+          </label>
+
+          <div className="space-y-2">
+            {statusOptions.map((opt) => {
+              const isSelected = selectedStatus === opt.status
+              return (
+                <div
+                  key={opt.status}
+                  onClick={() => setSelectedStatus(opt.status)}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+                    isSelected
+                      ? `${opt.borderActive} ${opt.bgActive} shadow-xs`
+                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                  }`}
+                >
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                      isSelected
+                        ? `${opt.textColor} bg-white shadow-2xs`
+                        : 'text-slate-400 bg-slate-100'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {opt.icon}
+                    </span>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="font-bold text-xs sm:text-sm text-slate-900">
+                        {opt.title}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          isSelected
+                            ? `${opt.textColor} bg-white border border-current shadow-2xs`
+                            : 'text-slate-500 bg-slate-100'
+                        }`}
+                      >
+                        {opt.badge}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                      {opt.description}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
           </div>
-        ) : null}
+        </div>
+
+        {/* Reason / Status Note Field */}
+        <div className="space-y-1.5 pt-1">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-slate-700">
+              سبب الحالة أو تفاصيل إضافية (اختياري):
+            </label>
+            <span className="text-[10px] text-slate-400">
+              تظهر للمندوب والإدارة
+            </span>
+          </div>
+          <textarea
+            className="w-full rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-800 focus:bg-white focus:border-[#002855] focus:outline-none transition-all resize-none shadow-2xs"
+            onChange={(event) => setReason(event.target.value)}
+            placeholder={
+              selectedStatus === 'VACATION'
+                ? 'مثال: إجازة سنوية حتى الأحد 5 نوفمبر 2026'
+                : selectedStatus === 'SUSPENDED'
+                  ? 'مثال: معلق مؤقتاً لمراجعة التحصيلات وحسابات العهدة'
+                  : 'ملاحظة تفعيل المندوب...'
+            }
+            rows={2}
+            value={reason}
+          />
+        </div>
       </div>
-      <div className="shrink-0 flex items-center justify-end gap-3 bg-surface-container px-4 sm:px-6 py-3.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+
+      <div className="shrink-0 flex items-center justify-end gap-2.5 bg-slate-50 border-t border-slate-100 px-5 py-3.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
         <button
-          className="font-label-md rounded-lg bg-surface-container-high px-4 py-2.5 text-label-md text-on-surface transition-colors hover:bg-surface-container-highest"
+          className="h-9 px-4 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           onClick={() => onOpenChange(false)}
           type="button"
         >
           {MODAL_CANCEL}
         </button>
         <button
-          className={cn(
-            'font-label-md rounded-lg px-5 py-2.5 text-label-md shadow-md transition-all disabled:cursor-not-allowed disabled:opacity-60',
-            mode === 'suspend'
-              ? 'bg-error text-on-error hover:bg-error/90'
-              : 'bg-primary text-on-primary hover:bg-primary-container',
-          )}
+          className={`h-9 px-5 rounded-xl text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer disabled:opacity-50 ${
+            selectedStatus === 'SUSPENDED'
+              ? 'bg-rose-600 hover:bg-rose-700'
+              : selectedStatus === 'VACATION'
+                ? 'bg-amber-600 hover:bg-amber-700'
+                : 'bg-emerald-700 hover:bg-emerald-800'
+          }`}
           disabled={updateSeller.isPending}
           onClick={onConfirm}
           type="button"
         >
-          {mode === 'suspend' ? SUSPEND_CONFIRM_BUTTON : REACTIVATE_CONFIRM_BUTTON}
+          <span className="material-symbols-outlined text-[16px]">
+            {selectedStatus === 'SUSPENDED'
+              ? 'block'
+              : selectedStatus === 'VACATION'
+                ? 'flight_takeoff'
+                : 'check_circle'}
+          </span>
+          <span>
+            {updateSeller.isPending
+              ? 'جارٍ الحفظ...'
+              : selectedStatus === 'SUSPENDED'
+                ? 'تأكيد تعليق المندوب'
+                : selectedStatus === 'VACATION'
+                  ? 'تأكيد وضع المندوب في إجازة'
+                  : 'تأكيد تفعيل المندوب'}
+          </span>
         </button>
       </div>
     </Dialog>
