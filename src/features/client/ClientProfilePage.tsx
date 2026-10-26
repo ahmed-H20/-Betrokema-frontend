@@ -195,6 +195,89 @@ export function ClientProfilePage() {
         </div>
       </div>
 
+      {/* Technical Support & Inquiries Card */}
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[20px] text-blue-600">
+              support_agent
+            </span>
+            <span className="text-xs font-bold text-slate-800">الدعم الفني والاستفسار</span>
+          </div>
+          <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded-full font-semibold">
+            خدمة العملاء
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
+          {/* Eng Ahmed Hesham */}
+          <div className="flex items-center justify-between gap-3 bg-slate-50 hover:bg-slate-100/80 p-3 rounded-xl border border-slate-100 transition-colors">
+            <div className="min-w-0">
+              <h4 className="text-xs font-bold text-slate-900 truncate">مهندس أحمد هشام</h4>
+              <p className="text-[11px] text-slate-500 font-medium">الدعم الفني المباشر</p>
+              <a
+                href="tel:01226810306"
+                className="text-xs font-mono font-bold text-blue-700 hover:text-blue-800 block mt-1 transition-colors"
+                dir="ltr"
+              >
+                01226810306
+              </a>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <a
+                href="tel:01226810306"
+                className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-blue-600 hover:border-blue-300 flex items-center justify-center transition-colors shadow-2xs"
+                title="اتصال مباشر"
+              >
+                <span className="material-symbols-outlined text-[16px]">call</span>
+              </a>
+              <a
+                href="https://wa.me/201226810306"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs transition-colors"
+                title="محادثة واتساب"
+              >
+                <span>واتساب</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Eng Ahmed Gereish */}
+          <div className="flex items-center justify-between gap-3 bg-slate-50 hover:bg-slate-100/80 p-3 rounded-xl border border-slate-100 transition-colors">
+            <div className="min-w-0">
+              <h4 className="text-xs font-bold text-slate-900 truncate">مهندس أحمد جريش</h4>
+              <p className="text-[11px] text-slate-500 font-medium">الدعم الفني المباشر</p>
+              <a
+                href="tel:01018430679"
+                className="text-xs font-mono font-bold text-blue-700 hover:text-blue-800 block mt-1 transition-colors"
+                dir="ltr"
+              >
+                010 18430679
+              </a>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <a
+                href="tel:01018430679"
+                className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-blue-600 hover:border-blue-300 flex items-center justify-center transition-colors shadow-2xs"
+                title="اتصال مباشر"
+              >
+                <span className="material-symbols-outlined text-[16px]">call</span>
+              </a>
+              <a
+                href="https://wa.me/201018430679"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs transition-colors"
+                title="محادثة واتساب"
+              >
+                <span>واتساب</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Support & Logout Actions */}
       <div className="space-y-2">
         <button

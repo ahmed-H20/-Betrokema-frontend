@@ -1,0 +1,10 @@
+services:
+  client:
+    build:
+      context: .
+      args:
+        VITE_API_BASE_URL: http://72.61.195.73:5000/api/v1
+    container_name: petrokema_client
+    restart: unless-stopped
+    ports:
+      - "3000:80"

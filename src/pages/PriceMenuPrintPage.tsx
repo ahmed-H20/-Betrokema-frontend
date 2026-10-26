@@ -374,26 +374,26 @@ export function PriceMenuPrintPage() {
                       <div className="col-span-6 flex items-center justify-between p-3.5 pl-2 gap-3">
                         <div className="flex flex-col justify-between h-full py-0.5">
                           <div>
-                            <h3 className="text-xl font-black text-[#063D37] leading-tight">
+                            <h3 className="text-2xl font-black text-[#063D37] leading-tight">
                               {p?.name || 'كيما ستار 20000'}
                             </h3>
-                            <p className="text-xs font-medium text-slate-700 mt-1">
+                            <p className="text-sm font-semibold text-slate-700 mt-1">
                               دهان أكريليك مائي داخلي خارجي نصف لامع
                             </p>
                           </div>
                           <div className="flex items-center gap-2 mt-2.5">
-                            <div className="rounded-full border border-[#063D37]/50 px-3 py-0.5 flex items-center gap-1.5 text-xs font-bold text-[#063D37] bg-white">
+                            <div className="rounded-full border-[1.5px] border-[#063D37]/60 px-3 py-1 flex items-center gap-1.5 text-xs font-black text-[#063D37] bg-white">
                               <BadgeHouseSvg />
                               <span>داخلي / خارجي</span>
                             </div>
-                            <div className="rounded-full border border-[#063D37]/50 px-3 py-0.5 flex items-center gap-1.5 text-xs font-bold text-[#063D37] bg-white">
+                            <div className="rounded-full border-[1.5px] border-[#063D37]/60 px-3 py-1 flex items-center gap-1.5 text-xs font-black text-[#063D37] bg-white">
                               <BadgeWandSvg />
                               <span>نصف لامع</span>
                             </div>
                           </div>
                         </div>
                         {p?.image && (
-                          <img src={p.image} alt={p.name} className="w-24 h-24 object-contain shrink-0 drop-shadow-md" />
+                          <img src={p.image} alt={p.name} className="w-32 h-32 sm:w-36 sm:h-36 object-contain shrink-0 drop-shadow-lg" />
                         )}
                       </div>
 
@@ -402,12 +402,12 @@ export function PriceMenuPrintPage() {
                         <div className="flex flex-col items-center">
                           <PaintCanSvg />
                           <span className="text-xs font-bold text-[#063D37] mt-1">وزن البستلة</span>
-                          <span className="text-xl font-black text-slate-900 mt-0.5">{pkg9L?.weight || '9 لتر'}</span>
+                          <span className="text-2xl font-black text-slate-900 mt-0.5">{pkg9L?.weight || '9 لتر'}</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-1" />
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-bold text-[#063D37]">وزن الجالون</span>
-                          <span className="text-xl font-black text-slate-900 mt-0.5">{pkg2L?.weight || '2.5 لتر'}</span>
+                          <span className="text-2xl font-black text-slate-900 mt-0.5">{pkg2L?.weight || '2.5 لتر'}</span>
                         </div>
                       </div>
 
@@ -416,18 +416,18 @@ export function PriceMenuPrintPage() {
                         <div className="flex flex-col items-center">
                           <CoinsSvg />
                           <span className="text-xs font-bold text-[#063D37] mt-1">سعر البستلة</span>
-                          <span className="text-2xl font-black text-slate-900 leading-tight mt-0.5">
+                          <span className="text-3xl font-black text-slate-900 leading-tight mt-0.5">
                             {formatNumber(pkg9L?.price || 1529.55)}
                           </span>
-                          <span className="text-[11px] font-bold text-[#063D37]">جنيه مصري</span>
+                          <span className="text-xs font-bold text-[#063D37]">جنيه مصري</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-1" />
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-bold text-[#063D37]">سعر الجالون</span>
-                          <span className="text-2xl font-black text-slate-900 leading-tight mt-0.5">
+                          <span className="text-3xl font-black text-slate-900 leading-tight mt-0.5">
                             {formatNumber(pkg2L?.price || 450)}
                           </span>
-                          <span className="text-[11px] font-bold text-[#063D37]">جنيه مصري</span>
+                          <span className="text-xs font-bold text-[#063D37]">جنيه مصري</span>
                         </div>
                       </div>
                     </div>
@@ -444,26 +444,26 @@ export function PriceMenuPrintPage() {
                       <div className="col-span-6 flex items-center justify-between p-3.5 pl-2 gap-3">
                         <div className="flex flex-col justify-between h-full py-0.5">
                           <div>
-                            <h3 className="text-xl font-black text-[#063D37] leading-tight">
+                            <h3 className="text-2xl font-black text-[#063D37] leading-tight">
                               {p?.name || 'كيما ستار 15000'}
                             </h3>
-                            <p className="text-xs font-medium text-slate-700 mt-1">
+                            <p className="text-sm font-semibold text-slate-700 mt-1">
                               دهان أكريليك مائي داخلي خارجي ربع لامع
                             </p>
                           </div>
                           <div className="flex items-center gap-2 mt-2.5">
-                            <div className="rounded-full border border-[#063D37]/50 px-3 py-0.5 flex items-center gap-1.5 text-xs font-bold text-[#063D37] bg-white">
+                            <div className="rounded-full border-[1.5px] border-[#063D37]/60 px-3 py-1 flex items-center gap-1.5 text-xs font-black text-[#063D37] bg-white">
                               <BadgeHouseSvg />
                               <span>داخلي / خارجي</span>
                             </div>
-                            <div className="rounded-full border border-[#063D37]/50 px-3 py-0.5 flex items-center gap-1.5 text-xs font-bold text-[#063D37] bg-white">
+                            <div className="rounded-full border-[1.5px] border-[#063D37]/60 px-3 py-1 flex items-center gap-1.5 text-xs font-black text-[#063D37] bg-white">
                               <BadgeWandSvg />
                               <span>ربع لامع</span>
                             </div>
                           </div>
                         </div>
                         {p?.image && (
-                          <img src={p.image} alt={p.name} className="w-24 h-24 object-contain shrink-0 drop-shadow-md" />
+                          <img src={p.image} alt={p.name} className="w-32 h-32 sm:w-36 sm:h-36 object-contain shrink-0 drop-shadow-lg" />
                         )}
                       </div>
 
@@ -471,12 +471,12 @@ export function PriceMenuPrintPage() {
                         <div className="flex flex-col items-center">
                           <PaintCanSvg />
                           <span className="text-xs font-bold text-[#063D37] mt-1">وزن البستلة</span>
-                          <span className="text-xl font-black text-slate-900 mt-0.5">{pkg9L?.weight || '9 لتر'}</span>
+                          <span className="text-2xl font-black text-slate-900 mt-0.5">{pkg9L?.weight || '9 لتر'}</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-1" />
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-bold text-[#063D37]">وزن الجالون</span>
-                          <span className="text-xl font-black text-slate-900 mt-0.5">{pkg2L?.weight || '2.5 لتر'}</span>
+                          <span className="text-2xl font-black text-slate-900 mt-0.5">{pkg2L?.weight || '2.5 لتر'}</span>
                         </div>
                       </div>
 
@@ -484,18 +484,18 @@ export function PriceMenuPrintPage() {
                         <div className="flex flex-col items-center">
                           <CoinsSvg />
                           <span className="text-xs font-bold text-[#063D37] mt-1">سعر البستلة</span>
-                          <span className="text-2xl font-black text-slate-900 leading-tight mt-0.5">
+                          <span className="text-3xl font-black text-slate-900 leading-tight mt-0.5">
                             {formatNumber(pkg9L?.price || 1359.6)}
                           </span>
-                          <span className="text-[11px] font-bold text-[#063D37]">جنيه مصري</span>
+                          <span className="text-xs font-bold text-[#063D37]">جنيه مصري</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-1" />
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-bold text-[#063D37]">سعر الجالون</span>
-                          <span className="text-2xl font-black text-slate-900 leading-tight mt-0.5">
+                          <span className="text-3xl font-black text-slate-900 leading-tight mt-0.5">
                             {formatNumber(pkg2L?.price || 400)}
                           </span>
-                          <span className="text-[11px] font-bold text-[#063D37]">جنيه مصري</span>
+                          <span className="text-xs font-bold text-[#063D37]">جنيه مصري</span>
                         </div>
                       </div>
                     </div>
@@ -513,48 +513,48 @@ export function PriceMenuPrintPage() {
                       <div className="col-span-6 flex items-center justify-between p-3.5 pl-2 gap-3">
                         <div className="flex flex-col justify-between h-full py-0.5">
                           <div>
-                            <h3 className="text-xl font-black text-[#063D37] leading-tight">
+                            <h3 className="text-2xl font-black text-[#063D37] leading-tight">
                               بلاستيك بلس 700
                             </h3>
-                            <p className="text-xs font-medium text-slate-700 mt-1">
+                            <p className="text-sm font-semibold text-slate-700 mt-1">
                               دهان بلاستيك مط عالي الجودة
                             </p>
                           </div>
                           <div className="flex items-center gap-2 mt-2.5">
-                            <div className="rounded-full border border-[#063D37]/50 px-3 py-0.5 flex items-center gap-1.5 text-xs font-bold text-[#063D37] bg-white">
+                            <div className="rounded-full border-[1.5px] border-[#063D37]/60 px-3 py-1 flex items-center gap-1.5 text-xs font-black text-[#063D37] bg-white">
                               <BadgeHouseSvg />
                               <span>داخلي</span>
                             </div>
-                            <div className="rounded-full border border-[#063D37]/50 px-3 py-0.5 flex items-center gap-1.5 text-xs font-bold text-[#063D37] bg-white">
+                            <div className="rounded-full border-[1.5px] border-[#063D37]/60 px-3 py-1 flex items-center gap-1.5 text-xs font-black text-[#063D37] bg-white">
                               <BadgeWandSvg />
                               <span>مط عالي الجودة</span>
                             </div>
                           </div>
                         </div>
                         {p?.image && (
-                          <img src={p.image} alt={p.name} className="w-24 h-24 object-contain shrink-0 drop-shadow-md" />
+                          <img src={p.image} alt={p.name} className="w-32 h-32 sm:w-36 sm:h-36 object-contain shrink-0 drop-shadow-lg" />
                         )}
                       </div>
 
                       <div className="col-span-3 border-r-2 border-[#063D37] flex flex-col justify-around py-2 px-2 text-center bg-white">
                         <div className="flex flex-col items-center">
                           <PaintCanSvg />
-                          <span className="text-[11px] font-bold text-[#063D37]">وزن البستلة</span>
-                          <span className="text-base font-black text-slate-900">{pkg9L?.weight || '9 لتر'}</span>
+                          <span className="text-xs font-bold text-[#063D37]">وزن البستلة</span>
+                          <span className="text-lg font-black text-slate-900">{pkg9L?.weight || '9 لتر'}</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-0.5" />
                         <div className="flex flex-col items-center">
-                          <span className="text-[11px] font-bold text-[#063D37]">وزن الجالون الأبيض</span>
-                          <span className="text-base font-black text-slate-900">{pkgWhite?.weight || '2.5 لتر'}</span>
+                          <span className="text-xs font-bold text-[#063D37]">وزن الجالون الأبيض</span>
+                          <span className="text-lg font-black text-slate-900">{pkgWhite?.weight || '2.5 لتر'}</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-0.5" />
                         <div className="flex flex-col items-center">
-                          <span className="text-[11px] font-bold text-[#063D37]">وزن الجالون الألوان</span>
+                          <span className="text-xs font-bold text-[#063D37]">وزن الجالون الألوان</span>
                           <div className="flex items-center gap-1">
-                            <span className="text-base font-black text-slate-900">{pkgColors?.weight || '2.25 لتر'}</span>
+                            <span className="text-lg font-black text-slate-900">{pkgColors?.weight || '2.25 لتر'}</span>
                             <div className="flex items-center gap-0.5">
-                              <span className="text-[8px] bg-black text-white px-1 rounded font-bold">أسود</span>
-                              <span className="text-[8px] bg-[#67000D] text-white px-1 rounded font-bold">نبيتي</span>
+                              <span className="text-[9px] bg-black text-white px-1.5 py-0.5 rounded font-bold">أسود</span>
+                              <span className="text-[9px] bg-[#67000D] text-white px-1.5 py-0.5 rounded font-bold">نبيتي</span>
                             </div>
                           </div>
                         </div>
@@ -563,27 +563,27 @@ export function PriceMenuPrintPage() {
                       <div className="col-span-3 border-r-2 border-[#063D37] flex flex-col justify-around py-2 px-2 text-center bg-white">
                         <div className="flex flex-col items-center">
                           <CoinsSvg />
-                          <span className="text-[11px] font-bold text-[#063D37]">سعر البستلة</span>
-                          <span className="text-xl font-black text-slate-900 leading-tight">
+                          <span className="text-xs font-bold text-[#063D37]">سعر البستلة</span>
+                          <span className="text-2xl font-black text-slate-900 leading-tight">
                             {formatNumber(pkg9L?.price || 978.5)}
                           </span>
-                          <span className="text-[10px] font-bold text-[#063D37]">جنيه مصري</span>
+                          <span className="text-xs font-bold text-[#063D37]">جنيه مصري</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-0.5" />
                         <div className="flex flex-col items-center">
-                          <span className="text-[11px] font-bold text-[#063D37]">سعر الجالون</span>
-                          <span className="text-xl font-black text-slate-900 leading-tight">
+                          <span className="text-xs font-bold text-[#063D37]">سعر الجالون</span>
+                          <span className="text-2xl font-black text-slate-900 leading-tight">
                             {formatNumber(pkgWhite?.price || 300)}
                           </span>
-                          <span className="text-[10px] font-bold text-[#063D37]">جنيه مصري</span>
+                          <span className="text-xs font-bold text-[#063D37]">جنيه مصري</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-0.5" />
                         <div className="flex flex-col items-center">
-                          <span className="text-[11px] font-bold text-[#063D37]">سعر الجالون الألوان</span>
-                          <span className="text-xl font-black text-slate-900 leading-tight">
+                          <span className="text-xs font-bold text-[#063D37]">سعر الجالون الألوان</span>
+                          <span className="text-2xl font-black text-slate-900 leading-tight">
                             {formatNumber(pkgColors?.price || 240)}
                           </span>
-                          <span className="text-[10px] font-bold text-[#063D37]">جنيه مصري</span>
+                          <span className="text-xs font-bold text-[#063D37]">جنيه مصري</span>
                         </div>
                       </div>
                     </div>
@@ -601,48 +601,48 @@ export function PriceMenuPrintPage() {
                       <div className="col-span-6 flex items-center justify-between p-3.5 pl-2 gap-3">
                         <div className="flex flex-col justify-between h-full py-0.5">
                           <div>
-                            <h3 className="text-xl font-black text-[#063D37] leading-tight">
+                            <h3 className="text-2xl font-black text-[#063D37] leading-tight">
                               كيما برو 5050
                             </h3>
-                            <p className="text-xs font-medium text-slate-700 mt-1">
+                            <p className="text-sm font-semibold text-slate-700 mt-1">
                               طلاء بلاستيك مط عالي الجودة
                             </p>
                           </div>
                           <div className="flex items-center gap-2 mt-2.5">
-                            <div className="rounded-full border border-[#063D37]/50 px-3 py-0.5 flex items-center gap-1.5 text-xs font-bold text-[#063D37] bg-white">
+                            <div className="rounded-full border-[1.5px] border-[#063D37]/60 px-3 py-1 flex items-center gap-1.5 text-xs font-black text-[#063D37] bg-white">
                               <BadgeHouseSvg />
                               <span>داخلي</span>
                             </div>
-                            <div className="rounded-full border border-[#063D37]/50 px-3 py-0.5 flex items-center gap-1.5 text-xs font-bold text-[#063D37] bg-white">
+                            <div className="rounded-full border-[1.5px] border-[#063D37]/60 px-3 py-1 flex items-center gap-1.5 text-xs font-black text-[#063D37] bg-white">
                               <BadgeWandSvg />
                               <span>مط داخلي</span>
                             </div>
                           </div>
                         </div>
                         {p?.image && (
-                          <img src={p.image} alt={p.name} className="w-24 h-24 object-contain shrink-0 drop-shadow-md" />
+                          <img src={p.image} alt={p.name} className="w-32 h-32 sm:w-36 sm:h-36 object-contain shrink-0 drop-shadow-lg" />
                         )}
                       </div>
 
                       <div className="col-span-3 border-r-2 border-[#063D37] flex flex-col justify-around py-2 px-2 text-center bg-white">
                         <div className="flex flex-col items-center">
                           <PaintCanSvg />
-                          <span className="text-[11px] font-bold text-[#063D37]">وزن البستلة</span>
-                          <span className="text-base font-black text-slate-900">{pkg9L?.weight || '9 لتر'}</span>
+                          <span className="text-xs font-bold text-[#063D37]">وزن البستلة</span>
+                          <span className="text-lg font-black text-slate-900">{pkg9L?.weight || '9 لتر'}</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-0.5" />
                         <div className="flex flex-col items-center">
-                          <span className="text-[11px] font-bold text-[#063D37]">وزن الجالون الأبيض</span>
-                          <span className="text-base font-black text-slate-900">{pkgWhite?.weight || '2.5 لتر'}</span>
+                          <span className="text-xs font-bold text-[#063D37]">وزن الجالون الأبيض</span>
+                          <span className="text-lg font-black text-slate-900">{pkgWhite?.weight || '2.5 لتر'}</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-0.5" />
                         <div className="flex flex-col items-center">
-                          <span className="text-[11px] font-bold text-[#063D37]">وزن الجالون الألوان</span>
+                          <span className="text-xs font-bold text-[#063D37]">وزن الجالون الألوان</span>
                           <div className="flex items-center gap-1">
-                            <span className="text-base font-black text-slate-900">{pkgColors?.weight || '2.5 لتر'}</span>
+                            <span className="text-lg font-black text-slate-900">{pkgColors?.weight || '2.5 لتر'}</span>
                             <div className="flex items-center gap-0.5">
-                              <span className="text-[8px] bg-black text-white px-1 rounded font-bold">أسود</span>
-                              <span className="text-[8px] bg-[#67000D] text-white px-1 rounded font-bold">نبيتي</span>
+                              <span className="text-[9px] bg-black text-white px-1.5 py-0.5 rounded font-bold">أسود</span>
+                              <span className="text-[9px] bg-[#67000D] text-white px-1.5 py-0.5 rounded font-bold">نبيتي</span>
                             </div>
                           </div>
                         </div>
@@ -651,27 +651,27 @@ export function PriceMenuPrintPage() {
                       <div className="col-span-3 border-r-2 border-[#063D37] flex flex-col justify-around py-2 px-2 text-center bg-white">
                         <div className="flex flex-col items-center">
                           <CoinsSvg />
-                          <span className="text-[11px] font-bold text-[#063D37]">سعر البستلة</span>
-                          <span className="text-xl font-black text-slate-900 leading-tight">
+                          <span className="text-xs font-bold text-[#063D37]">سعر البستلة</span>
+                          <span className="text-2xl font-black text-slate-900 leading-tight">
                             {formatNumber(pkg9L?.price || 545.95)}
                           </span>
-                          <span className="text-[10px] font-bold text-[#063D37]">جنيه مصري</span>
+                          <span className="text-xs font-bold text-[#063D37]">جنيه مصري</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-0.5" />
                         <div className="flex flex-col items-center">
-                          <span className="text-[11px] font-bold text-[#063D37]">سعر الجالون الأبيض</span>
-                          <span className="text-xl font-black text-slate-900 leading-tight">
+                          <span className="text-xs font-bold text-[#063D37]">سعر الجالون الأبيض</span>
+                          <span className="text-2xl font-black text-slate-900 leading-tight">
                             {formatNumber(pkgWhite?.price || 165)}
                           </span>
-                          <span className="text-[10px] font-bold text-[#063D37]">جنيه مصري</span>
+                          <span className="text-xs font-bold text-[#063D37]">جنيه مصري</span>
                         </div>
                         <div className="border-b border-dashed border-slate-300 w-3/4 mx-auto my-0.5" />
                         <div className="flex flex-col items-center">
-                          <span className="text-[11px] font-bold text-[#063D37]">سعر الجالون الألوان</span>
-                          <span className="text-xl font-black text-slate-900 leading-tight">
+                          <span className="text-xs font-bold text-[#063D37]">سعر الجالون الألوان</span>
+                          <span className="text-2xl font-black text-slate-900 leading-tight">
                             {formatNumber(pkgColors?.price || 180)}
                           </span>
-                          <span className="text-[10px] font-bold text-[#063D37]">جنيه مصري</span>
+                          <span className="text-xs font-bold text-[#063D37]">جنيه مصري</span>
                         </div>
                       </div>
                     </div>
