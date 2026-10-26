@@ -300,25 +300,23 @@ export function PriceMenuPrintPage() {
               className="w-full h-full object-cover object-top pointer-events-none select-none"
             />
 
-            {/* Live Precision Dynamic Calendar Overlay Badge */}
+            {/* Live Dynamic Date rendered directly inside the original 3D metallic gold pill badge */}
             <div
-              className="absolute bg-[#002855] text-white border-2 border-[#E85D04] rounded-2xl p-2 px-3.5 shadow-2xl flex items-center gap-3"
+              className="absolute flex items-center justify-center font-bold text-white select-none pointer-events-none"
               style={{
-                top: '366px',
-                right: '44px',
-                width: '232px',
-                height: '84px',
+                left: '150px',
+                top: '447px',
+                width: '205px',
+                height: '46px',
+                fontSize: '25px',
+                fontFamily: "'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif",
+                letterSpacing: '0.5px',
+                fontWeight: 900,
+                textShadow: '0 2px 4px rgba(0,0,0,0.4)',
               }}
+              dir="ltr"
             >
-              <div className="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center text-[#E85D04] shrink-0 border border-white/10">
-                <span className="material-symbols-outlined text-[28px]">calendar_month</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[12px] text-slate-200 font-bold">تاريخ الإصدار</span>
-                <span className="font-mono text-[19px] font-black text-white tracking-wide">
-                  {releaseDate}
-                </span>
-              </div>
+              {releaseDate}
             </div>
           </div>
 
