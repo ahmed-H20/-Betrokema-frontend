@@ -102,8 +102,22 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
   const handleClientChange = (cId: string) => {
     setClientId(cId)
     const client = clients.find((c) => c._id === cId)
-    if (client && typeof client.seller === 'object' && client.seller?._id) {
-      setSellerId(client.seller._id)
+    if (client && client.seller) {
+      const sellerObj = typeof client.seller === 'object' ? client.seller : null
+      const repId = sellerObj ? sellerObj._id : (typeof client.seller === 'string' ? client.seller : '')
+      if (repId) {
+        const rep = sellers.find((s) => s._id === repId)
+        if (rep && rep.status && rep.status !== 'ACTIVE') {
+          setSellerId('')
+          toast.warning(
+            `المندوب المسند للعميل (${rep.name}) ${
+              rep.status === 'SUSPENDED' ? 'معلّق حالياً' : 'في فترة إجازة'
+            } ولا يمكن إصدار فواتير باسمه. يرجى اختيار مندوب بديل نشط.`,
+          )
+        } else {
+          setSellerId(repId)
+        }
+      }
     }
   }
 
@@ -281,6 +295,16 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
     }
     if (!sellerId) {
       toast.error('يرجى اختيار المندوب المسؤول')
+      setMobileView('form')
+      return
+    }
+    const activeSeller = sellers.find((s) => s._id === sellerId)
+    if (activeSeller && activeSeller.status && activeSeller.status !== 'ACTIVE') {
+      toast.error(
+        `المندوب (${activeSeller.name}) ${
+          activeSeller.status === 'SUSPENDED' ? 'معلّق عن العمل' : 'في فترة إجازة'
+        }، لا يمكن إصدار فواتير باسمه. يرجى اختيار مندوب نشط.`,
+      )
       setMobileView('form')
       return
     }
@@ -516,12 +540,29 @@ export function CreateInvoiceModal({ isOpen, onClose }: CreateInvoiceModalProps)
                       required
                     >
                       <option value="">-- اختر المندوب --</option>
-                      {sellers.map((s) => (
-                        <option key={s._id} value={s._id}>
-                          {s.name} ({s.sector || 'العام'})
-                        </option>
-                      ))}
+                      {sellers.map((s) => {
+                        const isInactive = Boolean(s.status && s.status !== 'ACTIVE')
+                        return (
+                          <option
+                            key={s._id}
+                            value={s._id}
+                            disabled={isInactive}
+                            className={isInactive ? 'text-slate-400 bg-slate-100' : ''}
+                          >
+                            {s.name} {s.status === 'SUSPENDED'
+                              ? '🚫 [معلّق - لا يعمل]'
+                              : s.status === 'VACATION'
+                              ? '🏖️ [في إجازة - غير متاح]'
+                              : `(${s.sector || 'العام'})`}
+                          </option>
+                        )
+                      })}
                     </select>
+                    {selectedSeller && selectedSeller.status && selectedSeller.status !== 'ACTIVE' && (
+                      <p className="text-[11px] text-amber-600 font-medium mt-1">
+                        ⚠️ تنبيه: المندوب المختار {selectedSeller.status === 'SUSPENDED' ? 'معلّق عن العمل' : 'في فترة إجازة'}، يرجى اختيار مندوب بديل نشط.
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1">

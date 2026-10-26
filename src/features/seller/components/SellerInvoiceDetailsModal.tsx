@@ -209,13 +209,12 @@ export function SellerInvoiceDetailsModal({
                     {currentInvoice.invoiceCode}
                   </Dialog.Title>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                      isPaid
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${isPaid
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                         : isPartial
                           ? 'bg-amber-50 text-amber-700 border-amber-200'
                           : 'bg-rose-50 text-rose-700 border-rose-200'
-                    }`}
+                      }`}
                   >
                     {isPaid ? 'مسددة' : isPartial ? 'سداد جزئي' : 'غير مسددة'}
                   </span>
@@ -248,11 +247,10 @@ export function SellerInvoiceDetailsModal({
               <button
                 type="button"
                 onClick={() => setActiveTab(activeTab === 'paper' ? 'items' : 'paper')}
-                className={`flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs ${
-                  activeTab === 'paper'
+                className={`flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs ${activeTab === 'paper'
                     ? 'bg-[#002855] text-white border-[#002855]'
                     : 'bg-orange-50 text-orange-700 hover:bg-orange-100 border-orange-200'
-                }`}
+                  }`}
                 title="معاينة الفاتورة المطبوعة A4"
               >
                 <span className="material-symbols-outlined text-[17px]">description</span>
@@ -367,11 +365,10 @@ export function SellerInvoiceDetailsModal({
               <button
                 type="button"
                 onClick={() => setActiveTab('items')}
-                className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  activeTab === 'items'
+                className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'items'
                     ? 'bg-white text-orange-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 <span className="material-symbols-outlined text-[16px]">format_paint</span>
                 <span>الأصناف ({currentInvoice.products?.length || 0})</span>
@@ -379,11 +376,10 @@ export function SellerInvoiceDetailsModal({
               <button
                 type="button"
                 onClick={() => setActiveTab('payments')}
-                className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  activeTab === 'payments'
+                className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'payments'
                     ? 'bg-white text-orange-600 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 <span className="material-symbols-outlined text-[16px]">payments</span>
                 <span>التحصيلات ({currentInvoice.payments?.length || 0})</span>
@@ -391,11 +387,10 @@ export function SellerInvoiceDetailsModal({
               <button
                 type="button"
                 onClick={() => setActiveTab('paper')}
-                className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  activeTab === 'paper'
+                className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab === 'paper'
                     ? 'bg-[#002855] text-white shadow-sm'
                     : 'text-slate-700 hover:text-slate-900 bg-white/50'
-                }`}
+                  }`}
               >
                 <span className="material-symbols-outlined text-[16px]">description</span>
                 <span>📄 الفاتورة A4</span>
@@ -564,18 +559,16 @@ export function SellerInvoiceDetailsModal({
                       <button
                         type="button"
                         onClick={() => setPaperZoomMode('fit')}
-                        className={`px-2 py-1 rounded-md transition-all ${
-                          paperZoomMode === 'fit' ? 'bg-white text-primary shadow-xs' : 'text-slate-600'
-                        }`}
+                        className={`px-2 py-1 rounded-md transition-all ${paperZoomMode === 'fit' ? 'bg-white text-primary shadow-xs' : 'text-slate-600'
+                          }`}
                       >
                         ملاءمة 📱
                       </button>
                       <button
                         type="button"
                         onClick={() => setPaperZoomMode('full')}
-                        className={`px-2 py-1 rounded-md transition-all ${
-                          paperZoomMode === 'full' ? 'bg-white text-primary shadow-xs' : 'text-slate-600'
-                        }`}
+                        className={`px-2 py-1 rounded-md transition-all ${paperZoomMode === 'full' ? 'bg-white text-primary shadow-xs' : 'text-slate-600'
+                          }`}
                       >
                         100% 🔍
                       </button>
@@ -594,16 +587,7 @@ export function SellerInvoiceDetailsModal({
                       <span>{isCapturing ? 'جارِ المعالجة...' : 'تنزيل الصورة'}</span>
                     </button>
 
-                    <button
-                      type="button"
-                      disabled={isCapturing}
-                      onClick={handleSaveInvoiceImage}
-                      className="flex-1 sm:flex-initial h-8 sm:h-9 items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white text-xs font-bold transition-all shadow-xs flex active:scale-95 disabled:opacity-50"
-                      title="حفظ وتحديث صورة الفاتورة المعتمدة على السيرفر"
-                    >
-                      <span className="material-symbols-outlined text-[17px]">photo_camera</span>
-                      <span>حفظ بالسيرفر</span>
-                    </button>
+
 
                     <button
                       type="button"
@@ -675,7 +659,7 @@ export function SellerInvoiceDetailsModal({
                 className="h-12 px-3.5 sm:px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:scale-[0.98] text-white flex items-center justify-center gap-1.5 text-xs font-bold transition-all shrink-0 shadow-sm shadow-emerald-500/20"
               >
                 <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
-                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
                 </svg>
                 <span>واتساب</span>
               </button>

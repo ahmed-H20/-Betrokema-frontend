@@ -15,5 +15,7 @@ export function buildSellerPayload(
     password: form.password || undefined,
     monthlyTarget: form.monthlyTarget,
     commissionRate: form.commissionRate,
+    status: form.status,
+    statusNote: form.statusNote,
   }
 }

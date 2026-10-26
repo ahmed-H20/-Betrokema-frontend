@@ -7,6 +7,7 @@ import {
   VALIDATION_SELLER_NAME_REQUIRED,
   VALIDATION_SELLER_PHONE_INVALID,
 } from '@/constants/strings'
+import { sellerStatusSchema } from '@/api/sellers.schema'
 
 const urlOrEmptySchema = z
   .string()
@@ -38,6 +39,8 @@ export const repFormSchema = z.object({
   monthlyTarget: z.number().min(0).optional(),
   commissionRate: z.number().min(0).max(100).optional(),
   password: z.string().trim().optional(),
+  status: sellerStatusSchema.optional(),
+  statusNote: z.string().trim().optional(),
 })
 export type RepFormValues = z.infer<typeof repFormSchema>
 
@@ -52,4 +55,6 @@ export const repFormDefaults: DefaultValues<RepFormValues> = {
   sector: '',
   monthlyTarget: undefined,
   commissionRate: undefined,
+  status: 'ACTIVE',
+  statusNote: '',
 }

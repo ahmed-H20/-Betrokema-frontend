@@ -53,6 +53,8 @@ function sellerToFormValues(seller: Seller): RepFormValues {
     sector: seller.sector,
     monthlyTarget: seller.monthlyTarget,
     commissionRate: seller.commissionRate,
+    status: seller.status || 'ACTIVE',
+    statusNote: seller.statusNote || '',
   }
 }
 
@@ -225,6 +227,38 @@ export function RepFormDialog({
                 <span className="font-label-sm mt-1 block text-label-sm text-on-surface-variant">
                   💡 في حال تركته فارغاً، سيقوم النظام تلقائياً بتوليد رمز PIN سهل وسريع مكون من 6 أرقام، وسيتم عرضه فوراً على الشاشة لتتمكن من نسخه وإعطائه للمندوب.
                 </span>
+              </div>
+            ) : null}
+            {isEdit ? (
+              <div className="md:col-span-2 rounded-xl border border-outline-variant/30 bg-surface-container-low p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="font-label-md text-label-md text-on-surface font-bold flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[18px] text-primary">badge</span>
+                    حالة المندوب وصلاحية العمل
+                  </label>
+                  <span className="text-[11px] text-on-surface-variant font-medium">
+                    (تتحكم في إمكانية تسجيل الدخول وإصدار الفواتير)
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelClassName}>الحالة الحالية</label>
+                    <select className={inputClassName} {...register('status')}>
+                      <option value="ACTIVE">نشط (مصرح له بالعمل وتسجيل الدخول)</option>
+                      <option value="VACATION">في إجازة (موقوف مؤقتاً عن العمل)</option>
+                      <option value="SUSPENDED">معلق (ممنوع من تسجيل الدخول والعمليات)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClassName}>ملاحظة / سبب الحالة</label>
+                    <input
+                      className={inputClassName}
+                      placeholder="مثال: إجازة سنوية حتى نهاية الشهر..."
+                      type="text"
+                      {...register('statusNote')}
+                    />
+                  </div>
+                </div>
               </div>
             ) : null}
           </div>
