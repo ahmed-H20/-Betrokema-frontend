@@ -16,7 +16,10 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
+            set -e
             cd /vps/projects/company/client
-            git fetch origin
-            git reset --hard FETCH_HEAD
+            git fetch origin ${{ github.ref_name }}
+            git checkout -f -B ${{ github.ref_name }} origin/${{ github.ref_name }} || (rm -f .env && git checkout -f -B ${{ github.ref_name }} origin/${{ github.ref_name }})
+            git reset --hard origin/${{ github.ref_name }}
+            git clean -fd
             docker compose up -d --build
